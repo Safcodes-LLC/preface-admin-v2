@@ -1,0 +1,92 @@
+[
+    {
+        "id": 1,
+        "username": "author_abhi",
+        "title": "Health and wealth",
+        "author_img": "/img/avatars/thumb-7.jpg",
+        "language": "English",
+        "categories": "health, wealth",
+        "status": "Pending"
+    },
+    {
+        "id": 2,
+        "username": "writer_jane",
+        "title": "Fitness and Finance",
+        "author_img": "/img/avatars/thumb-4.jpg",
+        "language": "English",
+        "categories": "health, wealth",
+        "status": "Approved"
+    },
+    {
+        "id": 3,
+        "username": "blogger_mark",
+        "title": "Healthy Habits",
+        "author_img": "/img/avatars/thumb-9.jpg",
+        "language": "English",
+        "categories": "health",
+        "status": "Published"
+    },
+    {
+        "id": 4,
+        "username": "writer_emily",
+        "title": "Investing for Beginners",
+        "author_img": "/img/avatars/thumb-2.jpg",
+        "language": "English",
+        "categories": "wealth",
+        "status": "Approved"
+    },
+    {
+        "id": 5,
+        "username": "author_max",
+        "title": "Healthy Eating Tips",
+        "author_img": "/img/avatars/thumb-5.jpg",
+        "language": "English",
+        "categories": "health",
+        "status": "Pending"
+    },
+    {
+        "id": 6,
+        "username": "blogger_sara",
+        "title": "Financial Planning",
+        "author_img": "/img/avatars/thumb-3.jpg",
+        "language": "English",
+        "categories": "wealth",
+        "status": "Published"
+    },
+    {
+        "id": 7,
+        "username": "writer_mike",
+        "title": "Mental Health Matters",
+        "author_img": "/img/avatars/thumb-6.jpg",
+        "language": "English",
+        "categories": "health",
+        "status": "Approved"
+    },
+    {
+        "id": 8,
+        "username": "author_lisa",
+        "title": "Investment Strategies",
+        "author_img": "/img/avatars/thumb-1.jpg",
+        "language": "English",
+        "categories": "wealth",
+        "status": "Published"
+    },
+    {
+        "id": 9,
+        "username": "blogger_david",
+        "title": "Fitness Tips",
+        "author_img": "/img/avatars/thumb-8.jpg",
+        "language": "English",
+        "categories": "health",
+        "status": "Pending"
+    },
+    {
+        "id": 10,
+        "username": "writer_olivia",
+        "title": "Financial Success",
+        "author_img": "/img/avatars/thumb-10.jpg",
+        "language": "English",
+        "categories": "wealth",
+        "status": "Approved"
+    }
+]

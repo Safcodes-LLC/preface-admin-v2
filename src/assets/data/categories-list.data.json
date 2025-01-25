@@ -1,0 +1,37 @@
+[
+    {
+      "id": 1,
+      "name": "Technology",
+      "icon": "fa-desktop",
+      "img": "technology.jpg",
+      "short_description": "Innovations & Gadgets"
+    },
+    {
+      "id": 2,
+      "name": "Health",
+      "icon": "fa-heart",
+      "img": "health.jpg",
+      "short_description": "Wellness Tips"
+    },
+    {
+      "id": 3,
+      "name": "Travel",
+      "icon": "fa-plane",
+      "img": "travel.jpg",
+      "short_description": "Adventure Destinations"
+    },
+    {
+      "id": 4,
+      "name": "Food",
+      "icon": "fa-utensils",
+      "img": "food.jpg",
+      "short_description": "Culinary Delights"
+    },
+    {
+      "id": 5,
+      "name": "Science",
+      "icon": "fa-flask",
+      "img": "science.jpg",
+      "short_description": "Discoveries & Research"
+    }
+  ]

@@ -1,0 +1,43 @@
+.wrapper-class {
+    padding: 1rem;
+    border: 1px solid #ccc;
+  }
+  .editor-class {
+    background-color:lightgray;
+    padding: 1rem;
+    border: 1px solid #ccc;
+  }
+  .toolbar-class {
+    border: 1px solid #ccc;
+  }
+
+  .editor-container.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 9999;
+    text-align: -webkit-center;
+    margin-top: 20px;
+  }
+
+  .editor-container.fullscreen .wrapper-class {
+    height: 80vh;
+    width: 90%;
+  }
+
+  .editor-container button {
+    position: absolute;
+    right: 20px;
+  }
+
+  .editor-container.fullscreen button {
+    position: absolute;
+    right: 60px;
+  }
+
+  .statusModal {
+    width: 75% !important;
+  }

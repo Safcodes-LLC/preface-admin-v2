@@ -1,0 +1,56 @@
+[
+	{
+        "id": 12,
+        "username": "author_abhi",
+        "name": "Abhishe Borhade",
+        "email": "eileen_h@hotmail.com",
+        "img": "/img/avatars/thumb-7.jpg",
+        "languages": "English , Araian",
+        "status": "Active"
+    },
+    {
+        "id": "153",
+        "username": "author-Eileen",
+        "name": "Eileen Horton",
+        "email": "eileen_h@hotmail.com",
+        "img": "/img/avatars/thumb-1.jpg",
+        "languages": "English , Araian",
+        "status": "active"
+    },
+    {
+        "id": "1322",
+        "username": "author-Terrance",
+        "name": "Terrance Moreno",
+        "email": "Terrance@infotech.io",
+        "img": "/img/avatars/thumb-2.jpg",
+        "languages": "English , Araian",
+        "status": "active"
+    },
+    {
+        "id": "5657",
+        "username": "author-Ron",
+        "name": "Ron Vargas",
+        "email": "ronnie_vergas@infotech.io",
+        "img": "/img/avatars/thumb-3.jpg",
+        "languages": "English , Araian",
+        "status": "blocked"
+    },
+    {
+        "id": "754",
+        "username": "author-Cook",
+        "name": "Luke Cook",
+        "email": "cookie_lukie@hotmail.com",
+        "img": "/img/avatars/thumb-4.jpg",
+        "languages": "English , Araian",
+        "status": "active"
+    },
+    {
+        "id": "765",
+        "username": "author-Joyce",
+        "name": "Joyce Freeman",
+        "email": "joyce991@infotech.io",
+        "img": "/img/avatars/thumb-5.jpg",
+        "languages": "English , Araian",
+        "status": "active"
+    }
+]

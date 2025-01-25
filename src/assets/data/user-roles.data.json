@@ -1,0 +1,27 @@
+[
+    {
+      "id": 1,
+      "name": "Admin",
+      "description": "Full administrative access."
+    },
+    {
+      "id": 2,
+      "name": "Editor",
+      "description": "Can edit and manage content."
+    },
+    {
+      "id": 3,
+      "name": "Author",
+      "description": "Can create and publish articles."
+    },
+    {
+      "id": 4,
+      "name": "Reader",
+      "description": "Can view and comment on articles."
+    },
+    {
+      "id": 5,
+      "name": "Moderator",
+      "description": "Responsible for content moderation."
+    }
+  ]
