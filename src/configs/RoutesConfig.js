@@ -45,6 +45,13 @@ export const publicRoutes = [
     ),
   },
   {
+    key: "email-verification",
+    path: `${AUTH_PREFIX_PATH}/email-verification`,
+    component: React.lazy(() =>
+      import("views/auth-views/authentication/email-verification")
+    ),
+  },
+  {
     key: "reset-password",
     path: `${AUTH_PREFIX_PATH}/reset-password`,
     component: React.lazy(() =>
