@@ -1,8 +1,11 @@
-import React, { useState } from "react";
-import { Card, Row, Col, Form, Input, Button, message, Typography } from "antd";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState, useEffect } from "react";
+import { Card, Row, Col, Typography } from "antd";
+import { useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
+import axios from "axios";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
+
 const backgroundStyle = {
   backgroundImage: "url(/img/others/img-17.webp)",
   backgroundRepeat: "no-repeat",
@@ -10,8 +13,31 @@ const backgroundStyle = {
 };
 
 const EmailVerification = () => {
-
+  const [verificationStatus, setVerificationStatus] = useState("");
+  const [verificationMessage, setVerificationMessage] = useState("");
   const theme = useSelector((state) => state.theme.currentTheme);
+  const [status, setStatus] = useState("");   
+  const [searchParams] = useSearchParams();   
+  const token = searchParams.get("token");
+  const [isApiCalled, setIsApiCalled] = useState(false); // Prevent API call repetition
+
+  useEffect(() => {
+    // Check if the token exists and if the API has been called before
+    if (token && !isApiCalled) {
+      setIsApiCalled(true); // Set flag to avoid repeated calls
+
+      axios
+        .post(`https://king-prawn-app-x9z27.ondigitalocean.app/api/user/verify-email`, { token })
+        .then((response) => {
+          setVerificationStatus("success");
+          setVerificationMessage(response.data.message);
+        })
+        .catch((error) => {
+          setVerificationStatus("failed");
+          setVerificationMessage(error.response?.data?.message || "Verification failed");
+        });
+    }
+  }, [token, isApiCalled]);
 
   return (
     <div className="h-100" style={backgroundStyle}>
@@ -32,12 +58,27 @@ const EmailVerification = () => {
                 </div>
                 <Row justify="center">
                   <Col xs={24} sm={24} md={20} lg={20}>
-                  <div className="text-center">
-                      <Text strong style={{ color: "green", fontSize: "16px" }}>
-                        Success
+                    <div className="text-center">
+                      <Text
+                        strong
+                        style={{
+                          color:
+                            verificationStatus === "success" ? "green" : "red",
+                          fontSize: "16px",
+                        }}
+                      >
+                        {verificationStatus?.charAt(0).toUpperCase() +
+                          verificationStatus?.slice(1)}
                       </Text>
-                      <p style={{ color: "green", fontSize: "14px", marginTop: "5px" }}>
-                        Email successfully verified. You can now log in.
+                      <p
+                        style={{
+                          color:
+                            verificationStatus === "success" ? "green" : "red",
+                          fontSize: "14px",
+                          marginTop: "5px",
+                        }}
+                      >
+                        {verificationMessage}
                       </p>
                     </div>
                   </Col>

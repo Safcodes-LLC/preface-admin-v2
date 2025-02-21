@@ -1,5 +1,17 @@
+//src/configs/RoutesConfig.js
 import React from "react";
 import { AUTH_PREFIX_PATH, APP_PREFIX_PATH } from "configs/AppConfig";
+
+// New array for routes that should be accessible regardless of auth status
+export const unrestrictedRoutes = [
+  {
+    key: "email-verification",
+    path: `${AUTH_PREFIX_PATH}/email-verification/`,
+    component: React.lazy(() =>
+      import("views/auth-views/authentication/email-verification")
+    ),
+  }
+];
 
 export const publicRoutes = [
   {

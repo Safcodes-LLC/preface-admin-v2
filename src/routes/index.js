@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
 import { AUTHENTICATED_ENTRY } from "configs/AppConfig";
-import { protectedRoutes, publicRoutes } from "configs/RoutesConfig";
+import {
+  protectedRoutes,
+  publicRoutes,
+  unrestrictedRoutes,
+} from "configs/RoutesConfig";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
 import AppRoute from "./AppRoute";
@@ -34,6 +38,14 @@ const Routes = () => {
 
   return (
     <RouterRoutes>
+      {/* Unrestricted routes that bypass auth checks */}
+      {unrestrictedRoutes.map((route) => (
+        <Route
+          key={route.key}
+          path={route.path}
+          element={<AppRoute component={route.component} />}
+        />
+      ))}
       <Route path="/" element={<ProtectedRoute />}>
         <Route
           path="/"
