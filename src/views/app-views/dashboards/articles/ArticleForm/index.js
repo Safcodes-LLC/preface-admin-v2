@@ -15,13 +15,54 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import FilesServices from "services/FilesServices";
 import { fetchUserData } from "store/slices/userSlice";
-import { convertFromRaw, convertToRaw, EditorState } from "draft-js";
+import { CompositeDecorator, convertFromRaw, convertToRaw, EditorState, Modifier } from "draft-js";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import { Editor } from "react-draft-wysiwyg";
 import { useNavigate } from "react-router-dom";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
+
+const TooltipSpan = (props) => {
+  const { contentState, entityKey, children } = props;
+  const { tooltipContent } = contentState.getEntity(entityKey).getData();
+  
+  return (
+    <span 
+      style={{ 
+        borderBottom: '1px dotted blue',
+        cursor: 'help'
+      }}
+      title={tooltipContent}
+    >
+      {children}
+    </span>
+  );
+};
+
+// Find entities that have tooltips
+function findTooltipEntities(contentBlock, callback, contentState) {
+  contentBlock.findEntityRanges(
+    (character) => {
+      const entityKey = character.getEntity();
+      return (
+        entityKey !== null &&
+        contentState.getEntity(entityKey).getType() === 'TOOLTIP'
+      );
+    },
+    callback
+  );
+}
+
+// Create decorator for tooltip entities
+const createDecorator = () => new CompositeDecorator([
+  {
+    strategy: findTooltipEntities,
+    component: TooltipSpan,
+  },
+]);
+
+let initialContent = ""
 
 const ArticleForm = (props) => {
   const dispatch = useDispatch();
@@ -39,14 +80,64 @@ const ArticleForm = (props) => {
   const [modal1Open, setModal1Open] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+
+  
   const user = useSelector((state) => state.user);
   const auth = useSelector((state) => state.auth);
 
   const navigate = useNavigate();
 
-  const [editorState, setEditorState] = useState(() =>
-    EditorState.createEmpty()
-  );
+  const [editorState, setEditorState] = useState(() => {
+    if (initialContent) {
+      try {
+        const contentState = convertFromRaw(JSON.parse(initialContent));
+        return EditorState.createWithContent(contentState, createDecorator());
+      } catch (error) {
+        console.error('Error parsing initial content:', error);
+        return EditorState.createEmpty(createDecorator());
+      }
+    }
+    return EditorState.createEmpty(createDecorator());
+  });
+
+  const addTooltip = () => {
+    const selection = editorState.getSelection();
+    
+    if (selection.isCollapsed()) {
+      // No text selected, show a message to the user
+      alert('Please select some text first to add a tooltip.');
+      return;
+    }
+    
+    // Prompt for tooltip content
+    const tooltipContent = prompt('Enter tooltip content:');
+    if (!tooltipContent) return;
+    
+    // Create entity
+    const contentState = editorState.getCurrentContent();
+    const contentStateWithEntity = contentState.createEntity(
+      'TOOLTIP',
+      'MUTABLE',
+      { tooltipContent }
+    );
+    
+    const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+    
+    // Apply entity to selection
+    const newContentState = Modifier.applyEntity(
+      contentStateWithEntity,
+      selection,
+      entityKey
+    );
+    
+    const newEditorState = EditorState.push(
+      editorState,
+      newContentState,
+      'apply-entity'
+    );
+    
+    setEditorState(newEditorState);
+  };
 
   const ApproveTextFun = (status, editingSession) => {
     const statusIsValid = [
@@ -135,6 +226,8 @@ const ArticleForm = (props) => {
   // to track is form submitted
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [isPostsFetched, setIsPostsFetched] = useState(false);
+
+  
 
   // check it is in global state
   const articles_list = useSelector((state) => state.post.posts);
@@ -270,7 +363,9 @@ const ArticleForm = (props) => {
     form
       .validateFields()
       .then((values) => {
-        values.title = values.title.trim().replace(/\s+/g, ' ')
+
+        console.log(values,'value');
+        values.title = values.title.trim().replace(/\s+/g, ' ');
         values.postType = "66d9d564987787d3e3ff1312";
         values.thumbnail = uploadedThumbnailImg;
         values.allSelectedThumbnailImgs = allSelectedThumbnailImgs;
@@ -345,7 +440,7 @@ const ArticleForm = (props) => {
         content: (
           <div>
             <p>Are you sure you want to proceed?</p>
-            {(action === onApprove || action === onRejected) && (
+            {(action == onApprove || action == onRejected) && (
               <Input.TextArea
                 rows={4}
                 // value={editorMessage}
@@ -434,6 +529,18 @@ const ArticleForm = (props) => {
       }
     });
   };
+
+  const toolbarCustomButtons = [
+    <Button 
+      key="tooltip-btn"
+      onClick={addTooltip}
+      type="default"
+      style={{ marginRight: '10px',marginBottom:'10px' }}
+    >
+      Add Tooltip
+    </Button>
+  ];
+  
 
   return (
     <>
@@ -554,7 +661,7 @@ const ArticleForm = (props) => {
                                   <Option value="chief_review">
                                     Chief Editor
                                   </Option>
-                                  {/* <Option value="published">Publish</Option> */}
+                                  <Option value="published">Publish</Option>
                                 </>
                               )}
                             </Select>
@@ -658,14 +765,23 @@ const ArticleForm = (props) => {
                     }
                     view={view}
                   >
-                    <Editor
+                    {/* <Editor
                       editorState={editorState}
                       onEditorStateChange={setEditorState}
                       wrapperClassName="wrapper-class"
                       editorClassName="editor-class"
                       toolbarClassName="toolbar-class"
                       readOnly={view}
-                    />
+                    /> */}
+                    <Editor
+          editorState={editorState}
+          onEditorStateChange={setEditorState}
+          wrapperClassName="wrapper-class"
+          editorClassName="editor-class"
+          toolbarClassName="toolbar-class"
+          toolbarCustomButtons={toolbarCustomButtons}
+          // Your existing editor props...
+        />
                   </GeneralField>
                 ),
               },

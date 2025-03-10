@@ -157,7 +157,7 @@ const GeneralField = (props) => {
             <div
               className={`editor-container ${isFullscreen ? "fullscreen" : ""}`}
             >
-              <button onClick={toggleFullscreen}>
+              <button onClick={toggleFullscreen} className="min-full-btn">
                 {isFullscreen ? "X" : <ArrowsAltOutlined />}
               </button>
               {props.children}

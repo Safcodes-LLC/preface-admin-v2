@@ -28,7 +28,7 @@
     width: 90%;
   }
 
-  .editor-container button {
+  .editor-container .min-full-btn {
     position: absolute;
     right: 20px;
   }
