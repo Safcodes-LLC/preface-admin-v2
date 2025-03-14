@@ -61,6 +61,10 @@ const GeneralField = (props) => {
   const postTypes = useSelector((state) => state.postTypes.postTypes);
   const categories = useSelector((state) => state.categories.categories); // Get categories from Redux store
   const [loadingCategories, setLoadingCategories] = useState(true);
+
+  console.log(categories,"category show");
+  
+
   useEffect(() => {
     if (!postTypes.length) {
       dispatch(fetchAllPostTypes());
@@ -76,6 +80,13 @@ const GeneralField = (props) => {
       setLoadingCategories(false);
     }
   }, [categories, dispatch]);
+
+  // Filter categories that do not have a parentCategory
+  const filteredCategories = categories.filter(
+    (category) => !category.parentCategory
+  );
+
+
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
@@ -150,7 +161,7 @@ const GeneralField = (props) => {
               {/* <Option value={null}>
                 None (Create as a top-level category)
               </Option> */}
-              {categories.map((category) => (
+              {filteredCategories.map((category) => (
                 <Option key={category._id} value={category._id}>
                   {category.name}
                 </Option>
