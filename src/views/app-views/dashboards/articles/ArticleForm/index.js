@@ -261,6 +261,17 @@ const ArticleForm = (props) => {
     },
   ];
 
+  let articleDataforgeneral;
+
+  if (mode === EDIT && !loading) {
+    
+    const { id } = param;
+    const articleIdforGeneral = id;
+    articleDataforgeneral = list.find((article) => article._id === articleIdforGeneral);
+  }
+
+
+
   useEffect(() => {
     if (mode === EDIT && !loading) {
       const { id } = param;
@@ -282,11 +293,16 @@ const ArticleForm = (props) => {
           sub_title: articleData.sub_title,
           short_desc: articleData.short_desc,
           language: articleData.language._id,
-          categories: articleData.categories.map((category) => category._id),
+          categories: articleData.categories.map((category) => ({
+            label: category.name,
+            value: category._id,
+          })),
           meta_title: articleData.meta_title,
           meta_desc: articleData.meta_desc,
           meta_tags: articleData.meta_tags,
+          ParentCategory: articleData.categories.map((category) => category.parentCategory?.id)
         });
+        
 
         // Approval list start
         let newItems = [];
@@ -764,6 +780,8 @@ const ArticleForm = (props) => {
                       handleClearSelectedMoreImages
                     }
                     view={view}
+                    mode={mode}
+                    currentparentcategory={articleDataforgeneral?.categories?.map((category) => category.parentCategory?.id)}
                   >
                     {/* <Editor
                       editorState={editorState}

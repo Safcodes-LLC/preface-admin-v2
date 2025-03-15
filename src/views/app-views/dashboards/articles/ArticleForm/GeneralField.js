@@ -100,6 +100,24 @@ const GeneralField = (props) => {
   const languages = useSelector((state) => state.languages.languages);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [subCategories, setSubCategories] = useState([]);
+
+  const handleParentCategoryChange = (value) => {
+    
+    const filteredSubCategories = articleCategoriesList.filter(
+      (category) => category.parentCategory && category.parentCategory.id === value
+    );
+    
+    setSubCategories(filteredSubCategories);
+  };
+
+  useEffect(() => {
+    if (props?.currentparentcategory) {
+      const defaultParentCategory = props.currentparentcategory?.[0];
+      handleParentCategoryChange(defaultParentCategory);
+    }
+  }, [props.currentparentcategory, article_categories]);
+  
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -259,15 +277,31 @@ const GeneralField = (props) => {
                 ))}
               </Select>
             </Form.Item>
-
-            <Form.Item name="categories" label="Categories">
+             <Form.Item name="ParentCategory" label="Parent Category">
               <Select
-                mode="multiple"
                 style={{ width: "100%" }}
-                placeholder="Categories"
+                placeholder="Parent Category"
+                disabled={props.view}
+                onChange={handleParentCategoryChange}
+              >
+                {articleCategoriesList
+                  .filter((category) => !category.parentCategory)
+                  .map((category) => (
+                    <Option key={category._id} value={category._id}>
+                      {category.name}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item name="categories" label="Sub Category">
+              <Select
+                style={{ width: "100%" }}
+                mode="multiple"
+                placeholder="Sub Category"
                 disabled={props.view}
               >
-                {articleCategoriesList.map((category) => (
+                {subCategories.map((category) => (
                   <Option key={category._id} value={category._id}>
                     {category.name}
                   </Option>
