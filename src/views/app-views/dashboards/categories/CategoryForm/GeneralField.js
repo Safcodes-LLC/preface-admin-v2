@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllPostTypes } from "store/slices/postTypesSlice";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { fetchAllCategories } from "store/slices/categoriesSlice";
+import { fetchAllLanguages } from "store/slices/languagesSlice";
 
 const { Dragger } = Upload;
 const { Option } = Select;
@@ -28,6 +29,12 @@ const rules = {
     {
       required: true,
       message: "Please enter category PostType",
+    },
+  ],
+  language: [
+    {
+      required: true,
+      message: "Please select a language",
     },
   ],
 };
@@ -58,21 +65,30 @@ const beforeUpload = (file) => {
 
 const GeneralField = (props) => {
   const dispatch = useDispatch();
+  const form = Form.useFormInstance(); // Get form instance to watch field values
   const postTypes = useSelector((state) => state.postTypes.postTypes);
-  const categories = useSelector((state) => state.categories.categories); // Get categories from Redux store
-  const [loadingCategories, setLoadingCategories] = useState(true);
+  const categories = useSelector((state) => state.categories.categories);
+  const languages = useSelector((state) => state.languages.languages);
 
-  console.log(categories,"category show");
+  const [loadingCategories, setLoadingCategories] = useState(true);
   
+  // Watch the language field to filter parent categories
+  const selectedLanguage = Form.useWatch('language', form);
 
   useEffect(() => {
     if (!postTypes.length) {
       dispatch(fetchAllPostTypes());
     }
   }, [dispatch, postTypes]);
+
+  useEffect(() => {
+    if (!languages.length) {
+      dispatch(fetchAllLanguages());
+    }
+  }, [dispatch, languages]);
+
   useEffect(() => {
     if (categories.length === 0 && loadingCategories) {
-      // If categories haven't been fetched, fetch them
       dispatch(fetchAllCategories()).then(() => {
         setLoadingCategories(false);
       });
@@ -81,16 +97,42 @@ const GeneralField = (props) => {
     }
   }, [categories, dispatch]);
 
-  // Filter categories that do not have a parentCategory
-  const filteredCategories = categories.filter(
-    (category) => !category.parentCategory
-  );
+  // Reset parent category when language changes
+  useEffect(() => {
+    if (selectedLanguage) {
+      form.setFieldsValue({ parentCategory: undefined });
+    }
+  }, [selectedLanguage, form]);
 
+  // Filter categories that do not have a parentCategory AND match the selected language
+  const filteredCategories = categories.filter((category) => {
+    const hasNoParent = !category.parentCategory;
+    const matchesLanguage = selectedLanguage ? 
+      (category.language?._id === selectedLanguage || category.language === selectedLanguage) : 
+      true;
+    
+    return hasNoParent && matchesLanguage;
+  });
+
+  console.log(filteredCategories, "filtered categories by language");
 
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
+          <Form.Item name="language" label="Language" rules={rules.language}>
+            <Select
+              style={{ width: "100%" }}
+              placeholder="Language"
+              disabled={props.view}
+            >
+              {languages.map((language) => (
+                <Option key={language._id} value={language._id}>
+                  {language.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
           <Form.Item name="name" label="Category Name" rules={rules.name}>
             <Input placeholder="Category name" />
           </Form.Item>
@@ -156,11 +198,13 @@ const GeneralField = (props) => {
           <Form.Item name="parentCategory" label="Parent Category">
             <Select
               style={{ width: "100%" }}
-              placeholder="Select a parent category"
+              placeholder={
+                selectedLanguage 
+                  ? "Select a parent category" 
+                  : "Please select a language first"
+              }
+              disabled={!selectedLanguage}
             >
-              {/* <Option value={null}>
-                None (Create as a top-level category)
-              </Option> */}
               {filteredCategories.map((category) => (
                 <Option key={category._id} value={category._id}>
                   {category.name}
