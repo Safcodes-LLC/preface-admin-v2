@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Card, Table, Input, Button, Menu } from "antd";
+import React, { useEffect, useState, useMemo } from "react";
+import { Card, Table, Input, Button, Menu, Select } from "antd";
 import CategoriesListData from "assets/data/categories-list.data.json";
 import {
   EyeOutlined,
@@ -18,6 +18,8 @@ import {
   fetchAllCategoriesByPostType,
 } from "store/slices/categoriesSlice";
 
+const { Option } = Select;
+
 const ArticlesCategoriesList = () => {
   const dispatch = useDispatch();
   useEffect(() => {
@@ -31,13 +33,43 @@ const ArticlesCategoriesList = () => {
   const categoriesListOfArticles = useSelector(
     (state) => state.categories.categoriesByPostType
   );
+  
   const [list, setList] = useState(categoriesListOfArticles);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedLanguage, setSelectedLanguage] = useState("All Languages");
+  const [searchValue, setSearchValue] = useState("");
 
-  useEffect(() => {
-    setList(categoriesListOfArticles);
+  // Get unique languages from the data
+  const availableLanguages = useMemo(() => {
+    const languages = new Set();
+    categoriesListOfArticles.forEach(item => {
+      const languageName = item?.language?.name || "No Language";
+      languages.add(languageName);
+    });
+    return Array.from(languages).sort();
   }, [categoriesListOfArticles]);
+
+  // Filter data based on language and search
+  useEffect(() => {
+    let filteredData = categoriesListOfArticles;
+    
+    // Filter by language
+    if (selectedLanguage && selectedLanguage !== "All Languages") {
+      filteredData = filteredData.filter(item => {
+        const itemLanguage = item?.language?.name || "No Language";
+        return itemLanguage === selectedLanguage;
+      });
+    }
+    
+    // Filter by search value
+    if (searchValue) {
+      filteredData = utils.wildCardSearch(filteredData, searchValue);
+    }
+    
+    setList(filteredData);
+    setSelectedRowKeys([]);
+  }, [categoriesListOfArticles, selectedLanguage, searchValue]);
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -97,15 +129,6 @@ const ArticlesCategoriesList = () => {
       dataIndex: "name",
       sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
     },
-    // {
-    // 	title: 'icon',
-    // 	dataIndex: 'icon',
-    // 	render: (_, record) => (
-    // 		<div className="d-flex">
-    // 			<AvatarStatus size={60} type="square" src={record.icon} name={record.name}/>
-    // 		</div>
-    // 	),
-    // },
     {
       title: "Image",
       dataIndex: "featuredImage",
@@ -152,10 +175,11 @@ const ArticlesCategoriesList = () => {
 
   const onSearch = (e) => {
     const value = e.currentTarget.value;
-    const searchArray = e.currentTarget.value ? list : CategoriesListData;
-    const data = utils.wildCardSearch(searchArray, value);
-    setList(data);
-    setSelectedRowKeys([]);
+    setSearchValue(value);
+  };
+
+  const onLanguageChange = (value) => {
+    setSelectedLanguage(value);
   };
 
   return (
@@ -171,10 +195,24 @@ const ArticlesCategoriesList = () => {
               placeholder="Search"
               prefix={<SearchOutlined />}
               onChange={(e) => onSearch(e)}
+              style={{ width: 200 }}
             />
           </div>
         </Flex>
-        <div>
+        <div className="d-flex  gap-2">
+          <Select
+            placeholder="Filter by Language"
+            value={selectedLanguage}
+            onChange={onLanguageChange}
+            style={{ width: 180, marginRight: 12 }}
+          >
+            <Option value="All Languages">All Languages</Option>
+            {availableLanguages.map(language => (
+              <Option key={language} value={language}>
+                {language}
+              </Option>
+            ))}
+          </Select>
           <Button
             onClick={addCategory}
             type="primary"

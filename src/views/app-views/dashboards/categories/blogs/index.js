@@ -121,8 +121,10 @@ const BlogsCategoriesList = () => {
       ),
     },
     {
-      title: "Description",
-      dataIndex: "shortDescription",
+      title: "Language",
+      dataIndex: "language",
+      render: (_, record) =>
+        record?.language ? record.language.name : "No Language",
     },
     {
       title: "Parent Category",
