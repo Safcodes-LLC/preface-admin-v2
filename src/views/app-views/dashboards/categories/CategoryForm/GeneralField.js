@@ -45,7 +45,7 @@ const imageUploadProps = {
   listType: "picture-card",
   showUploadList: false,
   action:
-    "http://localhost:8080/api/fileupload/savefile/categories/featuredimages",
+    "https://king-prawn-app-x9z27.ondigitalocean.app/api/fileupload/savefile/categories/featuredimages",
   headers: {
     Authorization: localStorage.getItem(AUTH_TOKEN) || null,
   },
@@ -58,7 +58,7 @@ const iconUploadProps = {
   listType: "picture-card",
   showUploadList: false,
   action:
-    "http://localhost:8080/api/fileupload/savefile/categories/icons",
+    "https://king-prawn-app-x9z27.ondigitalocean.app/api/fileupload/savefile/categories/icons",
   headers: {
     Authorization: localStorage.getItem(AUTH_TOKEN) || null,
   },
