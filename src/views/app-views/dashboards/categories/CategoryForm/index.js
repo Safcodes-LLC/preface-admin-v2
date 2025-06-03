@@ -19,10 +19,12 @@ const CategoryForm = (props) => {
   const { mode = ADD, param } = props;
   const [form] = Form.useForm();
   const [featuredImage, setFeaturedImage] = useState("");
+  const [featuredIcon, setFeaturedIcon] = useState(""); // New state for icon
   const [allSelectedFeaturedImages, SetAllSelectedFeaturedImages] = useState(
     []
   );
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [iconUploadLoading, setIconUploadLoading] = useState(false); // New state for icon upload loading
   const [submitLoading, setSubmitLoading] = useState(false);
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,10 +56,13 @@ const CategoryForm = (props) => {
         name: categoryData.name,
         shortDescription: categoryData.shortDescription,
         featuredImage: categoryData.featuredImage,
+        featuredIcon: categoryData.featuredIcon, // Set icon value
         postType: categoryData.postType._id,
         parentCategory: categoryData.parentCategory,
+        language: categoryData.language?._id || categoryData.language,
       });
       setFeaturedImage(categoryData.featuredImage);
+      setFeaturedIcon(categoryData.featuredIcon || ""); // Set icon state
       SetAllSelectedFeaturedImages([categoryData.featuredImage]);
     }
   }, [form, mode, param, props, list, loading]);
@@ -79,6 +84,20 @@ const CategoryForm = (props) => {
     }
   };
 
+  // New handler for icon upload
+  const handleIconUploadChange = (info) => {
+    if (info.file.status === "uploading") {
+      setIconUploadLoading(true);
+      return;
+    }
+    if (info.file.status === "done") {
+      if (info.file.response.fileUrl) {
+        setFeaturedIcon(info.file.response.fileUrl);
+        setIconUploadLoading(false);
+      }
+    }
+  };
+
   const onFinish = () => {
     setSubmitLoading(true);
     form
@@ -86,6 +105,7 @@ const CategoryForm = (props) => {
       .then((values) => {
         values.name = values.name.trim().replace(/\s+/g, ' ')
         values.featuredImage = featuredImage;
+        values.featuredIcon = featuredIcon; // Include icon in form values
         values.allSelectedFeaturedImages = allSelectedFeaturedImages;
         setTimeout(() => {
           setSubmitLoading(false);
@@ -101,6 +121,7 @@ const CategoryForm = (props) => {
                   // message.success(`Created ${values.name} to categories list`);
                   form.resetFields();
                   setFeaturedImage("");
+                  setFeaturedIcon(""); // Reset icon
                   SetAllSelectedFeaturedImages([]);
                   if (values.postType === "66d9d564987787d3e3ff1314") {
                     navigate(`/admin/dashboards/categories/videos`);
@@ -192,8 +213,11 @@ const CategoryForm = (props) => {
                 children: (
                   <GeneralField
                     featuredImage={featuredImage}
+                    featuredIcon={featuredIcon} // Pass icon props
                     uploadLoading={uploadLoading}
+                    iconUploadLoading={iconUploadLoading} // Pass icon loading state
                     handleUploadChange={handleUploadChange}
+                    handleIconUploadChange={handleIconUploadChange} // Pass icon handler
                   />
                 ),
               },

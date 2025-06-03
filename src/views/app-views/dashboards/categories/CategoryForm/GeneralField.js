@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Input, Row, Col, Card, Form, Upload, message, Select } from "antd";
 import { ImageSvg } from "assets/svg/icon";
 import CustomIcon from "components/util-components/CustomIcon";
-import { LoadingOutlined } from "@ant-design/icons";
+import { LoadingOutlined, AppstoreOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllPostTypes } from "store/slices/postTypesSlice";
 import { AUTH_TOKEN } from "constants/AuthConstant";
@@ -45,7 +45,20 @@ const imageUploadProps = {
   listType: "picture-card",
   showUploadList: false,
   action:
-    "https://king-prawn-app-x9z27.ondigitalocean.app/api/fileupload/savefile/categories/featuredimages",
+    "http://localhost:8080/api/fileupload/savefile/categories/featuredimages",
+  headers: {
+    Authorization: localStorage.getItem(AUTH_TOKEN) || null,
+  },
+};
+
+// New upload props for icons
+const iconUploadProps = {
+  name: "file",
+  multiple: false,
+  listType: "picture-card",
+  showUploadList: false,
+  action:
+    "http://localhost:8080/api/fileupload/savefile/categories/icons",
   headers: {
     Authorization: localStorage.getItem(AUTH_TOKEN) || null,
   },
@@ -61,6 +74,24 @@ const beforeUpload = (file) => {
     message.error("Image must smaller than 2MB!");
   }
   return isJpgOrPng && isLt2M;
+};
+
+// Validation for icon upload
+const beforeIconUpload = (file) => {
+  const isValidIcon = 
+    file.type === "image/svg+xml" || 
+    file.type === "image/png" || 
+    file.type === "image/jpeg" ||
+    file.type === "image/x-icon";
+  
+  if (!isValidIcon) {
+    message.error("You can only upload SVG/PNG/JPG/ICO file!");
+  }
+  const isLt1M = file.size / 1024 / 1024 < 1;
+  if (!isLt1M) {
+    message.error("Icon must smaller than 1MB!");
+  }
+  return isValidIcon && isLt1M;
 };
 
 const GeneralField = (props) => {
@@ -146,6 +177,43 @@ const GeneralField = (props) => {
         </Card>
       </Col>
       <Col xs={24} sm={24} md={7}>
+        {/* Featured Icon Card - Added before Featured Image */}
+        <Card title="Featured Icon" className="mb-3">
+          <Dragger
+            {...iconUploadProps}
+            beforeUpload={beforeIconUpload}
+            onChange={(e) => props.handleIconUploadChange(e)}
+          >
+            {props.featuredIcon ? (
+              <div className="text-center">
+                <img
+                  src={props.featuredIcon}
+                  alt="icon"
+                  style={{ maxWidth: '60px', maxHeight: '60px' }}
+                />
+              </div>
+            ) : (
+              <div>
+                {props.iconUploadLoading ? (
+                  <div>
+                    <LoadingOutlined className="font-size-xxl text-primary" />
+                    <div className="mt-3">Uploading</div>
+                  </div>
+                ) : (
+                  <div>
+                    <AppstoreOutlined className="display-3" />
+                    <p>Click or drag icon to upload</p>
+                    <p className="text-muted" style={{ fontSize: '12px' }}>
+                      SVG, PNG, JPG, ICO (Max 1MB)
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </Dragger>
+        </Card>
+
+        {/* Featured Image Card */}
         <Card title="Featured Image">
           <Dragger
             {...imageUploadProps}
@@ -175,6 +243,7 @@ const GeneralField = (props) => {
             )}
           </Dragger>
         </Card>
+        
         <Card>
           <Form.Item
             name="postType"
