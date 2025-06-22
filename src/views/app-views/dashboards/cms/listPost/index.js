@@ -311,7 +311,8 @@ const ListPost = () => {
   };
 
   // Function to handle submitting the form
-  const handleOk = async () => {
+  const handleOk = async (e) => {
+    e.preventDefault();
     const updates = [];
 
     // Check the selected items based on selectedRowKeys
@@ -333,7 +334,7 @@ const ListPost = () => {
         if (newStatus !== undefined) {
           return { ...item, featured: newStatus };
         }
-        window.location.reload();
+        // window.location.reload();
         return item;
       });
 
@@ -341,9 +342,9 @@ const ListPost = () => {
       message.success("Featured statuses updated successfully");
 
       // Delay the reload slightly to ensure state is updated
-      setTimeout(() => {
-        window.location.reload();
-      }, 100); // Adjust the timeout as necessary
+      // setTimeout(() => {
+      //   window.location.reload();
+      // }, 100); // Adjust the timeout as necessary
     } catch (error) {
       message.error("Failed to update featured statuses");
     } finally {
