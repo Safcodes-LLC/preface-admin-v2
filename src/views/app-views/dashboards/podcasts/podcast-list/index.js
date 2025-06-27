@@ -103,29 +103,29 @@ const PodcastList = () => {
       title: "Title",
       dataIndex: "title",
     },
-    {
-      title: "Author",
-      dataIndex: "author",
-      render: (_, record) => (
-        <div className="d-flex">
-          <AvatarStatus
-            size={60}
-            type="square"
-            src={
-              record.author && record.author.profile_pic
-                ? record.author.profile_pic
-                : "/img/avatars/default-avatar.jpg"
-            }
-            name={
-              record.author && record.author.username
-                ? record.author.username
-                : ""
-            }
-          />
-        </div>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
-    },
+    // {
+    //   title: "Author",
+    //   dataIndex: "author",
+    //   render: (_, record) => (
+    //     <div className="d-flex">
+    //       <AvatarStatus
+    //         size={60}
+    //         type="square"
+    //         src={
+    //           record.author && record.author.profile_pic
+    //             ? record.author.profile_pic
+    //             : "/img/avatars/default-avatar.jpg"
+    //         }
+    //         name={
+    //           record.author && record.author.username
+    //             ? record.author.username
+    //             : ""
+    //         }
+    //       />
+    //     </div>
+    //   ),
+    //   sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
+    // },
     {
       title: "Language",
       dataIndex: "language",
