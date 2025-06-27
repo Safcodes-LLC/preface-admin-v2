@@ -484,32 +484,32 @@ const dashBoardNavTree = [
       //   authority: ['Administrator'],
       //   submenu: []
       // },
-      {
-        key: "authors",
-        path: `${APP_PREFIX_PATH}/dashboards/authors`,
-        title: "sidenav.dashboards.authors",
-        icon: UserOutlined,
-        breadcrumb: true,
-        authority: ["Administrator"],
-        submenu: [
-          {
-            key: "authors-listing",
-            path: `${APP_PREFIX_PATH}/dashboards/authors/listing`,
-            title: "sidenav.dashboards.authors.listing",
-            icon: TeamOutlined,
-            breadcrumb: true,
-            submenu: [],
-          },
-          {
-            key: "authors-add-author",
-            path: `${APP_PREFIX_PATH}/dashboards/authors/add-author`,
-            title: "sidenav.dashboards.authors.create",
-            icon: EditOutlined,
-            breadcrumb: false,
-            submenu: [],
-          },
-        ],
-      },
+      // {
+      //   key: "authors",
+      //   path: `${APP_PREFIX_PATH}/dashboards/authors`,
+      //   title: "sidenav.dashboards.authors",
+      //   icon: UserOutlined,
+      //   breadcrumb: true,
+      //   authority: ["Administrator"],
+      //   submenu: [
+      //     {
+      //       key: "authors-listing",
+      //       path: `${APP_PREFIX_PATH}/dashboards/authors/listing`,
+      //       title: "sidenav.dashboards.authors.listing",
+      //       icon: TeamOutlined,
+      //       breadcrumb: true,
+      //       submenu: [],
+      //     },
+      //     {
+      //       key: "authors-add-author",
+      //       path: `${APP_PREFIX_PATH}/dashboards/authors/add-author`,
+      //       title: "sidenav.dashboards.authors.create",
+      //       icon: EditOutlined,
+      //       breadcrumb: false,
+      //       submenu: [],
+      //     },
+      //   ],
+      // },
       {
         key: "users",
         path: `${APP_PREFIX_PATH}/dashboards/users`,
