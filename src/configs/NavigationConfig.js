@@ -604,14 +604,14 @@ const dashBoardNavTree = [
             breadcrumb: true,
             submenu: [],
           },
-          {
-            key: "elite-author",
-            path: `${APP_PREFIX_PATH}/dashboards/cms/elite-author`,
-            title: "sidenav.dashboards.cms.elite-author",
-            icon: UserOutlined,
-            breadcrumb: true,
-            submenu: [],
-          },
+          // {
+          //   key: "elite-author",
+          //   path: `${APP_PREFIX_PATH}/dashboards/cms/elite-author`,
+          //   title: "sidenav.dashboards.cms.elite-author",
+          //   icon: UserOutlined,
+          //   breadcrumb: true,
+          //   submenu: [],
+          // },
         ],
       },
       //cms end
