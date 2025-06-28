@@ -5,7 +5,6 @@ import Flex from "components/shared-components/Flex";
 import GeneralField from "./GeneralField";
 import {
   createCategory,
-  fetchAllCategoriesByPostType,
   updateCategory,
 } from "store/slices/categoriesSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -37,9 +36,8 @@ const CategoryForm = (props) => {
   );
   useEffect(() => {
     if (!articles_categories_list.length && loading) {
-      dispatch(
-        fetchAllCategoriesByPostType({ postTypeId: "66d9d564987787d3e3ff1312" })
-      );
+      // Removed fetchAllCategoriesByPostType dispatch
+      setList(articles_categories_list);
     } else {
       setList(articles_categories_list);
     }
@@ -57,7 +55,6 @@ const CategoryForm = (props) => {
         shortDescription: categoryData.shortDescription,
         featuredImage: categoryData.featuredImage,
         featuredIcon: categoryData.featuredIcon, // Set icon value
-        postType: categoryData.postType._id,
         parentCategory: categoryData.parentCategory,
         language: categoryData.language?._id || categoryData.language,
       });
@@ -123,18 +120,8 @@ const CategoryForm = (props) => {
                   setFeaturedImage("");
                   setFeaturedIcon(""); // Reset icon
                   SetAllSelectedFeaturedImages([]);
-                  if (values.postType === "66d9d564987787d3e3ff1314") {
-                    navigate(`/admin/dashboards/categories/videos`);
-                  } else if (values.postType === "66d9d564987787d3e3ff1312") {
-                    navigate(`/admin/dashboards/categories/articles`);
-                  } else if (values.postType === "66d9d564987787d3e3ff1315") {
-                    navigate(`/admin/dashboards/categories/ebooks`);
-                  } else if (values.postType === "66d9d564987787d3e3ff1316") {
-                    navigate(`/admin/dashboards/categories/blogs`);
-                  } else if (values.postType === "66d9d564987787d3e3ff1313") {
-                    navigate(`/admin/dashboards/categories/podcasts`);
-                  }
-                  // console.log(result.payload);
+                  // Removed postType-based navigation logic
+                  navigate(`/admin/dashboards/categories/articles`);
                 }
               }
             );

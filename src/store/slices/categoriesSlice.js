@@ -182,6 +182,12 @@ const categoriesSlice = createSlice({
         if (index !== -1) {
           state.categoriesByPostType[index] = action.payload;
         }
+        const categoriesIndex = state.categories.findIndex(
+          (category) => category._id === action.payload._id
+        );
+        if (categoriesIndex !== -1) {
+          state.categories[categoriesIndex] = action.payload;
+        }
         state.loading = false;
         state.error = null;
       })
@@ -195,6 +201,9 @@ const categoriesSlice = createSlice({
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
         state.categoriesByPostType = state.categoriesByPostType.filter(
+          (category) => category._id !== action.payload
+        );
+        state.categories = state.categories.filter(
           (category) => category._id !== action.payload
         );
         state.loading = false;

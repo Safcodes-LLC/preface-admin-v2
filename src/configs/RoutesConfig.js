@@ -705,10 +705,10 @@ export const protectedRoutes = [
 
   // Categories of Articles
   {
-    key: "dashboard.categories-articles",
-    path: `${APP_PREFIX_PATH}/dashboards/categories/articles`,
+    key: "dashboard.categories-category-list",
+    path: `${APP_PREFIX_PATH}/dashboards/categories/category-list`,
     component: React.lazy(() =>
-      import("views/app-views/dashboards/categories/articles")
+      import("views/app-views/dashboards/categories/category-list")
     ),
     authority: ["Post Admin", "Administrator"],
   },

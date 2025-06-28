@@ -41,15 +41,9 @@
 		
 	"sidenav.dashboards.categories": "Categories",
 
-	"sidenav.dashboards.categories.articles": "Articles",
+	"sidenav.dashboards.categories.categories": "Categories",
 	"sidenav.dashboards.categories.articles.list-category": "Categories list",
-	"sidenav.dashboards.categories.articles.add-category": "Create category",
-	"sidenav.dashboards.categories.articles.edit-category": "Edit category",
 
-	"sidenav.dashboards.categories.podcasts": "Podcasts",
-	"sidenav.dashboards.categories.videos": "Videos",
-	"sidenav.dashboards.categories.ebooks": "E-Books",
-	"sidenav.dashboards.categories.blogs": "Blogs",
 	"sidenav.dashboards.categories.add-category": "Add New Category",
 
 

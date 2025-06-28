@@ -1,6 +1,6 @@
 const dev = {
-  // API_ENDPOINT_URL: "http://localhost:8080/api",
-  API_ENDPOINT_URL: "https://king-prawn-app-x9z27.ondigitalocean.app/api",
+  API_ENDPOINT_URL: "http://localhost:8080/api",
+  // API_ENDPOINT_URL: "https://king-prawn-app-x9z27.ondigitalocean.app/api",
 };
 
 const prod = {

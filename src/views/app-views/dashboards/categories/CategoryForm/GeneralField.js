@@ -4,7 +4,6 @@ import { ImageSvg } from "assets/svg/icon";
 import CustomIcon from "components/util-components/CustomIcon";
 import { LoadingOutlined, AppstoreOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllPostTypes } from "store/slices/postTypesSlice";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { fetchAllCategories } from "store/slices/categoriesSlice";
 import { fetchAllLanguages } from "store/slices/languagesSlice";
@@ -23,12 +22,6 @@ const rules = {
     {
       required: true,
       message: "Please enter category description",
-    },
-  ],
-  postType: [
-    {
-      required: true,
-      message: "Please enter category PostType",
     },
   ],
   language: [
@@ -97,7 +90,6 @@ const beforeIconUpload = (file) => {
 const GeneralField = (props) => {
   const dispatch = useDispatch();
   const form = Form.useFormInstance(); // Get form instance to watch field values
-  const postTypes = useSelector((state) => state.postTypes.postTypes);
   const categories = useSelector((state) => state.categories.categories);
   const languages = useSelector((state) => state.languages.languages);
 
@@ -105,12 +97,6 @@ const GeneralField = (props) => {
   
   // Watch the language field to filter parent categories
   const selectedLanguage = Form.useWatch('language', form);
-
-  useEffect(() => {
-    if (!postTypes.length) {
-      dispatch(fetchAllPostTypes());
-    }
-  }, [dispatch, postTypes]);
 
   useEffect(() => {
     if (!languages.length) {
@@ -245,25 +231,6 @@ const GeneralField = (props) => {
         </Card>
         
         <Card>
-          <Form.Item
-            name="postType"
-            label="Creating for Post type"
-            rules={rules.postType}
-          >
-            <Select
-              style={{ width: "100%" }}
-              placeholder="Post type"
-              onChange={(val) => {
-                console.log(val, "lklk");
-              }}
-            >
-              {postTypes.map((postType) => (
-                <Option key={postType._id} value={postType._id}>
-                  {postType.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
           <Form.Item name="parentCategory" label="Parent Category">
             <Select
               style={{ width: "100%" }}
