@@ -59,7 +59,7 @@ const CategoryForm = (props) => {
           shortDescription: categoryData.shortDescription,
           featuredImage: categoryData.featuredImage,
           featuredIcon: categoryData.featuredIcon, // Set icon value
-          parentCategory: categoryData.parentCategory,
+          parentCategory: categoryData.parentCategory?.id || undefined, // FIXED: use .id
           language: categoryData.language?._id || categoryData.language,
         });
         setFeaturedImage(categoryData.featuredImage);
