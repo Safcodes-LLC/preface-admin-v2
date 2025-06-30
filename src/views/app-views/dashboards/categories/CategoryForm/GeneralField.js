@@ -149,14 +149,14 @@ const GeneralField = (props) => {
             </Select>
           </Form.Item>
           <Form.Item name="name" label="Category Name" rules={rules.name}>
-            <Input placeholder="Category name" />
+            <Input placeholder="Category name" disabled={props.view} />
           </Form.Item>
           <Form.Item
             name="shortDescription"
             label="Short Description"
             rules={rules.short_desc}
           >
-            <Input.TextArea rows={2} />
+            <Input.TextArea rows={2} disabled={props.view} />
           </Form.Item>
         </Card>
       </Col>
@@ -167,6 +167,7 @@ const GeneralField = (props) => {
             {...iconUploadProps}
             beforeUpload={beforeIconUpload}
             onChange={(e) => props.handleIconUploadChange(e)}
+            disabled={props.view}
           >
             {props.featuredIcon ? (
               <div className="text-center">
@@ -203,6 +204,7 @@ const GeneralField = (props) => {
             {...imageUploadProps}
             beforeUpload={beforeUpload}
             onChange={(e) => props.handleUploadChange(e)}
+            disabled={props.view}
           >
             {props.featuredImage ? (
               <img
@@ -237,7 +239,7 @@ const GeneralField = (props) => {
                   ? "Select a parent category" 
                   : "Please select a language first"
               }
-              disabled={!selectedLanguage}
+              disabled={!selectedLanguage || props.view}
             >
               {filteredCategories.map((category) => (
                 <Option key={category._id} value={category._id}>
