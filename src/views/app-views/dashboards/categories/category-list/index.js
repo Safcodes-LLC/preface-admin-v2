@@ -31,7 +31,6 @@ const CategoriesList = () => {
   const categoriesListOfArticles = useSelector(
     (state) => state.categories.categories
   );
-  console.log(categoriesListOfArticles, "categoriesListOfArticles");
 
   const [list, setList] = useState(categoriesListOfArticles);
   const [selectedRows, setSelectedRows] = useState([]);

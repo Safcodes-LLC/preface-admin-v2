@@ -131,8 +131,6 @@ const GeneralField = (props) => {
     return hasNoParent && matchesLanguage;
   });
 
-  console.log(filteredCategories, "filtered categories by language");
-
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
