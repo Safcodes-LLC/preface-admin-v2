@@ -179,7 +179,6 @@ const Banner = () => {
     console.log('Is array?', Array.isArray(categories));
     
     if (categories && Array.isArray(categories) && categories.length > 0) {
-      console.log('Sample category structure:', categories[0]);
       setCategoriesList(categories);
     } else {
       console.log('No categories available or invalid format');
@@ -210,10 +209,14 @@ const Banner = () => {
 
   // Filter subcategories by parent category and language (same as GeneralField concept)
   const filteredSubCategories = categoriesList.filter((category) => {
-    const hasParent = category.parentCategory && category.parentCategory._id === selectedParentCategory;
+    console.log(selectedParentCategory,'selectedParentCategory');
+    
+    const hasParent = category.parentCategory && category.parentCategory.id === selectedParentCategory;
     const matchesLanguage = selectedLanguage ? 
       (category.language?._id === selectedLanguage || category.language === selectedLanguage) : 
       true;
+    
+    console.log(category,'sub test coming');
     
     console.log('Sub Category Filter:', {
       categoryName: category.name,
@@ -1097,7 +1100,7 @@ const Banner = () => {
                   icon={<FilterOutlined />}
                   style={{ width: "100%" }}
                 >
-                  Filter
+                  Find
                 </Button>
               </Form.Item>
             </Col>
