@@ -6,6 +6,7 @@ import {
   DeleteOutlined,
   SearchOutlined,
   PlusCircleOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import AvatarStatus from "components/shared-components/AvatarStatus";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
@@ -31,7 +32,6 @@ const CategoriesList = () => {
   const categoriesListOfArticles = useSelector(
     (state) => state.categories.categories
   );
-  console.log(categoriesListOfArticles, "categoriesListOfArticles");
 
   const [list, setList] = useState(categoriesListOfArticles);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -72,13 +72,19 @@ const CategoriesList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item onClick={() => viewDetails(row)}>
+      <Menu.Item key="view" onClick={() => viewDetails(row)}>
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
       </Menu.Item>
-      <Menu.Item onClick={() => deleteRow(row)}>
+      <Menu.Item key="edit" onClick={() => editDetails(row)}>
+        <Flex alignItems="center">
+          <EditOutlined />
+          <span className="ml-2">Edit Details</span>
+        </Flex>
+      </Menu.Item>
+      <Menu.Item key="delete" onClick={() => deleteRow(row)}>
         <Flex alignItems="center">
           <DeleteOutlined />
           <span className="ml-2">
@@ -96,6 +102,10 @@ const CategoriesList = () => {
   };
 
   const viewDetails = (row) => {
+    navigate(`/admin/dashboards/categories/view-category/${row._id}`);
+  };
+
+  const editDetails = (row) => {
     navigate(`/admin/dashboards/categories/edit-category/${row._id}`);
   };
 

@@ -6,6 +6,7 @@ import GeneralField from "./GeneralField";
 import {
   createCategory,
   updateCategory,
+  fetchAllCategories,
 } from "store/slices/categoriesSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +16,7 @@ const EDIT = "EDIT";
 
 const CategoryForm = (props) => {
   const dispatch = useDispatch();
-  const { mode = ADD, param } = props;
+  const { mode = ADD, param, view } = props;
   const [form] = Form.useForm();
   const [featuredImage, setFeaturedImage] = useState("");
   const [featuredIcon, setFeaturedIcon] = useState(""); // New state for icon
@@ -30,14 +31,14 @@ const CategoryForm = (props) => {
 
   const navigate = useNavigate();
 
-  // check it is in global state
+  // check it is in global state - use categories instead of categoriesByPostType for editing
   const articles_categories_list = useSelector(
-    (state) => state.categories.categoriesByPostType
+    (state) => state.categories.categories
   );
   useEffect(() => {
     if (!articles_categories_list.length && loading) {
-      // Removed fetchAllCategoriesByPostType dispatch
-      setList(articles_categories_list);
+      // Fetch all categories if not available
+      dispatch(fetchAllCategories());
     } else {
       setList(articles_categories_list);
     }
@@ -45,24 +46,28 @@ const CategoryForm = (props) => {
   }, [articles_categories_list, dispatch]);
 
   useEffect(() => {
-    if (mode === EDIT && !loading) {
+    if ((mode === EDIT || view) && !loading) {
       const { id } = param;
       const categoryId = id;
       const categoryData = list.find((category) => category._id === categoryId);
       console.log(categoryData, "lkll");
-      form.setFieldsValue({
-        name: categoryData.name,
-        shortDescription: categoryData.shortDescription,
-        featuredImage: categoryData.featuredImage,
-        featuredIcon: categoryData.featuredIcon, // Set icon value
-        parentCategory: categoryData.parentCategory,
-        language: categoryData.language?._id || categoryData.language,
-      });
-      setFeaturedImage(categoryData.featuredImage);
-      setFeaturedIcon(categoryData.featuredIcon || ""); // Set icon state
-      SetAllSelectedFeaturedImages([categoryData.featuredImage]);
+      
+      // Add null check to prevent undefined error
+      if (categoryData) {
+        form.setFieldsValue({
+          name: categoryData.name,
+          shortDescription: categoryData.shortDescription,
+          featuredImage: categoryData.featuredImage,
+          featuredIcon: categoryData.featuredIcon, // Set icon value
+          parentCategory: categoryData.parentCategory?.id || undefined, // FIXED: use .id
+          language: categoryData.language?._id || categoryData.language,
+        });
+        setFeaturedImage(categoryData.featuredImage);
+        setFeaturedIcon(categoryData.featuredIcon || ""); // Set icon state
+        SetAllSelectedFeaturedImages([categoryData.featuredImage]);
+      }
     }
-  }, [form, mode, param, props, list, loading]);
+  }, [form, mode, param, props, list, loading, view]);
 
   const handleUploadChange = (info) => {
     // console.log("info" , info);
@@ -107,7 +112,7 @@ const CategoryForm = (props) => {
         setTimeout(() => {
           setSubmitLoading(false);
           if (mode === ADD) {
-            // call API to create a author
+            // call API to create a category
             console.log("values", values);
             dispatch(createCategory({ categoryData: values })).then(
               (result) => {
@@ -120,8 +125,8 @@ const CategoryForm = (props) => {
                   setFeaturedImage("");
                   setFeaturedIcon(""); // Reset icon
                   SetAllSelectedFeaturedImages([]);
-                  // Removed postType-based navigation logic
-                  navigate(`/admin/dashboards/categories/articles`);
+                  // Navigate back to category list page
+                  navigate(`/admin/dashboards/categories/category-list`);
                 }
               }
             );
@@ -139,6 +144,8 @@ const CategoryForm = (props) => {
               } else {
                 SetAllSelectedFeaturedImages([result.payload.profile_pic]);
                 message.success("Category updated successfully!");
+                // Navigate back to category list page after successful update
+                navigate(`/admin/dashboards/categories/category-list`);
               }
             });
           }
@@ -172,20 +179,26 @@ const CategoryForm = (props) => {
               justifyContent="space-between"
               alignItems="center"
             >
-              <h2 className="mb-3">
-                {mode === "ADD" ? "Add New Category" : `Edit Category`}{" "}
-              </h2>
-              <div className="mb-3">
-                {/* <Button className="mr-2">Discard</Button> */}
-                <Button
-                  type="primary"
-                  onClick={() => onFinish()}
-                  htmlType="submit"
-                  loading={submitLoading}
-                >
-                  {mode === "ADD" ? "Add" : `Save`}
-                </Button>
-              </div>
+              {view ? (
+                <h2 className="mb-3">View Category</h2>
+              ) : (
+                <>
+                  <h2 className="mb-3">
+                    {mode === "ADD" ? "Add New Category" : `Edit Category`}{" "}
+                  </h2>
+                  <div className="mb-3">
+                    {/* <Button className="mr-2">Discard</Button> */}
+                    <Button
+                      type="primary"
+                      onClick={() => onFinish()}
+                      htmlType="submit"
+                      loading={submitLoading}
+                    >
+                      {mode === "ADD" ? "Add" : `Save`}
+                    </Button>
+                  </div>
+                </>
+              )}
             </Flex>
           </div>
         </PageHeaderAlt>
@@ -205,6 +218,7 @@ const CategoryForm = (props) => {
                     iconUploadLoading={iconUploadLoading} // Pass icon loading state
                     handleUploadChange={handleUploadChange}
                     handleIconUploadChange={handleIconUploadChange} // Pass icon handler
+                    view={view} // Pass view prop to GeneralField
                   />
                 ),
               },

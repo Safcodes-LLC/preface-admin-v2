@@ -15,7 +15,7 @@ import CustomIcon from "components/util-components/CustomIcon";
 import { LoadingOutlined, ArrowsAltOutlined } from "@ant-design/icons";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllCategoriesByPostType } from "store/slices/categoriesSlice";
+import { fetchAllCategories } from "store/slices/categoriesSlice";
 import { fetchAllLanguages } from "store/slices/languagesSlice";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 
@@ -51,6 +51,18 @@ const rules = {
     {
       required: true,
       message: "Please select Language",
+    },
+  ],
+  ParentCategory: [
+    {
+      required: true,
+      message: "Please select Parent Category",
+    },
+  ],
+  categories: [
+    {
+      required: true,
+      message: "Please select at least one Sub Category",
     },
   ],
 };
@@ -95,19 +107,44 @@ const GeneralField = (props) => {
   const dispatch = useDispatch();
 
   const article_categories = useSelector(
-    (state) => state.categories.categoriesByPostType
+    (state) => state.categories.categories
   );
+
   const languages = useSelector((state) => state.languages.languages);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [subCategories, setSubCategories] = useState([]);
+  const [selectedLanguage, setSelectedLanguage] = useState(null);
+  const [filteredCategories, setFilteredCategories] = useState([]);
+
+  // Filter categories based on selected language
+  useEffect(() => {
+    if (selectedLanguage && article_categories.length > 0) {
+      const filtered = article_categories.filter(
+        (category) => category.language && category.language._id === selectedLanguage
+      );
+      setFilteredCategories(filtered);
+    } else {
+      setFilteredCategories([]);
+    }
+  }, [selectedLanguage, article_categories]);
+
+  const handleLanguageChange = (value) => {
+    setSelectedLanguage(value);
+    // Clear parent category and subcategories when language changes
+    if (props.form) {
+      props.form.setFieldsValue({
+        ParentCategory: undefined,
+        categories: undefined
+      });
+    }
+    setSubCategories([]);
+  };
 
   const handleParentCategoryChange = (value) => {
-    
-    const filteredSubCategories = articleCategoriesList.filter(
+    const filteredSubCategories = filteredCategories.filter(
       (category) => category.parentCategory && category.parentCategory.id === value
     );
-    
     setSubCategories(filteredSubCategories);
   };
 
@@ -116,7 +153,7 @@ const GeneralField = (props) => {
       const defaultParentCategory = props.currentparentcategory?.[0];
       handleParentCategoryChange(defaultParentCategory);
     }
-  }, [props.currentparentcategory, article_categories]);
+  }, [props.currentparentcategory, filteredCategories]);
   
 
   const toggleFullscreen = () => {
@@ -124,17 +161,15 @@ const GeneralField = (props) => {
   };
 
   useEffect(() => {
-    dispatch(
-      fetchAllCategoriesByPostType({ postTypeId: "66d9d564987787d3e3ff1312" })
-    );
+    dispatch(fetchAllCategories());
   }, [dispatch]);
 
   const [articleCategoriesList, setArticleCategoriesList] =
     useState(article_categories);
 
   useEffect(() => {
-    setArticleCategoriesList(article_categories);
-  }, [article_categories]);
+    setArticleCategoriesList(filteredCategories);
+  }, [filteredCategories]);
 
   useEffect(() => {
     if (!languages.length) {
@@ -269,6 +304,7 @@ const GeneralField = (props) => {
                 style={{ width: "100%" }}
                 placeholder="Language"
                 disabled={props.view}
+                onChange={handleLanguageChange}
               >
                 {languages.map((language) => (
                   <Option key={language._id} value={language._id}>
@@ -277,11 +313,11 @@ const GeneralField = (props) => {
                 ))}
               </Select>
             </Form.Item>
-             <Form.Item name="ParentCategory" label="Parent Category">
+             <Form.Item name="ParentCategory" label="Parent Category" rules={rules.ParentCategory}>
               <Select
                 style={{ width: "100%" }}
-                placeholder="Parent Category"
-                disabled={props.view}
+                placeholder={selectedLanguage ? "Parent Category" : "Please select language first"}
+                disabled={props.view || !selectedLanguage}
                 onChange={handleParentCategoryChange}
               >
                 {articleCategoriesList
@@ -294,12 +330,12 @@ const GeneralField = (props) => {
               </Select>
             </Form.Item>
 
-            <Form.Item name="categories" label="Sub Category">
+            <Form.Item name="categories" label="Sub Category" rules={rules.categories}>
               <Select
                 style={{ width: "100%" }}
                 mode="multiple"
-                placeholder="Sub Category"
-                disabled={props.view}
+                placeholder={selectedLanguage ? "Sub Category" : "Please select language first"}
+                disabled={props.view || !selectedLanguage}
               >
                 {subCategories.map((category) => (
                   <Option key={category._id} value={category._id}>

@@ -773,6 +773,16 @@ export const protectedRoutes = [
     authority: ["Post Admin", "Administrator"],
   },
 
+  // View category
+  {
+    key: "dashboard.categories-view-category",
+    path: `${APP_PREFIX_PATH}/dashboards/categories/view-category/:id`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/categories/view-category")
+    ),
+    authority: ["Post Admin", "Administrator"],
+  },
+
   // Settings
   {
     key: "dashboard.settings",
