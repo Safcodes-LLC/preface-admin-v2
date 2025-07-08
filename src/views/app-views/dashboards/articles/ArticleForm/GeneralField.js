@@ -164,11 +164,11 @@ const GeneralField = (props) => {
     dispatch(fetchAllCategories());
   }, [dispatch]);
 
-  const [articleCategoriesList, setArticleCategoriesList] =
+  const [categoriesList, setCategoriesList] =
     useState(article_categories);
 
   useEffect(() => {
-    setArticleCategoriesList(filteredCategories);
+    setCategoriesList(filteredCategories);
   }, [filteredCategories]);
 
   useEffect(() => {
@@ -320,7 +320,7 @@ const GeneralField = (props) => {
                 disabled={props.view || !selectedLanguage}
                 onChange={handleParentCategoryChange}
               >
-                {articleCategoriesList
+                {categoriesList
                   .filter((category) => !category.parentCategory)
                   .map((category) => (
                     <Option key={category._id} value={category._id}>

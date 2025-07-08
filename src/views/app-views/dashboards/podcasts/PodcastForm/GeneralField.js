@@ -47,6 +47,24 @@ const rules = {
       message: "Please enter podcast content",
     },
   ],
+  language: [
+    {
+      required: true,
+      message: "Please select Language",
+    },
+  ],
+  ParentCategory: [
+    {
+      required: true,
+      message: "Please select Parent Category",
+    },
+  ],
+  categories: [
+    {
+      required: true,
+      message: "Please select at least one Sub Category",
+    },
+  ],
 };
 
 const thumbnailUploadProps = {
@@ -112,18 +130,60 @@ const GeneralField = (props) => {
   );
   const languages = useSelector((state) => state.languages.languages);
 
+  const [subCategories, setSubCategories] = useState([]);
+  const [selectedLanguage, setSelectedLanguage] = useState(null);
+  const [filteredCategories, setFilteredCategories] = useState([]);
+
+  // Filter categories based on selected language
+  useEffect(() => {
+    if (selectedLanguage && podcast_categories.length > 0) {
+      const filtered = podcast_categories.filter(
+        (category) => category.language && category.language._id === selectedLanguage
+      );
+      setFilteredCategories(filtered);
+    } else {
+      setFilteredCategories([]);
+    }
+  }, [selectedLanguage, podcast_categories]);
+
+  const handleLanguageChange = (value) => {
+    setSelectedLanguage(value);
+    // Clear parent category and subcategories when language changes
+    if (props.form) {
+      props.form.setFieldsValue({
+        ParentCategory: undefined,
+        categories: undefined
+      });
+    }
+    setSubCategories([]);
+  };
+
+  const handleParentCategoryChange = (value) => {
+    const filteredSubCategories = filteredCategories.filter(
+      (category) => category.parentCategory && category.parentCategory.id === value
+    );
+    setSubCategories(filteredSubCategories);
+  };
+
+  useEffect(() => {
+    if (props?.currentparentcategory) {
+      const defaultParentCategory = props.currentparentcategory?.[0];
+      handleParentCategoryChange(defaultParentCategory);
+    }
+  }, [props.currentparentcategory, filteredCategories]);
+
   useEffect(() => {
     dispatch(
       fetchAllCategoriesByPostType({ postTypeId: "66d9d564987787d3e3ff1313" })
     );
   }, [dispatch]);
 
-  const [podcastCategoriesList, setPodcastCategoriesList] =
+  const [categoriesList, setCategoriesList] =
     useState(podcast_categories);
 
   useEffect(() => {
-    setPodcastCategoriesList(podcast_categories);
-  }, [podcast_categories]);
+    setCategoriesList(filteredCategories);
+  }, [filteredCategories]);
 
   useEffect(() => {
     if (!languages.length) {
@@ -279,35 +339,52 @@ const GeneralField = (props) => {
           )}
         </Card>
         <Card title="Language AND Categories">
-          <Form.Item name="language" label="Language">
-            <Select
-              style={{ width: "100%" }}
-              placeholder="Language"
-              disabled={props.view}
-            >
-              {languages.map((language) => (
-                <Option key={language._id} value={language._id}>
-                  {language.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
+            <Form.Item name="language" label="Language" rules={rules.language}>
+              <Select
+                style={{ width: "100%" }}
+                placeholder="Language"
+                disabled={props.view}
+                onChange={handleLanguageChange}
+              >
+                {languages.map((language) => (
+                  <Option key={language._id} value={language._id}>
+                    {language.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+             <Form.Item name="ParentCategory" label="Parent Category" rules={rules.ParentCategory}>
+              <Select
+                style={{ width: "100%" }}
+                placeholder={selectedLanguage ? "Parent Category" : "Please select language first"}
+                disabled={props.view || !selectedLanguage}
+                onChange={handleParentCategoryChange}
+              >
+                {categoriesList
+                  .filter((category) => !category.parentCategory)
+                  .map((category) => (
+                    <Option key={category._id} value={category._id}>
+                      {category.name}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
 
-          <Form.Item name="categories" label="Categories">
-            <Select
-              mode="multiple"
-              style={{ width: "100%" }}
-              placeholder="Categories"
-              disabled={props.view}
-            >
-              {podcastCategoriesList.map((category) => (
-                <Option key={category._id} value={category._id}>
-                  {category.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Card>
+            <Form.Item name="categories" label="Sub Category" rules={rules.categories}>
+              <Select
+                style={{ width: "100%" }}
+                mode="multiple"
+                placeholder={selectedLanguage ? "Sub Category" : "Please select language first"}
+                disabled={props.view || !selectedLanguage}
+              >
+                {subCategories.map((category) => (
+                  <Option key={category._id} value={category._id}>
+                    {category.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Card>
       </Col>
     </Row>
   );
