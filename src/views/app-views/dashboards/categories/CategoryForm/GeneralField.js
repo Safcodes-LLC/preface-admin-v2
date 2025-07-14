@@ -44,7 +44,6 @@ const imageUploadProps = {
   },
 };
 
-// New upload props for icons
 const iconUploadProps = {
   name: "file",
   multiple: false,
@@ -69,7 +68,6 @@ const beforeUpload = (file) => {
   return isJpgOrPng && isLt2M;
 };
 
-// Validation for icon upload
 const beforeIconUpload = (file) => {
   const isValidIcon = 
     file.type === "image/svg+xml" || 
@@ -89,14 +87,14 @@ const beforeIconUpload = (file) => {
 
 const GeneralField = (props) => {
   const dispatch = useDispatch();
-  const form = Form.useFormInstance(); // Get form instance to watch field values
+  const form = Form.useFormInstance();
   const categories = useSelector((state) => state.categories.categories);
   const languages = useSelector((state) => state.languages.languages);
 
   const [loadingCategories, setLoadingCategories] = useState(true);
   
-  // Watch the language field to filter parent categories
   const selectedLanguage = Form.useWatch('language', form);
+  const selectedParentCategory = Form.useWatch('parentCategory', form);
 
   useEffect(() => {
     if (!languages.length) {
@@ -114,22 +112,41 @@ const GeneralField = (props) => {
     }
   }, [categories, dispatch]);
 
-  // Reset parent category when language changes
+  // Reset parent and sub category when language changes
   useEffect(() => {
     if (selectedLanguage) {
-      form.setFieldsValue({ parentCategory: undefined });
+      form.setFieldsValue({ 
+        parentCategory: undefined,
+        subCategory: undefined 
+      });
     }
   }, [selectedLanguage, form]);
 
-  // Filter categories that do not have a parentCategory AND match the selected language
+  // Reset sub category when parent category changes
+  useEffect(() => {
+    form.setFieldsValue({ subCategory: undefined });
+  }, [selectedParentCategory, form]);
+
+  // Filter categories that match the selected language
   const filteredCategories = categories.filter((category) => {
-    const hasNoParent = !category.parentCategory;
     const matchesLanguage = selectedLanguage ? 
       (category.language?._id === selectedLanguage || category.language === selectedLanguage) : 
       true;
     
-    return hasNoParent && matchesLanguage;
+    return matchesLanguage;
   });
+
+  // Get main categories (categories without parent)
+  const mainCategories = filteredCategories.filter(category => !category.parentCategory);
+
+  // Get sub categories based on selected parent category
+  const subCategories = selectedParentCategory 
+    ? filteredCategories.filter(category => 
+        category.parentCategory && 
+        (category.parentCategory.id === selectedParentCategory || 
+         category.parentCategory === selectedParentCategory)
+      )
+    : [];
 
   return (
     <Row gutter={16}>
@@ -161,7 +178,6 @@ const GeneralField = (props) => {
         </Card>
       </Col>
       <Col xs={24} sm={24} md={7}>
-        {/* Featured Icon Card - Added before Featured Image */}
         <Card title="Featured Icon" className="mb-3">
           <Dragger
             {...iconUploadProps}
@@ -198,7 +214,6 @@ const GeneralField = (props) => {
           </Dragger>
         </Card>
 
-        {/* Featured Image Card */}
         <Card title="Featured Image">
           <Dragger
             {...imageUploadProps}
@@ -231,17 +246,47 @@ const GeneralField = (props) => {
         </Card>
         
         <Card>
+          {/* Parent Category Dropdown */}
           <Form.Item name="parentCategory" label="Parent Category">
             <Select
               style={{ width: "100%" }}
               placeholder={
                 selectedLanguage 
-                  ? "Select a parent category" 
-                  : "Please select a language first"
+                  ? "Please select language first" 
+                  : "Please select language first"
               }
               disabled={!selectedLanguage || props.view}
+              allowClear
+              showSearch
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
             >
-              {filteredCategories.map((category) => (
+              {mainCategories.map((category) => (
+                <Option key={category._id} value={category._id}>
+                  {category.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          {/* Sub Category Dropdown - Only shows when parent is selected */}
+          <Form.Item name="subCategory" label="Sub Category">
+            <Select
+              style={{ width: "100%" }}
+              placeholder={
+                selectedParentCategory 
+                  ? "Select a sub category (optional)" 
+                  : "Please select parent category first"
+              }
+              disabled={!selectedParentCategory || props.view}
+              allowClear
+              showSearch
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {subCategories.map((category) => (
                 <Option key={category._id} value={category._id}>
                   {category.name}
                 </Option>

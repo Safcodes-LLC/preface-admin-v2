@@ -19,25 +19,22 @@ const CategoryForm = (props) => {
   const { mode = ADD, param, view } = props;
   const [form] = Form.useForm();
   const [featuredImage, setFeaturedImage] = useState("");
-  const [featuredIcon, setFeaturedIcon] = useState(""); // New state for icon
-  const [allSelectedFeaturedImages, SetAllSelectedFeaturedImages] = useState(
-    []
-  );
+  const [featuredIcon, setFeaturedIcon] = useState("");
+  const [allSelectedFeaturedImages, SetAllSelectedFeaturedImages] = useState([]);
   const [uploadLoading, setUploadLoading] = useState(false);
-  const [iconUploadLoading, setIconUploadLoading] = useState(false); // New state for icon upload loading
+  const [iconUploadLoading, setIconUploadLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
-  // check it is in global state - use categories instead of categoriesByPostType for editing
   const articles_categories_list = useSelector(
     (state) => state.categories.categories
   );
+
   useEffect(() => {
     if (!articles_categories_list.length && loading) {
-      // Fetch all categories if not available
       dispatch(fetchAllCategories());
     } else {
       setList(articles_categories_list);
@@ -50,27 +47,47 @@ const CategoryForm = (props) => {
       const { id } = param;
       const categoryId = id;
       const categoryData = list.find((category) => category._id === categoryId);
-      console.log(categoryData, "lkll");
+      console.log(categoryData, "categoryData");
       
-      // Add null check to prevent undefined error
       if (categoryData) {
+        // Determine if this category has a parent and if that parent is a main category or sub-category
+        let parentCategoryValue = undefined;
+        let subCategoryValue = undefined;
+
+        if (categoryData.parentCategory) {
+          const parentId = categoryData.parentCategory.id;
+          const parentCategory = list.find(cat => cat._id === parentId);
+          
+          if (parentCategory) {
+            if (parentCategory.parentCategory) {
+              // The parent has a parent, so it's a sub-category
+              subCategoryValue = parentId;
+              parentCategoryValue = parentCategory.parentCategory.id;
+            } else {
+              // The parent has no parent, so it's a main category
+              parentCategoryValue = parentId;
+            }
+          }
+        }
+
         form.setFieldsValue({
           name: categoryData.name,
           shortDescription: categoryData.shortDescription,
           featuredImage: categoryData.featuredImage,
-          featuredIcon: categoryData.featuredIcon, // Set icon value
-          parentCategory: categoryData.parentCategory?.id || undefined, // FIXED: use .id
+          featuredIcon: categoryData.featuredIcon,
+          parentCategory: parentCategoryValue,
+          subCategory: subCategoryValue,
           language: categoryData.language?._id || categoryData.language,
         });
-        setFeaturedImage(categoryData.featuredImage);
-        setFeaturedIcon(categoryData.featuredIcon || ""); // Set icon state
+        
+        setFeaturedImage(categoryData.featuredImage || "");
+        setFeaturedIcon(categoryData.featuredIcon || "");
         SetAllSelectedFeaturedImages([categoryData.featuredImage]);
       }
     }
   }, [form, mode, param, props, list, loading, view]);
 
   const handleUploadChange = (info) => {
-    // console.log("info" , info);
     if (info.file.status === "uploading") {
       setUploadLoading(true);
       return;
@@ -86,7 +103,6 @@ const CategoryForm = (props) => {
     }
   };
 
-  // New handler for icon upload
   const handleIconUploadChange = (info) => {
     if (info.file.status === "uploading") {
       setIconUploadLoading(true);
@@ -105,46 +121,59 @@ const CategoryForm = (props) => {
     form
       .validateFields()
       .then((values) => {
-        values.name = values.name.trim().replace(/\s+/g, ' ')
-        values.featuredImage = featuredImage;
-        values.featuredIcon = featuredIcon; // Include icon in form values
-        values.allSelectedFeaturedImages = allSelectedFeaturedImages;
+        values.name = values.name.trim().replace(/\s+/g, ' ');
+        
+        // FIXED: Handle the new two-level dropdown structure
+        const categoryData = {
+          name: values.name,
+          shortDescription: values.shortDescription,
+          language: values.language,
+          featuredImage: featuredImage,
+          featuredIcon: featuredIcon,
+          allSelectedFeaturedImages: allSelectedFeaturedImages,
+        };
+
+        // Determine the actual parent category
+        if (values.subCategory) {
+          // If sub-category is selected, the new category will be under the sub-category
+          categoryData.parentCategory = values.subCategory;
+        } else if (values.parentCategory) {
+          // If only parent category is selected, the new category will be under the parent
+          categoryData.parentCategory = values.parentCategory;
+        }
+        // If neither is selected, it's a main category (no parentCategory field)
+        
         setTimeout(() => {
           setSubmitLoading(false);
           if (mode === ADD) {
-            // call API to create a category
-            console.log("values", values);
-            dispatch(createCategory({ categoryData: values })).then(
+            console.log("Creating category with data:", categoryData);
+            dispatch(createCategory({ categoryData })).then(
               (result) => {
                 if (result.type.includes("rejected")) {
-                  // console.log(result.payload);
+                  message.error("Failed to create category");
                 } else {
-                  // reset the form and show the user created successfully
-                  // message.success(`Created ${values.name} to categories list`);
+                  message.success(`Created ${values.name} successfully`);
                   form.resetFields();
                   setFeaturedImage("");
-                  setFeaturedIcon(""); // Reset icon
+                  setFeaturedIcon("");
                   SetAllSelectedFeaturedImages([]);
-                  // Navigate back to category list page
                   navigate(`/admin/dashboards/categories/category-list`);
                 }
               }
             );
           }
+          
           if (mode === EDIT) {
-            // call API to Update a category
             const { id } = param;
+            console.log("Updating category with data:", categoryData);
             dispatch(
-              updateCategory({ categoryData: values, categoryId: id })
+              updateCategory({ categoryData, categoryId: id })
             ).then((result) => {
               if (result.type.includes("rejected")) {
-                // console.log(result.payload);
-                console.log("promise rejected");
-                message.error(result.payload);
+                console.log("Update rejected:", result.payload);
+                message.error(result.payload || "Failed to update category");
               } else {
-                SetAllSelectedFeaturedImages([result.payload.profile_pic]);
                 message.success("Category updated successfully!");
-                // Navigate back to category list page after successful update
                 navigate(`/admin/dashboards/categories/category-list`);
               }
             });
@@ -153,8 +182,7 @@ const CategoryForm = (props) => {
       })
       .catch((info) => {
         setSubmitLoading(false);
-        console.log("info", info);
-        // message.error("Please enter all required field ");
+        console.log("Validation failed:", info);
       });
   };
 
@@ -187,7 +215,6 @@ const CategoryForm = (props) => {
                     {mode === "ADD" ? "Add New Category" : `Edit Category`}{" "}
                   </h2>
                   <div className="mb-3">
-                    {/* <Button className="mr-2">Discard</Button> */}
                     <Button
                       type="primary"
                       onClick={() => onFinish()}
@@ -213,12 +240,12 @@ const CategoryForm = (props) => {
                 children: (
                   <GeneralField
                     featuredImage={featuredImage}
-                    featuredIcon={featuredIcon} // Pass icon props
+                    featuredIcon={featuredIcon}
                     uploadLoading={uploadLoading}
-                    iconUploadLoading={iconUploadLoading} // Pass icon loading state
+                    iconUploadLoading={iconUploadLoading}
                     handleUploadChange={handleUploadChange}
-                    handleIconUploadChange={handleIconUploadChange} // Pass icon handler
-                    view={view} // Pass view prop to GeneralField
+                    handleIconUploadChange={handleIconUploadChange}
+                    view={view}
                   />
                 ),
               },
