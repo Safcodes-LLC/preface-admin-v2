@@ -65,6 +65,12 @@ const rules = {
       message: "Please select at least one Sub Category",
     },
   ],
+  subSubCategories: [
+    {
+      required: false,
+      message: "Please select Sub-Sub Category",
+    },
+  ],
 };
 
 const thumbnailUploadProps = {
@@ -114,7 +120,11 @@ const GeneralField = (props) => {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [subCategories, setSubCategories] = useState([]);
+  const [subSubCategories, setSubSubCategories] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState(null);
+  const [selectedSubCategories, setSelectedSubCategories] = useState([]);
+  const [selectedSubSubCategories, setSelectedSubSubCategories] = useState([]);
+  const [finalCategoriesForSubmission, setFinalCategoriesForSubmission] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
 
   // Filter categories based on selected language
@@ -131,14 +141,17 @@ const GeneralField = (props) => {
 
   const handleLanguageChange = (value) => {
     setSelectedLanguage(value);
-    // Clear parent category and subcategories when language changes
+    // Clear all category selections when language changes
     if (props.form) {
       props.form.setFieldsValue({
         ParentCategory: undefined,
-        categories: undefined
+        categories: undefined,
+        subSubCategories: undefined
       });
     }
     setSubCategories([]);
+    setSubSubCategories([]);
+    setSelectedSubCategories([]);
   };
 
   const handleParentCategoryChange = (value) => {
@@ -146,6 +159,97 @@ const GeneralField = (props) => {
       (category) => category.parentCategory && category.parentCategory.id === value
     );
     setSubCategories(filteredSubCategories);
+    
+    // Clear sub and sub-sub categories when parent changes
+    if (props.form) {
+      props.form.setFieldsValue({
+        categories: undefined,
+        subSubCategories: undefined
+      });
+    }
+    setSubSubCategories([]);
+    setSelectedSubCategories([]);
+  };
+
+  const handleSubCategoryChange = (selectedValues) => {
+    console.log("=== SUB CATEGORY CHANGE ===");
+    console.log("Selected sub category values:", selectedValues);
+    
+    setSelectedSubCategories(selectedValues);
+    
+    // Find all sub-sub categories that have any of the selected sub categories as parent
+    const filteredSubSubCategories = filteredCategories.filter(
+      (category) => 
+        category.parentCategory && 
+        selectedValues.includes(category.parentCategory.id)
+    );
+    
+    console.log("Filtered sub-sub categories:", filteredSubSubCategories);
+    setSubSubCategories(filteredSubSubCategories);
+    
+    // Clear sub-sub category selection when sub categories change
+    setSelectedSubSubCategories([]);
+    if (props.form) {
+      props.form.setFieldsValue({
+        subSubCategories: undefined
+      });
+    }
+    
+    // Set final categories to sub categories (will be overridden if sub-sub categories are selected)
+    setFinalCategoriesForSubmission(selectedValues);
+    
+    // Set the categories field to sub category values
+    if (props.form) {
+      props.form.setFieldsValue({
+        categories: selectedValues
+      });
+    }
+    
+    console.log("Form values after sub category change:", props.form.getFieldsValue());
+  };
+
+  const handleSubSubCategoryChange = (selectedValues) => {
+    console.log("=== SUB-SUB CATEGORY SELECTION ===");
+    console.log("Selected sub-sub category IDs:", selectedValues);
+    
+    // Update state
+    setSelectedSubSubCategories(selectedValues);
+    
+    // Find the actual category objects for debugging
+    const selectedCategories = selectedValues.map(id => 
+      filteredCategories.find(cat => cat._id === id)
+    );
+    console.log("Selected sub-sub category objects:", selectedCategories);
+    
+    // Set final categories to sub-sub categories
+    setFinalCategoriesForSubmission(selectedValues);
+    
+    // Force update the categories field multiple times to ensure it sticks
+    if (props.form) {
+      // Method 1: Direct field update
+      props.form.setFieldsValue({
+        categories: selectedValues,
+        finalParentCategory: selectedValues
+      });
+      
+      // Method 2: Force re-render with timeout
+      setTimeout(() => {
+        props.form.setFieldsValue({
+          categories: selectedValues
+        });
+        console.log("Form values after timeout update:", props.form.getFieldsValue());
+      }, 50);
+    }
+    
+    // Notify parent component with the correct categories
+    if (props.onSubSubCategoryChange) {
+      props.onSubSubCategoryChange(selectedValues);
+    }
+    
+    // Also call a direct callback to parent if available
+    if (props.onFinalCategoriesChange) {
+      props.onFinalCategoriesChange(selectedValues);
+    }
   };
 
   useEffect(() => {
@@ -177,6 +281,16 @@ const GeneralField = (props) => {
     }
   }, [dispatch, languages]);
 
+  // Effect to ensure categories field is always updated with final categories
+  useEffect(() => {
+    if (finalCategoriesForSubmission.length > 0 && props.form) {
+      console.log("Updating categories field with final categories:", finalCategoriesForSubmission);
+      props.form.setFieldsValue({
+        categories: finalCategoriesForSubmission
+      });
+    }
+  }, [finalCategoriesForSubmission, props.form]);
+
   return (
     <div>
       <Row gutter={16}>
@@ -203,9 +317,6 @@ const GeneralField = (props) => {
                 disabled={props.view}
               />
             </Form.Item>
-            {/* <Form.Item name="content" label="Content" rules={rules.content}>
-              <Input.TextArea rows={8} />
-            </Form.Item> */}
 
             <div
               className={`editor-container ${isFullscreen ? "fullscreen" : ""}`}
@@ -274,7 +385,7 @@ const GeneralField = (props) => {
                   {props.uploadMoreImgLoading ? (
                     <div>
                       <LoadingOutlined className="font-size-xxl text-primary" />
-                      <div className="mt-3">Uploading if</div>
+                      <div className="mt-3">Uploading</div>
                     </div>
                   ) : (
                     <div>
@@ -336,6 +447,7 @@ const GeneralField = (props) => {
                 mode="multiple"
                 placeholder={selectedLanguage ? "Sub Category" : "Please select language first"}
                 disabled={props.view || !selectedLanguage}
+                onChange={handleSubCategoryChange}
               >
                 {subCategories.map((category) => (
                   <Option key={category._id} value={category._id}>
@@ -343,6 +455,31 @@ const GeneralField = (props) => {
                   </Option>
                 ))}
               </Select>
+            </Form.Item>
+
+            <Form.Item name="subSubCategories" label="Sub-Sub Category (Final Selection)" rules={rules.subSubCategories}>
+              <Select
+                style={{ width: "100%" }}
+                mode="multiple"
+                placeholder={
+                  selectedSubCategories.length > 0 
+                    ? "Select Sub-Sub Category (This will be the final category)" 
+                    : "Please select sub categories first"
+                }
+                disabled={props.view || selectedSubCategories.length === 0}
+                onChange={handleSubSubCategoryChange}
+              >
+                {subSubCategories.map((category) => (
+                  <Option key={category._id} value={category._id}>
+                    {category.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            {/* Hidden field to store the final parent category for form submission */}
+            <Form.Item name="finalParentCategory" style={{ display: 'none' }}>
+              <Input type="hidden" />
             </Form.Item>
           </Card>
         </Col>
