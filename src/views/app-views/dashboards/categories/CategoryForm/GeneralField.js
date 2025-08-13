@@ -270,29 +270,6 @@ const GeneralField = (props) => {
             </Select>
           </Form.Item>
 
-          {/* Sub Category Dropdown - Only shows when parent is selected */}
-          <Form.Item name="subCategory" label="Sub Category">
-            <Select
-              style={{ width: "100%" }}
-              placeholder={
-                selectedParentCategory 
-                  ? "Select a sub category (optional)" 
-                  : "Please select parent category first"
-              }
-              disabled={!selectedParentCategory || props.view}
-              allowClear
-              showSearch
-              filterOption={(input, option) =>
-                option.children.toLowerCase().includes(input.toLowerCase())
-              }
-            >
-              {subCategories.map((category) => (
-                <Option key={category._id} value={category._id}>
-                  {category.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
         </Card>
       </Col>
     </Row>
