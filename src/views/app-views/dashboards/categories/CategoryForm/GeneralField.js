@@ -72,13 +72,11 @@ const beforeUpload = (file) => {
 
 const beforeIconUpload = (file) => {
   const isValidIcon = 
-    file.type === "image/svg+xml" || 
     file.type === "image/png" || 
-    file.type === "image/jpeg" ||
-    file.type === "image/x-icon";
+    file.type === "image/webp";
   
   if (!isValidIcon) {
-    message.error("You can only upload SVG/PNG/JPG/ICO file!");
+    message.error("You can only upload PNG or WebP files!");
   }
   const isLt1M = file.size / 1024 / 1024 < 1;
   if (!isLt1M) {
@@ -207,7 +205,7 @@ const GeneralField = (props) => {
                     <AppstoreOutlined className="display-3" />
                     <p>Click or drag icon to upload</p>
                     <p className="text-muted" style={{ fontSize: '12px' }}>
-                      SVG, PNG, JPG, ICO (Max 1MB)
+                      PNG, WebP (Max 1MB)
                     </p>
                   </div>
                 )}
