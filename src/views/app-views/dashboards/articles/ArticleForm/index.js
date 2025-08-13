@@ -924,15 +924,8 @@ const ArticleForm = (props) => {
       console.log("=== FORM SUBMISSION DEBUG ===");
       console.log("Raw form values:", values);
       console.log("Categories field before processing:", values.categories);
-      console.log("SubSubCategories field:", values.subSubCategories);
       console.log("Categories type:", typeof values.categories);
       console.log("Categories is array:", Array.isArray(values.categories));
-
-      // CRITICAL FIX: If subSubCategories exist, use them as the final categories
-      if (values.subSubCategories && values.subSubCategories.length > 0) {
-        console.log("OVERRIDING: Using sub-sub categories as final categories");
-        values.categories = values.subSubCategories;
-      }
 
       values.title = values.title.trim().replace(/\s+/g, " ");
       values.postType = "66d9d564987787d3e3ff1312";
@@ -960,7 +953,6 @@ const ArticleForm = (props) => {
       console.log("Final payload being sent:", values);
 
       // Clean up form fields that shouldn't be sent to backend
-      delete values.subSubCategories;
       delete values.finalParentCategory;
 
       // set setIsFormSubmitted as true

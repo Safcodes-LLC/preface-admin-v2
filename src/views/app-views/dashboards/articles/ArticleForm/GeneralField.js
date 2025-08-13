@@ -459,7 +459,7 @@ const GeneralField = (props) => {
               </Select>
             </Form.Item>
 
-            <Form.Item name="subSubCategories" label="Sub-Sub Category (Final Selection)" rules={rules.subSubCategories}>
+            {/* <Form.Item name="subSubCategories" label="Sub-Sub Category (Final Selection)" rules={rules.subSubCategories}>
               <Select
                 style={{ width: "100%" }}
                 mode="multiple"
@@ -477,7 +477,7 @@ const GeneralField = (props) => {
                   </Option>
                 ))}
               </Select>
-            </Form.Item>
+            </Form.Item> */}
 
             {/* Hidden field to store the final parent category for form submission */}
             <Form.Item name="finalParentCategory" style={{ display: 'none' }}>
