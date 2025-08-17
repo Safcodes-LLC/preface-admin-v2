@@ -120,7 +120,7 @@ const CategoryForm = (props) => {
     setSubmitLoading(true);
     form
       .validateFields()
-      .then((values) => {
+      .then(async (values) => {
         values.name = values.name.trim().replace(/\s+/g, ' ');
         
         // FIXED: Handle the new two-level dropdown structure
@@ -132,6 +132,11 @@ const CategoryForm = (props) => {
           featuredIcon: featuredIcon,
           allSelectedFeaturedImages: allSelectedFeaturedImages,
         };
+
+        // Only include isTrending if it exists in values (edit mode)
+        if (values.isTrending !== undefined) {
+          categoryData.isTrending = values.isTrending;
+        }
 
         // Determine the actual parent category
         if (values.subCategory) {
@@ -246,6 +251,7 @@ const CategoryForm = (props) => {
                     handleUploadChange={handleUploadChange}
                     handleIconUploadChange={handleIconUploadChange}
                     view={view}
+                    mode={mode}
                   />
                 ),
               },

@@ -165,6 +165,22 @@ const GeneralField = (props) => {
               ))}
             </Select>
           </Form.Item>
+          {props.mode === 'EDIT' && (
+            <Form.Item 
+              name="isTrending" 
+              label="Trending Topic"
+              initialValue={false}
+            >
+              <Select
+                style={{ width: "100%" }}
+                placeholder="Select trending status"
+                disabled={props.view}
+              >
+                <Option value={false}>No</Option>
+                <Option value={true}>Yes</Option>
+              </Select>
+            </Form.Item>
+          )}
           <Form.Item name="name" label="Category Name" rules={rules.name}>
             <Input placeholder="Category name" disabled={props.view} />
           </Form.Item>
@@ -175,6 +191,7 @@ const GeneralField = (props) => {
           >
             <Input.TextArea rows={2} disabled={props.view} />
           </Form.Item>
+          
         </Card>
       </Col>
       <Col xs={24} sm={24} md={7}>
