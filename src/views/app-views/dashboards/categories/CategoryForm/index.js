@@ -78,6 +78,7 @@ const CategoryForm = (props) => {
           parentCategory: parentCategoryValue,
           subCategory: subCategoryValue,
           language: categoryData.language?._id || categoryData.language,
+          isTrending: categoryData.isTrending || false,
         });
         
         setFeaturedImage(categoryData.featuredImage || "");
