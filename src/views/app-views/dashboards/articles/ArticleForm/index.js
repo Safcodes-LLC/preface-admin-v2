@@ -350,7 +350,7 @@ const ArticleForm = (props) => {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="Enter URL"
-            required
+            // required
           />
         </div>
 
