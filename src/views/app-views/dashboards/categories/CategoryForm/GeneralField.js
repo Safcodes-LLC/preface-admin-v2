@@ -20,7 +20,7 @@ const rules = {
   ],
   short_desc: [
     {
-      required: true,
+      required: false,
       message: "Please enter category description",
     },
   ],
