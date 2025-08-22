@@ -65,6 +65,12 @@ const rules = {
       message: "Please select at least one Sub Category",
     },
   ],
+  thumbnail: [
+    {
+      required: true,
+      message: "Please upload thumbnail horizontal image",
+    },
+  ],
 };
 
 const thumbnailUploadProps = {
@@ -134,7 +140,7 @@ const beforeUploadMoreImages = (file) => {
 };
 
 const beforeUploadThumbnail = (file) => {
-  const isImage = file.type.startsWith('image/');
+  const isImage = file.type.startsWith("image/");
   if (!isImage) {
     message.error("You can only upload image files!");
   }
@@ -161,7 +167,8 @@ const GeneralField = (props) => {
   useEffect(() => {
     if (selectedLanguage && video_categories.length > 0) {
       const filtered = video_categories.filter(
-        (category) => category.language && category.language._id === selectedLanguage
+        (category) =>
+          category.language && category.language._id === selectedLanguage
       );
       setFilteredCategories(filtered);
     } else {
@@ -175,7 +182,7 @@ const GeneralField = (props) => {
     if (props.form) {
       props.form.setFieldsValue({
         ParentCategory: undefined,
-        categories: undefined
+        categories: undefined,
       });
     }
     setSubCategories([]);
@@ -183,7 +190,8 @@ const GeneralField = (props) => {
 
   const handleParentCategoryChange = (value) => {
     const filteredSubCategories = filteredCategories.filter(
-      (category) => category.parentCategory && category.parentCategory.id === value
+      (category) =>
+        category.parentCategory && category.parentCategory.id === value
     );
     setSubCategories(filteredSubCategories);
   };
@@ -248,8 +256,8 @@ const GeneralField = (props) => {
             {/* <Form.Item name="content" label="Content" rules={rules.content}>
               <Input.TextArea rows={8} disabled={props.view} />
             </Form.Item> */}
-             {/*  */}
-          <div
+            {/*  */}
+            <div
               className={`editor-container ${isFullscreen ? "fullscreen" : ""}`}
             >
               <button onClick={toggleFullscreen}>
@@ -298,42 +306,44 @@ const GeneralField = (props) => {
           </Card>
 
           <Card title="Thumbnail horizontal">
-            <Upload
-              {...thumbnailImageUploadProps}
-              beforeUpload={beforeUploadThumbnail}
-              onChange={(e) => props.handleThumbnailImageUploadChange(e)}
-              showUploadList={false}
-              disabled={props.view}
-            >
-              <div className="upload-container">
-                {props.uploadedThumbnailImage ? (
-                  <img
-                    src={props.uploadedThumbnailImage}
-                    alt="Thumbnail"
-                    className="img-fluid"
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  <div className="upload-placeholder">
-                    {props.uploadThumbnailImageLoading ? (
-                      <div>
-                        <LoadingOutlined className="font-size-xxl text-primary" />
-                        <div className="mt-3">Uploading</div>
-                      </div>
-                    ) : (
-                      <div>
-                        <CustomIcon className="display-3" svg={ImageSvg} />
-                        <p>Click or drag thumbnail image to upload</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </Upload>
+            <Form.Item name="thumbnail" rules={rules.thumbnail}>
+              <Upload
+                {...thumbnailImageUploadProps}
+                beforeUpload={beforeUploadThumbnail}
+                onChange={(e) => props.handleThumbnailImageUploadChange(e)}
+                showUploadList={false}
+                disabled={props.view}
+              >
+                <div className="upload-container">
+                  {props.uploadedThumbnailImage ? (
+                    <img
+                      src={props.uploadedThumbnailImage}
+                      alt="Thumbnail"
+                      className="img-fluid"
+                      style={{
+                        width: "100px",
+                        height: "100px",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <div className="upload-placeholder">
+                      {props.uploadThumbnailImageLoading ? (
+                        <div>
+                          <LoadingOutlined className="font-size-xxl text-primary" />
+                          <div className="mt-3">Uploading</div>
+                        </div>
+                      ) : (
+                        <div>
+                          <CustomIcon className="display-3" svg={ImageSvg} />
+                          <p>Click or drag thumbnail image to upload</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Upload>
+            </Form.Item>
           </Card>
 
           <Card title="Thumbnail vertical">
@@ -346,7 +356,7 @@ const GeneralField = (props) => {
               {props.uploadedMoreImgs ? (
                 <img
                   src={props.uploadedMoreImgs}
-                  alt="More Image"
+                  alt="Additional thumbnail"
                   className="img-fluid"
                   style={{
                     width: "100px",
@@ -400,10 +410,18 @@ const GeneralField = (props) => {
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item name="ParentCategory" label="Parent Category" rules={rules.ParentCategory}>
+            <Form.Item
+              name="ParentCategory"
+              label="Parent Category"
+              rules={rules.ParentCategory}
+            >
               <Select
                 style={{ width: "100%" }}
-                placeholder={selectedLanguage ? "Parent Category" : "Please select language first"}
+                placeholder={
+                  selectedLanguage
+                    ? "Parent Category"
+                    : "Please select language first"
+                }
                 disabled={props.view || !selectedLanguage}
                 onChange={handleParentCategoryChange}
               >
@@ -416,11 +434,19 @@ const GeneralField = (props) => {
                   ))}
               </Select>
             </Form.Item>
-            <Form.Item name="categories" label="Sub Category" rules={rules.categories}>
+            <Form.Item
+              name="categories"
+              label="Sub Category"
+              rules={rules.categories}
+            >
               <Select
                 style={{ width: "100%" }}
                 mode="multiple"
-                placeholder={selectedLanguage ? "Sub Category" : "Please select language first"}
+                placeholder={
+                  selectedLanguage
+                    ? "Sub Category"
+                    : "Please select language first"
+                }
                 disabled={props.view || !selectedLanguage}
               >
                 {subCategories.map((category) => (
