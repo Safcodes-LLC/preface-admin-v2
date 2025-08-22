@@ -147,6 +147,11 @@ const VideosForm = (props) => {
   const [uploadThumbnailImgLoading, setUploadThumbnailImgLoading] =
     useState(false);
 
+  // For thumbnail image
+  const [uploadedThumbnailImage, setThumbnailImageImage] = useState("");
+  const [allSelectedThumbnailImageImgs, setAllSelectedThumbnailImageImgs] = useState([]);
+  const [uploadThumbnailImageLoading, setUploadThumbnailImageLoading] = useState(false);
+
   // For more images
   const [uploadedMoreImgs, setMoreImgs] = useState([]);
   const [allSelectedMoreImgs, setAllSelectedMoreImgs] = useState([]);
@@ -197,6 +202,7 @@ const VideosForm = (props) => {
         meta_title: videoData.meta_title,
         meta_desc: videoData.meta_desc,
         meta_tags: videoData.meta_tags,
+        thumbnail: videoData.thumbnail,
       });
 
       // Approval list start
@@ -216,6 +222,8 @@ const VideosForm = (props) => {
 
       setThumbnailImage(videoData.video_file);
       setAllSelectedThumbnailImgs([videoData.video_file]);
+      setThumbnailImageImage(videoData.thumbnail);
+      setAllSelectedThumbnailImageImgs([videoData.thumbnail]);
       setMoreImgs(videoData.more_images);
       setAllSelectedMoreImgs(videoData.more_images);
 
@@ -236,6 +244,23 @@ const VideosForm = (props) => {
           return [...prev, info.file.response.fileUrl];
         });
         setUploadThumbnailImgLoading(false);
+      }
+    }
+  };
+
+  // For thumbnail image
+  const handleThumbnailImageUploadChange = (info) => {
+    if (info.file.status === "uploading") {
+      setUploadThumbnailImageLoading(true);
+      return;
+    }
+    if (info.file.status === "done") {
+      if (info.file.response.fileUrl) {
+        setThumbnailImageImage(info.file.response.fileUrl);
+        setAllSelectedThumbnailImageImgs((prev) => {
+          return [...prev, info.file.response.fileUrl];
+        });
+        setUploadThumbnailImageLoading(false);
       }
     }
   };
@@ -278,6 +303,8 @@ const VideosForm = (props) => {
         values.postType = "66d9d564987787d3e3ff1314";
         values.video_file = uploadedThumbnailImg;
         values.allSelectedThumbnailImgs = allSelectedThumbnailImgs;
+        values.thumbnail = uploadedThumbnailImage;
+        values.allSelectedThumbnailImageImgs = allSelectedThumbnailImageImgs;
         values.more_images = uploadedMoreImgs;
         values.allSelectedMoreImgs = allSelectedMoreImgs;
         values.content = rowContent;
@@ -297,6 +324,8 @@ const VideosForm = (props) => {
                 form.resetFields();
                 setThumbnailImage("");
                 setAllSelectedThumbnailImgs([]);
+                setThumbnailImageImage("");
+                setAllSelectedThumbnailImageImgs([]);
                 setMoreImgs([]);
                 setAllSelectedMoreImgs([]);
                  // Set is form submitted as a false because form is blank
@@ -632,6 +661,11 @@ const VideosForm = (props) => {
                     uploadThumbnailImgLoading={uploadThumbnailImgLoading}
                     handleThumbnailImgUploadChange={
                       handleThumbnailImgUploadChange
+                    }
+                    uploadedThumbnailImage={uploadedThumbnailImage}
+                    uploadThumbnailImageLoading={uploadThumbnailImageLoading}
+                    handleThumbnailImageUploadChange={
+                      handleThumbnailImageUploadChange
                     }
                     uploadedMoreImgs={uploadedMoreImgs}
                     uploadMoreImgLoading={uploadMoreImgLoading}

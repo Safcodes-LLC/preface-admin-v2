@@ -92,6 +92,19 @@ const moreImagesUploadProps = {
   },
 };
 
+// For thumbnail image
+const thumbnailImageUploadProps = {
+  name: "file",
+  multiple: false,
+  listType: "picture-card",
+  showUploadList: false,
+  action:
+    "https://king-prawn-app-x9z27.ondigitalocean.app/api/fileupload/savefile/videos/thumbnails",
+  headers: {
+    Authorization: localStorage.getItem(AUTH_TOKEN) || null,
+  },
+};
+
 const beforeUploadVideo = (file) => {
   const acceptedFormats = ["video/mp4", "video/mpeg", "video/quicktime"]; // Add more formats if needed
   if (acceptedFormats.indexOf(file.type) === -1) {
@@ -118,6 +131,18 @@ const beforeUploadMoreImages = (file) => {
     message.error("Image must be smaller than 1MB!");
   }
   return isPngOrWebp && isLt1M;
+};
+
+const beforeUploadThumbnail = (file) => {
+  const isImage = file.type.startsWith('image/');
+  if (!isImage) {
+    message.error("You can only upload image files!");
+  }
+  const isLt2M = file.size / 1024 / 1024 < 2;
+  if (!isLt2M) {
+    message.error("Thumbnail must be smaller than 2MB!");
+  }
+  return isImage && isLt2M;
 };
 
 const GeneralField = (props) => {
@@ -264,6 +289,45 @@ const GeneralField = (props) => {
                       <div>
                         <CustomIcon className="display-3" svg={ImageSvg} />
                         <p>Click or drag video file to upload</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Upload>
+          </Card>
+
+          <Card title="Thumbnail horizontal">
+            <Upload
+              {...thumbnailImageUploadProps}
+              beforeUpload={beforeUploadThumbnail}
+              onChange={(e) => props.handleThumbnailImageUploadChange(e)}
+              showUploadList={false}
+              disabled={props.view}
+            >
+              <div className="upload-container">
+                {props.uploadedThumbnailImage ? (
+                  <img
+                    src={props.uploadedThumbnailImage}
+                    alt="Thumbnail"
+                    className="img-fluid"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <div className="upload-placeholder">
+                    {props.uploadThumbnailImageLoading ? (
+                      <div>
+                        <LoadingOutlined className="font-size-xxl text-primary" />
+                        <div className="mt-3">Uploading</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <CustomIcon className="display-3" svg={ImageSvg} />
+                        <p>Click or drag thumbnail image to upload</p>
                       </div>
                     )}
                   </div>
