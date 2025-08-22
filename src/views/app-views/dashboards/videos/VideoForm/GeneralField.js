@@ -31,13 +31,13 @@ const rules = {
   ],
   sub_title: [
     {
-      required: true,
+      required: false,
       message: "Please enter video sub title",
     },
   ],
   short_desc: [
     {
-      required: true,
+      required: false,
       message: "Please enter video short description",
     },
   ],
