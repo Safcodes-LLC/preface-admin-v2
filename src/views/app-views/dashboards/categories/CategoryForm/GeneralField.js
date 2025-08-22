@@ -71,10 +71,8 @@ const beforeUpload = (file) => {
 };
 
 const beforeIconUpload = (file) => {
-  const isValidIcon = 
-    file.type === "image/png" || 
-    file.type === "image/webp";
-  
+  const isValidIcon = file.type === "image/png" || file.type === "image/webp";
+
   if (!isValidIcon) {
     message.error("You can only upload PNG or WebP files!");
   }
@@ -92,9 +90,9 @@ const GeneralField = (props) => {
   const languages = useSelector((state) => state.languages.languages);
 
   const [loadingCategories, setLoadingCategories] = useState(true);
-  
-  const selectedLanguage = Form.useWatch('language', form);
-  const selectedParentCategory = Form.useWatch('parentCategory', form);
+
+  const selectedLanguage = Form.useWatch("language", form);
+  const selectedParentCategory = Form.useWatch("parentCategory", form);
 
   useEffect(() => {
     if (!languages.length) {
@@ -115,9 +113,9 @@ const GeneralField = (props) => {
   // Reset parent and sub category when language changes
   useEffect(() => {
     if (selectedLanguage) {
-      form.setFieldsValue({ 
+      form.setFieldsValue({
         parentCategory: undefined,
-        subCategory: undefined 
+        subCategory: undefined,
       });
     }
   }, [selectedLanguage, form]);
@@ -129,22 +127,26 @@ const GeneralField = (props) => {
 
   // Filter categories that match the selected language
   const filteredCategories = categories.filter((category) => {
-    const matchesLanguage = selectedLanguage ? 
-      (category.language?._id === selectedLanguage || category.language === selectedLanguage) : 
-      true;
-    
+    const matchesLanguage = selectedLanguage
+      ? category.language?._id === selectedLanguage ||
+        category.language === selectedLanguage
+      : true;
+
     return matchesLanguage;
   });
 
   // Get main categories (categories without parent)
-  const mainCategories = filteredCategories.filter(category => !category.parentCategory);
+  const mainCategories = filteredCategories.filter(
+    (category) => !category.parentCategory
+  );
 
   // Get sub categories based on selected parent category
-  const subCategories = selectedParentCategory 
-    ? filteredCategories.filter(category => 
-        category.parentCategory && 
-        (category.parentCategory.id === selectedParentCategory || 
-         category.parentCategory === selectedParentCategory)
+  const subCategories = selectedParentCategory
+    ? filteredCategories.filter(
+        (category) =>
+          category.parentCategory &&
+          (category.parentCategory.id === selectedParentCategory ||
+            category.parentCategory === selectedParentCategory)
       )
     : [];
 
@@ -165,22 +167,22 @@ const GeneralField = (props) => {
               ))}
             </Select>
           </Form.Item>
-          {props.mode === 'EDIT' && (
-            <Form.Item 
-              name="isTrending" 
-              label="Trending Topic"
-              initialValue={false}
+
+          <Form.Item
+            name="isTrending"
+            label="Trending Topic"
+            initialValue={false}
+          >
+            <Select
+              style={{ width: "100%" }}
+              placeholder="Select trending status"
+              disabled={props.view}
             >
-              <Select
-                style={{ width: "100%" }}
-                placeholder="Select trending status"
-                disabled={props.view}
-              >
-                <Option value={false}>No</Option>
-                <Option value={true}>Yes</Option>
-              </Select>
-            </Form.Item>
-          )}
+              <Option value={false}>No</Option>
+              <Option value={true}>Yes</Option>
+            </Select>
+          </Form.Item>
+
           <Form.Item name="name" label="Category Name" rules={rules.name}>
             <Input placeholder="Category name" disabled={props.view} />
           </Form.Item>
@@ -191,7 +193,6 @@ const GeneralField = (props) => {
           >
             <Input.TextArea rows={2} disabled={props.view} />
           </Form.Item>
-          
         </Card>
       </Col>
       <Col xs={24} sm={24} md={7}>
@@ -207,7 +208,7 @@ const GeneralField = (props) => {
                 <img
                   src={props.featuredIcon}
                   alt="icon"
-                  style={{ maxWidth: '60px', maxHeight: '60px' }}
+                  style={{ maxWidth: "60px", maxHeight: "60px" }}
                 />
               </div>
             ) : (
@@ -221,7 +222,7 @@ const GeneralField = (props) => {
                   <div>
                     <AppstoreOutlined className="display-3" />
                     <p>Click or drag icon to upload</p>
-                    <p className="text-muted" style={{ fontSize: '12px' }}>
+                    <p className="text-muted" style={{ fontSize: "12px" }}>
                       PNG, WebP (Max 1MB)
                     </p>
                   </div>
@@ -261,15 +262,15 @@ const GeneralField = (props) => {
             )}
           </Dragger>
         </Card>
-        
+
         <Card>
           {/* Parent Category Dropdown */}
           <Form.Item name="parentCategory" label="Parent Category">
             <Select
               style={{ width: "100%" }}
               placeholder={
-                selectedLanguage 
-                  ? "Please select language first" 
+                selectedLanguage
+                  ? "Please select language first"
                   : "Please select language first"
               }
               disabled={!selectedLanguage || props.view}
@@ -286,7 +287,6 @@ const GeneralField = (props) => {
               ))}
             </Select>
           </Form.Item>
-
         </Card>
       </Col>
     </Row>
