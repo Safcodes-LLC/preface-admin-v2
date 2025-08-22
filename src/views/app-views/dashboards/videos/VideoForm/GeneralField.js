@@ -82,7 +82,7 @@ const thumbnailUploadProps = {
 // For more images
 const moreImagesUploadProps = {
   name: "file",
-  multiple: true,
+  multiple: false,
   listType: "picture-card",
   showUploadList: false,
   action:
@@ -336,57 +336,54 @@ const GeneralField = (props) => {
             </Upload>
           </Card>
 
-          <Card title="More Images">
-            <Dragger
+          <Card title="Thumbnail vertical">
+            <Upload
               {...moreImagesUploadProps}
               beforeUpload={beforeUploadMoreImages}
               onChange={(e) => props.handleUploadMoreImagesChange(e)}
               disabled={props.view}
             >
-              {props.uploadedMoreImgs && props.uploadedMoreImgs.length ? (
-                props.uploadedMoreImgs.map((img, index) => (
-                  <img
-                    key={index}
-                    src={img}
-                    alt={`Thumbnail ${index}`}
-                    className="img-fluid"
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      objectFit: "cover",
-                    }}
-                  />
-                ))
+              {props.uploadedMoreImgs ? (
+                <img
+                  src={props.uploadedMoreImgs}
+                  alt="More Image"
+                  className="img-fluid"
+                  style={{
+                    width: "100px",
+                    height: "100px",
+                    objectFit: "cover",
+                  }}
+                />
               ) : (
                 <div>
                   {props.uploadMoreImgLoading ? (
                     <div>
                       <LoadingOutlined className="font-size-xxl text-primary" />
-                      <div className="mt-3">Uploading if</div>
+                      <div className="mt-3">Uploading</div>
                     </div>
                   ) : (
                     <div>
                       <CustomIcon className="display-3" svg={ImageSvg} />
-                      <p>Click or drag files to upload</p>
+                      <p>Click or drag file to upload</p>
                     </div>
                   )}
                 </div>
               )}
-            </Dragger>
+            </Upload>
           </Card>
 
-          <Card>
-            {props.uploadedMoreImgs && props.uploadedMoreImgs.length ? (
+          {/* <Card>
+            {props.uploadedMoreImgs ? (
               <Button
                 type="primary"
                 onClick={props.handleClearSelectedMoreImages}
               >
-                Clear Selected more Images
+                Clear More Image
               </Button>
             ) : (
               ""
             )}
-          </Card>
+          </Card> */}
 
           <Card title="Language AND Categories">
             <Form.Item name="language" label="Language" rules={rules.language}>

@@ -153,7 +153,7 @@ const VideosForm = (props) => {
   const [uploadThumbnailImageLoading, setUploadThumbnailImageLoading] = useState(false);
 
   // For more images
-  const [uploadedMoreImgs, setMoreImgs] = useState([]);
+  const [uploadedMoreImg, setMoreImg] = useState("");
   const [allSelectedMoreImgs, setAllSelectedMoreImgs] = useState([]);
   const [uploadMoreImgLoading, setUploadMoreImgsLoading] = useState(false);
 
@@ -224,7 +224,7 @@ const VideosForm = (props) => {
       setAllSelectedThumbnailImgs([videoData.video_file]);
       setThumbnailImageImage(videoData.thumbnail);
       setAllSelectedThumbnailImageImgs([videoData.thumbnail]);
-      setMoreImgs(videoData.more_images);
+      setMoreImg(videoData.more_images && videoData.more_images.length > 0 ? videoData.more_images[0] : "");
       setAllSelectedMoreImgs(videoData.more_images);
 
       ApproveTextFun(videoData.status, videoData?.editingSession?.id);
@@ -273,9 +273,7 @@ const VideosForm = (props) => {
     }
     if (info.file.status === "done") {
       if (info.file.response.fileUrl) {
-        setMoreImgs((prev) => {
-          return [...prev, info.file.response.fileUrl];
-        });
+        setMoreImg(info.file.response.fileUrl);
 
         setAllSelectedMoreImgs((prev) => {
           return [...prev, info.file.response.fileUrl];
@@ -288,7 +286,7 @@ const VideosForm = (props) => {
 
   // Reset the selected more_images
   const handleClearSelectedMoreImages = () => {
-    setMoreImgs([]);
+    setMoreImg("");
   };
 
   const onFinish = () => {
@@ -305,7 +303,7 @@ const VideosForm = (props) => {
         values.allSelectedThumbnailImgs = allSelectedThumbnailImgs;
         values.thumbnail = uploadedThumbnailImage;
         values.allSelectedThumbnailImageImgs = allSelectedThumbnailImageImgs;
-        values.more_images = uploadedMoreImgs;
+        values.more_images = uploadedMoreImg;
         values.allSelectedMoreImgs = allSelectedMoreImgs;
         values.content = rowContent;
 
@@ -326,7 +324,7 @@ const VideosForm = (props) => {
                 setAllSelectedThumbnailImgs([]);
                 setThumbnailImageImage("");
                 setAllSelectedThumbnailImageImgs([]);
-                setMoreImgs([]);
+                setMoreImg("");
                 setAllSelectedMoreImgs([]);
                  // Set is form submitted as a false because form is blank
                  setIsFormSubmitted(false);
@@ -667,7 +665,7 @@ const VideosForm = (props) => {
                     handleThumbnailImageUploadChange={
                       handleThumbnailImageUploadChange
                     }
-                    uploadedMoreImgs={uploadedMoreImgs}
+                    uploadedMoreImgs={uploadedMoreImg}
                     uploadMoreImgLoading={uploadMoreImgLoading}
                     handleUploadMoreImagesChange={handleUploadMoreImagesChange}
                     handleClearSelectedMoreImages={
