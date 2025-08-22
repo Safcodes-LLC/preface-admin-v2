@@ -120,14 +120,14 @@ const Banner = () => {
       endpoint: "article",
       postTypeId: "66d9d564987787d3e3ff1312"
     },
-    topics: {
-      title: "Topics",
-      icon: <TagsOutlined />,
-      addButtonText: "Manage Topic Banner",
-      modalTitle: "Manage Topic Banner Selection",
-      endpoint: "topics",
-      postTypeId: "66d9d564987787d3e3ff1313"
-    }
+    // topics: {
+    //   title: "Topics",
+    //   icon: <TagsOutlined />,
+    //   addButtonText: "Manage Topic Banner",
+    //   modalTitle: "Manage Topic Banner Selection",
+    //   endpoint: "topics",
+    //   postTypeId: "66d9d564987787d3e3ff1313"
+    // }
   };
 
   // Reset parent category when language changes
