@@ -20,7 +20,7 @@ const rules = {
   ],
   slug: [
     {
-      required: true,
+      required: false,
       message: "Please enter category slug",
     },
     {
