@@ -806,6 +806,7 @@ const ArticleForm = (props) => {
         );
         form.setFieldsValue({
           title: articleData.title,
+          slug: articleData.slug,
           sub_title: articleData.sub_title,
           short_desc: articleData.short_desc,
           language: articleData.language._id,
@@ -928,6 +929,7 @@ const ArticleForm = (props) => {
       console.log("Categories is array:", Array.isArray(values.categories));
 
       values.title = values.title.trim().replace(/\s+/g, " ");
+      // values.slug = values.slug.trim().replace(/\s+/g, " ");
       values.postType = "66d9d564987787d3e3ff1312";
       values.thumbnail = uploadedThumbnailImg;
       values.allSelectedThumbnailImgs = allSelectedThumbnailImgs;

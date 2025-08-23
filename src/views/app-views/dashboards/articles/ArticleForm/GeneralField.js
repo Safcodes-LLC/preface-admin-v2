@@ -29,6 +29,16 @@ const rules = {
       message: "Please enter article title",
     },
   ],
+  slug: [
+    {
+      required: false,
+      message: "Please enter category slug",
+    },
+    {
+      pattern: /^[a-z0-9-]+$/,
+      message: "Slug can only contain lowercase letters, numbers, and hyphens",
+    },
+  ],
   sub_title: [
     {
       required: false,
@@ -300,6 +310,10 @@ const GeneralField = (props) => {
           <Card>
             <Form.Item name="title" label="Article Title" rules={rules.title}>
               <Input placeholder="Article Title" disabled={props.view} />
+            </Form.Item>
+            {/* add a slug field here */}
+            <Form.Item name="slug" label="Article Slug" rules={rules.slug}>
+              <Input placeholder="Article Slug" disabled={props.view} />
             </Form.Item>
             <Form.Item
               name="sub_title"
