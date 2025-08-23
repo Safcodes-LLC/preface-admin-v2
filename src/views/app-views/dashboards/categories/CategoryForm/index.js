@@ -72,6 +72,7 @@ const CategoryForm = (props) => {
 
         form.setFieldsValue({
           name: categoryData.name,
+          slug: categoryData.slug,
           shortDescription: categoryData.shortDescription,
           featuredImage: categoryData.featuredImage,
           featuredIcon: categoryData.featuredIcon,
@@ -127,6 +128,7 @@ const CategoryForm = (props) => {
         // FIXED: Handle the new two-level dropdown structure
         const categoryData = {
           name: values.name,
+          slug: values.slug,
           shortDescription: values.shortDescription,
           language: values.language,
           featuredImage: featuredImage,

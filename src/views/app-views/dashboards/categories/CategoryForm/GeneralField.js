@@ -18,6 +18,16 @@ const rules = {
       message: "Please enter category name",
     },
   ],
+  slug: [
+    {
+      required: true,
+      message: "Please enter category slug",
+    },
+    {
+      pattern: /^[a-z0-9-]+$/,
+      message: "Slug can only contain lowercase letters, numbers, and hyphens",
+    },
+  ],
   short_desc: [
     {
       required: false,
@@ -186,6 +196,11 @@ const GeneralField = (props) => {
           <Form.Item name="name" label="Category Name" rules={rules.name}>
             <Input placeholder="Category name" disabled={props.view} />
           </Form.Item>
+          
+          <Form.Item name="slug" label="Category Slug" rules={rules.slug}>
+            <Input placeholder="Category slug" disabled={props.view} />
+          </Form.Item>
+          
           <Form.Item
             name="shortDescription"
             label="Short Description"
