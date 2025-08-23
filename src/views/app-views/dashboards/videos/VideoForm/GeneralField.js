@@ -140,15 +140,15 @@ const beforeUploadMoreImages = (file) => {
 };
 
 const beforeUploadThumbnail = (file) => {
-  const isImage = file.type.startsWith("image/");
-  if (!isImage) {
-    message.error("You can only upload image files!");
+  const isPngOrWebp = file.type === "image/png" || file.type === "image/webp";
+  if (!isPngOrWebp) {
+    message.error("You can only upload PNG or WebP files!");
   }
-  const isLt2M = file.size / 1024 / 1024 < 2;
-  if (!isLt2M) {
-    message.error("Thumbnail must be smaller than 2MB!");
+  const isLt1M = file.size / 1024 / 1024 < 1;
+  if (!isLt1M) {
+    message.error("Thumbnail must be smaller than 1MB!");
   }
-  return isImage && isLt2M;
+  return isPngOrWebp && isLt1M;
 };
 
 const GeneralField = (props) => {
