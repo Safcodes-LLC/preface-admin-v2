@@ -126,6 +126,21 @@ const beforeUploadVideo = (file) => {
 
   return acceptedFormats.indexOf(file.type) !== -1 && isLt100M;
 };
+// const beforeUploadVideo = (file) => {
+//   const acceptedFormats = ["video/mp4", "video/webm"];
+//   if (!acceptedFormats.includes(file.type)) {
+//     message.error("You can only upload MP4 or WebM video files!");
+//     return Upload.LIST_IGNORE;
+//   }
+
+//   const isLt20M = file.size / 1024 / 1024 < 20; // safer cap
+//   if (!isLt20M) {
+//     message.error("Video must be smaller than 20MB!");
+//     return Upload.LIST_IGNORE;
+//   }
+
+//   return true;
+// };
 
 const beforeUploadMoreImages = (file) => {
   const isPngOrWebp = file.type === "image/png" || file.type === "image/webp";
