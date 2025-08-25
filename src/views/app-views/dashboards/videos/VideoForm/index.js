@@ -194,6 +194,8 @@ const VideosForm = (props) => {
   console.log("videoData", videoData);
       form.setFieldsValue({
         title: videoData.title,
+        slug: videoData.slug,
+        video_url: videoData.video_url,
         sub_title: videoData.sub_title,
         short_desc: videoData.short_desc,
         content: videoData.content,

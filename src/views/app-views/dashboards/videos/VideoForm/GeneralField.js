@@ -29,6 +29,22 @@ const rules = {
       message: "Please enter video title",
     },
   ],
+  slug: [
+    {
+      required: true,
+      message: "Please enter category slug",
+    },
+    {
+      pattern: /^[a-z0-9-]+$/,
+      message: "Slug can only contain lowercase letters, numbers, and hyphens",
+    },
+  ],
+  video_url: [
+    {
+      required: true,
+      message: "Please enter video url",
+    },
+  ],
   sub_title: [
     {
       required: false,
@@ -249,6 +265,13 @@ const GeneralField = (props) => {
           <Card>
             <Form.Item name="title" label="Video Title" rules={rules.title}>
               <Input placeholder="Video Title" disabled={props.view} />
+            </Form.Item>
+            {/* add a slug field here */}
+            <Form.Item name="slug" label="Video Slug" rules={rules.slug}>
+              <Input placeholder="Video Slug" disabled={props.view} />
+            </Form.Item>
+            <Form.Item name="video_url" label="Video URL" rules={rules.video_url}>
+              <Input placeholder="Video URL" disabled={props.view} />
             </Form.Item>
             <Form.Item
               name="sub_title"
