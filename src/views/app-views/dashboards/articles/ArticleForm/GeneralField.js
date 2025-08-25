@@ -31,7 +31,7 @@ const rules = {
   ],
   slug: [
     {
-      required: false,
+      required: true,
       message: "Please enter category slug",
     },
     {
