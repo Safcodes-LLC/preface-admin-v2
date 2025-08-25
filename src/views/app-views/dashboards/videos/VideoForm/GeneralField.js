@@ -41,7 +41,7 @@ const rules = {
   ],
   video_url: [
     {
-      required: true,
+      required: false,
       message: "Please enter video url",
     },
   ],
@@ -270,7 +270,7 @@ const GeneralField = (props) => {
             <Form.Item name="slug" label="Video Slug" rules={rules.slug}>
               <Input placeholder="Video Slug" disabled={props.view} />
             </Form.Item>
-            <Form.Item name="video_url" label="Video URL" rules={rules.video_url}>
+            <Form.Item name="video_url" label="Video URL (youtube)" rules={rules.video_url}>
               <Input placeholder="Video URL" disabled={props.view} />
             </Form.Item>
             <Form.Item
