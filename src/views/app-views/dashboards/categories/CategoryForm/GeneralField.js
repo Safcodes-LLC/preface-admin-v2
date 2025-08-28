@@ -24,7 +24,7 @@ const rules = {
       message: "Please enter category slug",
     },
     {
-      pattern: /^[a-z0-9-]+$/,
+      // pattern: /^[a-z0-9-]+$/,
       message: "Slug can only contain lowercase letters, numbers, and hyphens",
     },
   ],
