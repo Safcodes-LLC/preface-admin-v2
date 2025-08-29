@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Input, Button, Menu, Tag, message } from "antd";
-import ArticleListData from "assets/data/article-list.data.json";
 import {
   EyeOutlined,
   DeleteOutlined,
@@ -8,7 +7,6 @@ import {
   PlusCircleOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import AvatarStatus from "components/shared-components/AvatarStatus";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
@@ -18,25 +16,35 @@ import { deletePost, fetchAllPostsByPostType } from "store/slices/postSlice";
 
 const ArticleList = () => {
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    // Dispatch the action to fetch Article posts
-    dispatch(
-      fetchAllPostsByPostType({ postTypeId: "66d9d564987787d3e3ff1312" })
-    );
-  }, [dispatch]);
-
   const navigate = useNavigate();
-  const allArticlePosts = useSelector((state) => state.post.posts);
+
+  // pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+
+  const { posts, totalCount, totalPages, loading } = useSelector(
+    (state) => state.post
+  );
+
   const [list, setList] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   useEffect(() => {
-    if (allArticlePosts) {
-      setList(allArticlePosts);
+    dispatch(
+      fetchAllPostsByPostType({
+        postTypeId: "66d9d564987787d3e3ff1312",
+        page: currentPage,
+        limit: pageSize,
+      })
+    );
+  }, [dispatch, currentPage, pageSize]);
+
+  useEffect(() => {
+    if (posts) {
+      setList(posts);
     }
-  }, [allArticlePosts]);
+  }, [posts]);
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -93,7 +101,7 @@ const ArticleList = () => {
     } else {
       dispatch(deletePost({ postId: row._id })).then((res) => {
         if (!res.error) {
-          message.success("Deleted Successfuly");
+          message.success("Deleted Successfully");
           data = utils.deleteArrayRow(data, objKey, row._id);
           setList(data);
         }
@@ -105,27 +113,14 @@ const ArticleList = () => {
     {
       title: "ID",
       dataIndex: "_id",
-      render: (_, record, index) => <span>{index + 1}</span>,
+      render: (_, record, index) => (
+        <span>{(currentPage - 1) * pageSize + (index + 1)}</span>
+      ),
     },
     {
       title: "Title",
       dataIndex: "title",
     },
-    // {
-    //   title: "Author",
-    //   dataIndex: "author",
-    //   render: (_, record) => (
-    //     <div className="d-flex">
-    //       <AvatarStatus
-    //         size={60}
-    //         type="square"
-    //         src={record?.author?.profile_pic || "/img/avatars/default-avatar.jpg"}
-    //         name={record?.author?.username}
-    //       />
-    //     </div>
-    //   ),
-    //   sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
-    // },
     {
       title: "Language",
       dataIndex: "language",
@@ -167,8 +162,7 @@ const ArticleList = () => {
 
   const onSearch = (e) => {
     const value = e.currentTarget.value;
-    const searchArray = e.currentTarget.value ? list : ArticleListData;
-    const data = utils.wildCardSearch(searchArray, value);
+    const data = utils.wildCardSearch(posts, value);
     setList(data);
     setSelectedRowKeys([]);
   };
@@ -200,16 +194,26 @@ const ArticleList = () => {
           </Button>
         </div>
       </Flex>
+
       <div className="table-responsive">
         <Table
+          loading={loading}
           columns={tableColumns}
           dataSource={list}
-          rowKey="id"
+          rowKey="_id"
           rowSelection={{
             selectedRowKeys: selectedRowKeys,
             type: "checkbox",
             preserveSelectedRowKeys: false,
             ...rowSelection,
+          }}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: totalCount,
+            onChange: (page) => setCurrentPage(page),
+            showSizeChanger: false,
+            showTotal: (total) => `Total ${total} articles`,
           }}
         />
       </div>

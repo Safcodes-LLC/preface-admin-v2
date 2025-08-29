@@ -6,6 +6,9 @@ const initialState = {
   selectedPost: null,
   loading: false,
   error: null,
+  currentPage: 1,
+  totalPages: 0,
+  totalCount: 0,
 };
 
 // Create an async thunk to fetch all posts
@@ -67,10 +70,10 @@ export const fetchMyApprovedPost = createAsyncThunk(
 // Create an async thunk to fetch all posts with a specific post type
 export const fetchAllPostsByPostType = createAsyncThunk(
   "posts/fetchAllPostsByPostType",
-  async ({ postTypeId }, { rejectWithValue }) => {
+  async ({ postTypeId, page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
-      const response = await PostService.getAllPostsByPostType(postTypeId);
-      return response.data.reverse();
+      const response = await PostService.getAllPostsByPostType(postTypeId, page, limit);
+      return response; // keep whole response (with pagination info)
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -233,7 +236,10 @@ const postsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAllPostsByPostType.fulfilled, (state, action) => {
-        state.posts = action.payload;
+        state.posts = action.payload.data; // backend returns {data: []}
+        state.currentPage = action.payload.currentPage;
+        state.totalPages = action.payload.totalPages;
+        state.totalCount = action.payload.totalCount;
         state.loading = false;
         state.error = null;
       })

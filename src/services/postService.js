@@ -19,9 +19,9 @@ PostService.getMyApprovedPost = function (postTypeId) {
 };
 
 // Fetch all posts with a specific post type
-PostService.getAllPostsByPostType = function (postTypeId) {
+PostService.getAllPostsByPostType = function (postTypeId, page = 1, limit = 10) {
   return fetch({
-    url: `/posts/byposttype/${postTypeId}`,
+    url: `/posts/byposttype/${postTypeId}?page=${page}&limit=${limit}`,
     method: "get",
   });
 };
