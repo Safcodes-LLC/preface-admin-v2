@@ -28,6 +28,8 @@ PostService.getAllPostsByPostType = function (
 ) {
   let url = `/posts/byposttype/${postTypeId}?page=${page}&limit=${limit}`;
   if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (language) url += `&language=${encodeURIComponent(language)}`;
+  if (category) url += `&category=${encodeURIComponent(category)}`;
 
   return fetch({ url, method: "get" });
 };

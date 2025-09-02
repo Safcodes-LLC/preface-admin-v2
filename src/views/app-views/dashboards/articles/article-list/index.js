@@ -10,23 +10,28 @@ import {
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
-import utils from "utils";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllLanguages } from "store/slices/languagesSlice";
 import { deletePost, fetchAllPostsByPostType } from "store/slices/postSlice";
 import { fetchAllCategories } from "store/slices/categoriesSlice";
+
 const { Option } = Select;
+
 const ArticleList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // pagination state
+  // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
 
-  const { posts, totalCount, totalPages, loading } = useSelector(
-    (state) => state.post
-  );
+  // filters
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // redux states
+  const { posts, totalCount, loading } = useSelector((state) => state.post);
   const { languages, loading: languagesLoading } = useSelector(
     (state) => state.languages
   );
@@ -37,50 +42,86 @@ const ArticleList = () => {
   const [list, setList] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [selectedLanguage, setSelectedLanguage] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // Get available languages and categories
-  const availableLanguages = useMemo(() => {
-    return [{ _id: "all", name: "All Languages" }, ...(languages || [])];
-  }, [languages]);
+  // available filters
+  const availableLanguages = useMemo(
+    () => [{ _id: "all", name: "All Languages" }, ...(languages || [])],
+    [languages]
+  );
 
   const availableCategories = useMemo(() => {
     if (selectedLanguage === "all") {
-      // When 'All Languages' is selected, show only subcategories
-      const subCategories =
-        categories?.filter((cat) => cat.parentCategory) || [];
-      return [{ _id: "all", name: "All Categories" }, ...subCategories];
+      return [
+        { _id: "all", name: "All Categories" },
+        ...(categories?.filter((cat) => cat.parentCategory) || []),
+      ];
     }
-    // When a specific language is selected
-    const filteredCategories =
-      categories?.filter((cat) => {
-        const languageMatch =
-          cat.language?._id === selectedLanguage ||
-          cat.language === selectedLanguage;
-        // Only include categories that have a parentCategory (subcategories)
-        return languageMatch && cat.parentCategory;
-      }) || [];
-    return [{ _id: "all", name: "All Categories" }, ...filteredCategories];
+    return [
+      { _id: "all", name: "All Categories" },
+      ...(categories?.filter((cat) => {
+        const langId = cat.language?._id || cat.language;
+        return langId === selectedLanguage && cat.parentCategory;
+      }) || []),
+    ];
   }, [categories, selectedLanguage]);
 
-  useEffect(() => {
-    dispatch(fetchAllLanguages());
-    dispatch(fetchAllCategories({ page: 1, limit: 100 }));
+  // helper: fetch posts with current filters
+  const fetchPosts = (page = currentPage, search = searchValue, lang = selectedLanguage, cat = selectedCategory) => {
+    const languageFilter =
+      lang === "all"
+        ? ""
+        : availableLanguages.find((l) => l._id === lang)?.name || "";
+
+    const categoryFilter =
+      cat === "all"
+        ? ""
+        : availableCategories.find((c) => c._id === cat)?._id || "";
+
     dispatch(
       fetchAllPostsByPostType({
         postTypeId: "66d9d564987787d3e3ff1312",
-        page: currentPage,
+        page,
         limit: pageSize,
+        search,
+        language: languageFilter,
+        category: categoryFilter,
       })
     );
-  }, [dispatch, currentPage, pageSize]);
+  };
 
+  // initial load
   useEffect(() => {
-    if (posts) {
-      setList(posts);
-    }
+    dispatch(fetchAllLanguages());
+    dispatch(fetchAllCategories({ page: 1, limit: 100 }));
+    fetchPosts(1); // initial fetch
+  }, [dispatch]);
+
+  // update list whenever posts change
+  useEffect(() => {
+    if (posts) setList(posts);
   }, [posts]);
+
+  // actions
+  const AddArticle = () => navigate(`/admin/dashboards/articles/add-article`);
+  const editDetails = (row) =>
+    navigate(`/admin/dashboards/articles/edit-article/${row._id}`);
+  const viewDetails = (row) =>
+    navigate(`/admin/dashboards/articles/view-article/${row._id}`);
+
+  const deleteRow = async (row) => {
+    const idsToDelete =
+      selectedRows.length > 0 ? selectedRows.map((r) => r._id) : [row._id];
+
+    try {
+      await Promise.all(idsToDelete.map((id) => dispatch(deletePost({ postId: id }))));
+      message.success("Deleted Successfully");
+      setList((prev) => prev.filter((item) => !idsToDelete.includes(item._id)));
+      setSelectedRows([]);
+      setSelectedRowKeys([]);
+    } catch (error) {
+      message.error("Failed to delete");
+    }
+  };
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -109,42 +150,33 @@ const ArticleList = () => {
     </Menu>
   );
 
-  const AddArticle = () => {
-    navigate(`/admin/dashboards/articles/add-article`);
+  // handlers: trigger fetch immediately
+  const onSearch = (e) => {
+    const val = e.target.value;
+    setSearchValue(val);
+    setCurrentPage(1);
+    fetchPosts(1, val, selectedLanguage, selectedCategory);
   };
 
-  const editDetails = (row) => {
-    navigate(`/admin/dashboards/articles/edit-article/${row._id}`);
+  const onLanguageChange = (val) => {
+    setSelectedLanguage(val);
+    setSelectedCategory("all");
+    setCurrentPage(1);
+    fetchPosts(1, searchValue, val, "all");
   };
 
-  const viewDetails = (row) => {
-    navigate(`/admin/dashboards/articles/view-article/${row._id}`);
+  const onCategoryChange = (val) => {
+    setSelectedCategory(val);
+    setCurrentPage(1);
+    fetchPosts(1, searchValue, selectedLanguage, val);
   };
 
-  const deleteRow = (row) => {
-    const objKey = "_id";
-    let data = list;
-    if (selectedRows.length > 1) {
-      selectedRows.forEach((elm) => {
-        data = utils.deleteArrayRow(data, objKey, elm._id);
-        setList(data);
-        setSelectedRows([]);
-        // Need to dispatch the delete category
-        dispatch(deletePost({ postId: elm._id })).then((res) => {
-          console.log(res, "1");
-        });
-      });
-    } else {
-      dispatch(deletePost({ postId: row._id })).then((res) => {
-        if (!res.error) {
-          message.success("Deleted Successfully");
-          data = utils.deleteArrayRow(data, objKey, row._id);
-          setList(data);
-        }
-      });
-    }
+  const onPageChange = (page) => {
+    setCurrentPage(page);
+    fetchPosts(page, searchValue, selectedLanguage, selectedCategory);
   };
 
+  // table columns
   const tableColumns = [
     {
       title: "ID",
@@ -156,6 +188,7 @@ const ArticleList = () => {
     {
       title: "Title",
       dataIndex: "title",
+      ellipsis: false,
     },
     {
       title: "Language",
@@ -165,18 +198,16 @@ const ArticleList = () => {
     {
       title: "Status",
       dataIndex: "status",
-      render: (_, record) => {
-        return (
-          <>
-            <Tag color={record.status.includes("sendback") ? "red" : "green"}>
-              {record.status}
-            </Tag>
-            {record.editingSession?.id && (
-              <Tag color={"grey"}>Edit in progress</Tag>
-            )}
-          </>
-        );
-      },
+      render: (_, record) => (
+        <>
+          <Tag color={record.status.includes("sendback") ? "red" : "green"}>
+            {record.status}
+          </Tag>
+          {record.editingSession?.id && (
+            <Tag color="grey">Edit in progress</Tag>
+          )}
+        </>
+      ),
     },
     {
       title: "",
@@ -196,85 +227,6 @@ const ArticleList = () => {
     },
   };
 
-  const onSearch = (e) => {
-    const value = e.currentTarget.value;
-    setCurrentPage(1); // reset to first page
-    dispatch(
-      fetchAllPostsByPostType({
-        postTypeId: "66d9d564987787d3e3ff1312",
-        page: 1,
-        limit: pageSize,
-        search: value,
-      })
-    );
-  };
-
-  const onLanguageChange = (value) => {
-    setSelectedLanguage(value);
-    setCurrentPage(1);
-    setSelectedCategory("all"); // Reset category when language changes
-    const selectedLang = availableLanguages.find((lang) => lang._id === value);
-    const languageFilter =
-      selectedLang?._id === "all" ? "" : selectedLang?.name;
-
-    dispatch(
-      fetchAllPostsByPostType({
-        postTypeId: "66d9d564987787d3e3ff1312",
-        page: 1,
-        limit: pageSize,
-        language: languageFilter,
-        category: "", // Reset category filter when language changes
-      })
-    );
-  };
-
-  const onCategoryChange = (value) => {
-    setSelectedCategory(value);
-    setCurrentPage(1);
-    const selectedLang = availableLanguages.find(
-      (lang) => lang._id === selectedLanguage
-    );
-    const languageFilter =
-      selectedLang?._id === "all" ? "" : selectedLang?.name;
-    const selectedCat = availableCategories.find((cat) => cat._id === value);
-    const categoryFilter = selectedCat?._id === "all" ? "" : selectedCat?._id;
-
-    dispatch(
-      fetchAllPostsByPostType({
-        postTypeId: "66d9d564987787d3e3ff1312",
-        page: 1,
-        limit: pageSize,
-        language: languageFilter,
-        category: categoryFilter,
-      })
-    );
-  };
-
-  // Add a new handleFilter function
-  const handleFilter = () => {
-    const languageFilter =
-      selectedLanguage === "all"
-        ? ""
-        : availableLanguages.find((lang) => lang._id === selectedLanguage)
-            ?.name || "";
-
-    const categoryFilter =
-      selectedCategory === "all"
-        ? ""
-        : availableCategories.find((cat) => cat._id === selectedCategory)
-            ?._id || "";
-
-    dispatch(
-      fetchAllPostsByPostType({
-        postTypeId: "66d9d564987787d3e3ff1312",
-        page: 1,
-        limit: pageSize,
-        language: languageFilter,
-        category: categoryFilter,
-      })
-    );
-  };
-
   return (
     <Card>
       <Flex
@@ -287,11 +239,12 @@ const ArticleList = () => {
             <Input
               placeholder="Search"
               prefix={<SearchOutlined />}
-              onChange={(e) => onSearch(e)}
+              onChange={onSearch}
+              value={searchValue}
             />
           </div>
         </Flex>
-        <div className="d-flex  gap-2">
+        <div className="d-flex gap-2">
           <Select
             placeholder="Filter by language"
             value={selectedLanguage}
@@ -318,20 +271,7 @@ const ArticleList = () => {
               </Option>
             ))}
           </Select>
-          <Button
-            onClick={handleFilter}
-            type="primary"
-            className="px-1 mr-2"
-            block
-          >
-            Filter
-          </Button>
-          <Button
-            onClick={AddArticle}
-            type="primary"
-            icon={<PlusCircleOutlined />}
-            block
-          >
+          <Button onClick={AddArticle} type="primary" icon={<PlusCircleOutlined />} block>
             Add Article
           </Button>
         </div>
@@ -344,7 +284,7 @@ const ArticleList = () => {
           dataSource={list}
           rowKey="_id"
           rowSelection={{
-            selectedRowKeys: selectedRowKeys,
+            selectedRowKeys,
             type: "checkbox",
             preserveSelectedRowKeys: false,
             ...rowSelection,
@@ -353,7 +293,7 @@ const ArticleList = () => {
             current: currentPage,
             pageSize: pageSize,
             total: totalCount,
-            onChange: (page) => setCurrentPage(page),
+            onChange: onPageChange,
             showSizeChanger: false,
             showTotal: (total) => `Total ${total} articles`,
           }}

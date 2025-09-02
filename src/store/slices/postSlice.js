@@ -70,9 +70,9 @@ export const fetchMyApprovedPost = createAsyncThunk(
 // Create an async thunk to fetch all posts with a specific post type
 export const fetchAllPostsByPostType = createAsyncThunk(
   "posts/fetchAllPostsByPostType",
-  async ({ postTypeId, page = 1, limit = 10, search = "" }, { rejectWithValue }) => {
+  async ({ postTypeId, page = 1, limit = 10, search = "", language = "", category = "" }, { rejectWithValue }) => {
     try {
-      const response = await PostService.getAllPostsByPostType(postTypeId, page, limit, search);
+      const response = await PostService.getAllPostsByPostType(postTypeId, page, limit, search, language, category);
       return response;
     } catch (error) {
       return rejectWithValue(error.message);
