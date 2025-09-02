@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Card, Table, Input, Button, Menu, Tag, message } from "antd";
+import React, { useEffect, useMemo, useState } from "react";
+import { Card, Table, Input, Button, Menu, Tag, message, Select } from "antd";
 import {
   EyeOutlined,
   DeleteOutlined,
@@ -10,41 +10,118 @@ import {
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
-import utils from "utils";
 import { useDispatch, useSelector } from "react-redux";
+import { fetchAllLanguages } from "store/slices/languagesSlice";
 import { deletePost, fetchAllPostsByPostType } from "store/slices/postSlice";
+import { fetchAllCategories } from "store/slices/categoriesSlice";
+
+const { Option } = Select;
 
 const ArticleList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // pagination state
+  // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
 
-  const { posts, totalCount, totalPages, loading } = useSelector(
-    (state) => state.post
+  // filters
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // redux states
+  const { posts, totalCount, loading } = useSelector((state) => state.post);
+  const { languages, loading: languagesLoading } = useSelector(
+    (state) => state.languages
+  );
+  const { categories, loading: categoriesLoading } = useSelector(
+    (state) => state.categories
   );
 
   const [list, setList] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
-  useEffect(() => {
+  // available filters
+  const availableLanguages = useMemo(
+    () => [{ _id: "all", name: "All Languages" }, ...(languages || [])],
+    [languages]
+  );
+
+  const availableCategories = useMemo(() => {
+    if (selectedLanguage === "all") {
+      return [
+        { _id: "all", name: "All Categories" },
+        ...(categories?.filter((cat) => cat.parentCategory) || []),
+      ];
+    }
+    return [
+      { _id: "all", name: "All Categories" },
+      ...(categories?.filter((cat) => {
+        const langId = cat.language?._id || cat.language;
+        return langId === selectedLanguage && cat.parentCategory;
+      }) || []),
+    ];
+  }, [categories, selectedLanguage]);
+
+  // helper: fetch posts with current filters
+  const fetchPosts = (page = currentPage, search = searchValue, lang = selectedLanguage, cat = selectedCategory) => {
+    const languageFilter =
+      lang === "all"
+        ? ""
+        : availableLanguages.find((l) => l._id === lang)?.name || "";
+
+    const categoryFilter =
+      cat === "all"
+        ? ""
+        : availableCategories.find((c) => c._id === cat)?._id || "";
+
     dispatch(
       fetchAllPostsByPostType({
         postTypeId: "66d9d564987787d3e3ff1312",
-        page: currentPage,
+        page,
         limit: pageSize,
+        search,
+        language: languageFilter,
+        category: categoryFilter,
       })
     );
-  }, [dispatch, currentPage, pageSize]);
+  };
 
+  // initial load
   useEffect(() => {
-    if (posts) {
-      setList(posts);
-    }
+    dispatch(fetchAllLanguages());
+    dispatch(fetchAllCategories({ page: 1, limit: 100 }));
+    fetchPosts(1); // initial fetch
+  }, [dispatch]);
+
+  // update list whenever posts change
+  useEffect(() => {
+    if (posts) setList(posts);
   }, [posts]);
+
+  // actions
+  const AddArticle = () => navigate(`/admin/dashboards/articles/add-article`);
+  const editDetails = (row) =>
+    navigate(`/admin/dashboards/articles/edit-article/${row._id}`);
+  const viewDetails = (row) =>
+    navigate(`/admin/dashboards/articles/view-article/${row._id}`);
+
+  const deleteRow = async (row) => {
+    const idsToDelete =
+      selectedRows.length > 0 ? selectedRows.map((r) => r._id) : [row._id];
+
+    try {
+      await Promise.all(idsToDelete.map((id) => dispatch(deletePost({ postId: id }))));
+      message.success("Deleted Successfully");
+      setList((prev) => prev.filter((item) => !idsToDelete.includes(item._id)));
+      setSelectedRows([]);
+      setSelectedRowKeys([]);
+    } catch (error) {
+      message.error("Failed to delete");
+    }
+  };
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -73,42 +150,33 @@ const ArticleList = () => {
     </Menu>
   );
 
-  const AddArticle = () => {
-    navigate(`/admin/dashboards/articles/add-article`);
+  // handlers: trigger fetch immediately
+  const onSearch = (e) => {
+    const val = e.target.value;
+    setSearchValue(val);
+    setCurrentPage(1);
+    fetchPosts(1, val, selectedLanguage, selectedCategory);
   };
 
-  const editDetails = (row) => {
-    navigate(`/admin/dashboards/articles/edit-article/${row._id}`);
+  const onLanguageChange = (val) => {
+    setSelectedLanguage(val);
+    setSelectedCategory("all");
+    setCurrentPage(1);
+    fetchPosts(1, searchValue, val, "all");
   };
 
-  const viewDetails = (row) => {
-    navigate(`/admin/dashboards/articles/view-article/${row._id}`);
+  const onCategoryChange = (val) => {
+    setSelectedCategory(val);
+    setCurrentPage(1);
+    fetchPosts(1, searchValue, selectedLanguage, val);
   };
 
-  const deleteRow = (row) => {
-    const objKey = "_id";
-    let data = list;
-    if (selectedRows.length > 1) {
-      selectedRows.forEach((elm) => {
-        data = utils.deleteArrayRow(data, objKey, elm._id);
-        setList(data);
-        setSelectedRows([]);
-        // Need to dispatch the delete category
-        dispatch(deletePost({ postId: elm._id })).then((res) => {
-          console.log(res, "1");
-        });
-      });
-    } else {
-      dispatch(deletePost({ postId: row._id })).then((res) => {
-        if (!res.error) {
-          message.success("Deleted Successfully");
-          data = utils.deleteArrayRow(data, objKey, row._id);
-          setList(data);
-        }
-      });
-    }
+  const onPageChange = (page) => {
+    setCurrentPage(page);
+    fetchPosts(page, searchValue, selectedLanguage, selectedCategory);
   };
 
+  // table columns
   const tableColumns = [
     {
       title: "ID",
@@ -120,6 +188,7 @@ const ArticleList = () => {
     {
       title: "Title",
       dataIndex: "title",
+      ellipsis: false,
     },
     {
       title: "Language",
@@ -129,18 +198,16 @@ const ArticleList = () => {
     {
       title: "Status",
       dataIndex: "status",
-      render: (_, record) => {
-        return (
-          <>
-            <Tag color={record.status.includes("sendback") ? "red" : "green"}>
-              {record.status}
-            </Tag>
-            {record.editingSession?.id && (
-              <Tag color={"grey"}>Edit in progress</Tag>
-            )}
-          </>
-        );
-      },
+      render: (_, record) => (
+        <>
+          <Tag color={record.status.includes("sendback") ? "red" : "green"}>
+            {record.status}
+          </Tag>
+          {record.editingSession?.id && (
+            <Tag color="grey">Edit in progress</Tag>
+          )}
+        </>
+      ),
     },
     {
       title: "",
@@ -160,13 +227,6 @@ const ArticleList = () => {
     },
   };
 
-  const onSearch = (e) => {
-    const value = e.currentTarget.value;
-    const data = utils.wildCardSearch(posts, value);
-    setList(data);
-    setSelectedRowKeys([]);
-  };
-
   return (
     <Card>
       <Flex
@@ -179,17 +239,39 @@ const ArticleList = () => {
             <Input
               placeholder="Search"
               prefix={<SearchOutlined />}
-              onChange={(e) => onSearch(e)}
+              onChange={onSearch}
+              value={searchValue}
             />
           </div>
         </Flex>
-        <div>
-          <Button
-            onClick={AddArticle}
-            type="primary"
-            icon={<PlusCircleOutlined />}
-            block
+        <div className="d-flex gap-2">
+          <Select
+            placeholder="Filter by language"
+            value={selectedLanguage}
+            onChange={onLanguageChange}
+            loading={languagesLoading}
+            style={{ width: 180, marginRight: 12 }}
           >
+            {availableLanguages.map((language) => (
+              <Option key={language._id} value={language._id}>
+                {language.name}
+              </Option>
+            ))}
+          </Select>
+          <Select
+            placeholder="Filter by category"
+            value={selectedCategory}
+            onChange={onCategoryChange}
+            loading={categoriesLoading}
+            style={{ width: 180, marginRight: 12 }}
+          >
+            {availableCategories.map((category) => (
+              <Option key={category._id} value={category._id}>
+                {category.name}
+              </Option>
+            ))}
+          </Select>
+          <Button onClick={AddArticle} type="primary" icon={<PlusCircleOutlined />} block>
             Add Article
           </Button>
         </div>
@@ -202,7 +284,7 @@ const ArticleList = () => {
           dataSource={list}
           rowKey="_id"
           rowSelection={{
-            selectedRowKeys: selectedRowKeys,
+            selectedRowKeys,
             type: "checkbox",
             preserveSelectedRowKeys: false,
             ...rowSelection,
@@ -211,7 +293,7 @@ const ArticleList = () => {
             current: currentPage,
             pageSize: pageSize,
             total: totalCount,
-            onChange: (page) => setCurrentPage(page),
+            onChange: onPageChange,
             showSizeChanger: false,
             showTotal: (total) => `Total ${total} articles`,
           }}
