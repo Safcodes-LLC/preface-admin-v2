@@ -817,9 +817,10 @@ const ArticleForm = (props) => {
           meta_title: articleData.meta_title,
           meta_desc: articleData.meta_desc,
           meta_tags: articleData.meta_tags,
-          ParentCategory: articleData.categories.map(
-            (category) => category.parentCategory?.id
-          ),
+          ParentCategory: articleData.categories.map((category) => ({
+            label: category.parentCategory?.name,
+            value: category.parentCategory?.id,
+          })),
         });
 
         // Approval list start
