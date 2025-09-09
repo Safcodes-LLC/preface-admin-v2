@@ -63,13 +63,11 @@ const ListPost = () => {
   const [allListData, setAllListData] = useState([]); // New state to store data conditionally
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   // State to manage selected values
-  const [selectedAuthor, setSelectedAuthor] = useState(null); // Initialize with the first author
   const [selectedCategory, setSelectedCategory] = useState(null); // Initialize with the first category
   const [isModalVisible, setIsModalVisible] = useState(false); // State to control modal visibility
   const [listMain, setListMain] = useState([]);
   const [featuredStatusChanges, setFeaturedStatusChanges] = useState({});
   const [categories, setCategories] = useState([]);
-  const [authors, setAuthors] = useState([]);
   const [selectedTitle, setSelectedTitle] = useState(""); // State for title filter
   const [filteredData, setFilteredData] = useState([]);
   const [originalData, setOriginalData] = useState([]); // Store original dataset
@@ -127,30 +125,6 @@ const ListPost = () => {
     fetchCategories();
   }, []);
 
-
-  //authors
-  useEffect(() => {
-    const fetchAuthors = async () => {
-      try {
-        const token = localStorage.getItem("auth_token");
-        const response = await axios.get(
-          `${API_BASE_URL}/frontend/all-authors`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token, // Pass the token directly without 'Bearer'
-            },
-          }
-        );
-        setAuthors(response.data.data.map((author) => author.username));
-      } catch (error) {
-        console.error("Error fetching category list:", error);
-      }
-    };
-
-    fetchAuthors();
-  }, []);
-  // console.log(authors, "author hj");
   
   useEffect(() => {
     const postTypeIdMapping = {
@@ -210,9 +184,6 @@ const ListPost = () => {
 
     fetchFeaturedPosts(); // Call the fetch function
   }, [location.pathname]); // Rerun when the pathname changes
-
-  // const Author = ["salman", "ameen", "shahad", "rufaid"]; // Static data for first dropdown
-  // const Category = ["QURAN", "HADEES", "RELIGION"]; // Static data for second dropdown
 
   // Function to format the current path
   const formatPath = (path) => {
@@ -274,22 +245,19 @@ const ListPost = () => {
     }
   };
 
-  //filter category, title, author
+  //filter category, title
   const handleFilter = () => {
     const filteredList = originalData.filter((item) => {
       const matchesCategory = selectedCategory
         ? item.categories.some((category) => category.name === selectedCategory)
         : true;
         
-      const matchesAuthor = selectedAuthor
-      ? item.author && item.author.username === selectedAuthor
-      : true;
-
+    
       const matchesTitle = selectedTitle
         ? item.title.toLowerCase().includes(selectedTitle.toLowerCase())
         : true;
 
-      return matchesCategory && matchesAuthor && matchesTitle;
+      return matchesCategory && matchesTitle;
     });
 
     setFilteredData(filteredList); // Update filtered data
@@ -455,23 +423,6 @@ const ListPost = () => {
     },
     { title: "Title", dataIndex: "title" },
     {
-      title: "Author",
-      dataIndex: "author",
-      render: (_, record) => (
-        <div className="d-flex">
-          <AvatarStatus
-            size={60}
-            type="square"
-            src={
-              record?.author?.profile_pic || "/img/avatars/default-avatar.jpg"
-            }
-            name={record?.author?.username}
-          />
-        </div>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
-    },
-    {
       title: "Language",
       dataIndex: "language",
       render: (_, record) => record?.language?.name,
@@ -573,26 +524,6 @@ const ListPost = () => {
       >
         <Form form={form} layout="vertical" style={{ marginTop: "20px" }}>
           <Row gutter={[5, 1]}>
-            {/* author dropdown */}
-            <Col xs={24} sm={12} md={12} lg={12} xl={5}>
-              <Form.Item
-                label="Author"
-                name="author"
-                initialValue={selectedAuthor}
-                // rules={[{ required: true, message: "Select an author!" }]}
-              >
-                <Select
-                  onChange={(value) => setSelectedAuthor(value)}
-                  placeholder="Select an Author"
-                >
-                  {authors.map((author) => (
-                    <Option key={author} value={author}>
-                      {author}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
             {/* category dropdown */}
             <Col xs={24} sm={12} md={12} lg={12} xl={5}>
               <Form.Item
