@@ -617,7 +617,7 @@ const ListPost = () => {
                 />
               </Form.Item>
             </Col> */}
-            <Col xs={24} sm={24} md={8} lg={12}>
+            <Col xs={24} sm={24} md={8} lg={10}>
               <Form.Item label="Search">
                 <Input
                   placeholder="Search by title..."
