@@ -14,14 +14,10 @@ import {
   Grid,
   message,
   Checkbox,
-  Input as AntInput
+  Input as AntInput,
 } from "antd";
 import { PlusCircleOutlined } from "@ant-design/icons";
-import {
-  DeleteOutlined,
-  EyeOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
+import { DeleteOutlined, EyeOutlined, SearchOutlined } from "@ant-design/icons";
 import { API_BASE_URL } from "configs/AppConfig";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
@@ -31,6 +27,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { fetchAllPostsByPostType } from "store/slices/postSlice";
 import axios from "axios";
 import { fetchAllLanguages } from "store/slices/languagesSlice";
+import { fetchAllCategories } from "store/slices/categoriesSlice";
 
 const ListPost = () => {
   const { Option } = Select;
@@ -38,6 +35,101 @@ const ListPost = () => {
   const [form] = Form.useForm();
   const { useBreakpoint } = Grid;
   const screens = useBreakpoint(); // Get screen size information
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname.split("/").pop(); // Get the last part of the path
+
+  // State for pagination and filters
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedLanguage, setSelectedLanguage] = useState("all");
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [featuredStatusChanges, setFeaturedStatusChanges] = useState({});
+  const [listMain, setListMain] = useState([]);
+
+  // Redux states
+  const {
+    posts,
+    totalCount,
+    loading: postsLoading,
+  } = useSelector((state) => state.post);
+  const { languages, loading: languagesLoading } = useSelector(
+    (state) => state.languages
+  );
+  const { categories, loading: categoriesLoading } = useSelector(
+    (state) => state.categories
+  );
+
+  // Available filters
+  const availableLanguages = useMemo(
+    () => [{ _id: "all", name: "All Languages" }, ...(languages || [])],
+    [languages]
+  );
+
+  const availableCategories = useMemo(() => {
+    if (selectedLanguage === "all") {
+      return [
+        { _id: "all", name: "All Categories" },
+        ...(categories?.filter((cat) => cat.parentCategory) || []),
+      ];
+    }
+    return [
+      { _id: "all", name: "All Categories" },
+      ...(categories?.filter((cat) => {
+        const langId = cat.language?._id || cat.language;
+        return langId === selectedLanguage && cat.parentCategory;
+      }) || []),
+    ];
+  }, [categories, selectedLanguage]);
+
+  // Fetch posts with current filters
+  const fetchPosts = (
+    page = 1,
+    search = searchValue,
+    lang = selectedLanguage,
+    cat = selectedCategory
+  ) => {
+    const languageFilter = lang !== "all" ? lang : "";
+    const categoryFilter = cat !== "all" ? cat : "";
+    const searchQuery = search || "";
+
+    const postTypeIdMapping = {
+      "popular-article": "66d9d564987787d3e3ff1312",
+      "popular-podcast": "66d9d564987787d3e3ff1313",
+      "popular-video": "66d9d564987787d3e3ff1314",
+    };
+
+    const postTypeId = Object.keys(postTypeIdMapping).find((key) =>
+      location.pathname.includes(key)
+    );
+
+    if (postTypeId) {
+      const params = {
+        postTypeId: postTypeIdMapping[postTypeId],
+        page,
+        limit: pageSize,
+      };
+
+      // Only include parameters that have values
+      if (searchQuery) params.search = searchQuery;
+      if (languageFilter) params.language = languageFilter;
+      if (categoryFilter) params.category = categoryFilter;
+
+      dispatch(
+        fetchAllPostsByPostType(params)
+      );
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    dispatch(fetchAllLanguages());
+    dispatch(fetchAllCategories({ page: 1, limit: 100 }));
+    fetchPosts(1);
+  }, [dispatch]);
 
   // Define label logic outside JSX
   let labelContent;
@@ -47,30 +139,16 @@ const ListPost = () => {
     labelContent = <span style={{ display: "none" }}>Filter</span>; // Completely hidden for smaller screens
   }
 
-  // Get the current path
-  const location = useLocation();
-  const currentPath = location.pathname.split("/").pop(); // Get the last part of the path
-  const navigate = useNavigate();
   const allArticlePosts = useSelector((state) => state.post.posts);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+
   const [list, setList] = useState([]);
   const [allListData] = useState([]); // State to store data conditionally
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  // State to manage selected values
-  const [selectedCategory, setSelectedCategory] = useState(null); // Initialize with the first category
-  const [selectedLanguage, setSelectedLanguage] = useState("");
-  const { languages, loading: languagesLoading } = useSelector((state) => state.languages);
-  const { categories, loading: categoriesLoading } = useSelector((state) => state.categories);
-  const { posts, totalCount, loading: postsLoading } = useSelector((state) => state.post);
-  const [isModalVisible, setIsModalVisible] = useState(false); // State to control modal visibility
-  const [listMain, setListMain] = useState([]);
-  const [featuredStatusChanges, setFeaturedStatusChanges] = useState({});
+
   // const [categories, setCategories] = useState([]);
   const [selectedTitle, setSelectedTitle] = useState(""); // State for title filter
   const [filteredData, setFilteredData] = useState([]);
   const [originalData, setOriginalData] = useState([]); // Store original dataset
-  const [searchValue, setSearchValue] = useState("");
+
   const isPrefaceToIslam = location.pathname.includes("preface-to-islam");
   // console.log(list,"list data");
   // console.log(allListData,"allListData data");
@@ -91,27 +169,11 @@ const ListPost = () => {
   }, [allArticlePosts]);
 
   // Fetch languages on component mount
-  useEffect(() => {
-    if (languages.length === 0) {
-      dispatch(fetchAllLanguages());
-    }
-  }, [dispatch, languages.length]);
-
-  //category
   // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${API_BASE_URL}/frontend/category-list`
-  //       );
-  //       setCategories(response.data.data.map((cat) => cat.name));
-  //     } catch (error) {
-  //       console.error("Error fetching category list:", error);
-  //     }
-  //   };
-
-  //   fetchCategories();
-  // }, []);
+  //   if (languages.length === 0) {
+  //     dispatch(fetchAllLanguages());
+  //   }
+  // }, [dispatch, languages.length]);
 
   // Fetch posts by post type
   useEffect(() => {
@@ -119,7 +181,7 @@ const ListPost = () => {
     const postTypeIdMapping = {
       "popular-article": "66d9d564987787d3e3ff1312",
       "popular-podcast": "66d9d564987787d3e3ff1313",
-      "popular-video": "66d9d564987787d3e3ff1314"
+      "popular-video": "66d9d564987787d3e3ff1314",
     };
 
     const postTypeId = Object.keys(postTypeIdMapping).find((key) =>
@@ -207,48 +269,35 @@ const ListPost = () => {
 
   //view details
   const viewDetails = (row) => {
-    let path = '';
-  
+    let path = "";
+
     if (location.pathname.includes("popular-article")) {
-      path = 'view-article';
+      path = "view-article";
     } else if (location.pathname.includes("popular-podcast")) {
-      path = 'view-podcast';
+      path = "view-podcast";
     } else if (location.pathname.includes("popular-video")) {
-      path = 'view-video';
+      path = "view-video";
     }
-  
+
     switch (path) {
-      case 'view-article':
+      case "view-article":
         navigate(`/admin/dashboards/articles/${path}/${row._id}`);
         break;
-      case 'view-podcast':
+      case "view-podcast":
         navigate(`/admin/dashboards/podcasts/${path}/${row._id}`);
         break;
-      case 'view-video':
+      case "view-video":
         navigate(`/admin/dashboards/videos/${path}/${row._id}`);
         break;
       default:
-        console.error('No matching path found');
+        console.error("No matching path found");
         break;
     }
   };
 
-  //filter category, title
+  //filter category, title, and language
   const handleFilter = () => {
-    const filteredList = originalData.filter((item) => {
-      const matchesCategory = selectedCategory
-        ? item.categories.some((category) => category.name === selectedCategory)
-        : true;
-        
-    
-      const matchesTitle = selectedTitle
-        ? item.title.toLowerCase().includes(selectedTitle.toLowerCase())
-        : true;
-
-      return matchesCategory && matchesTitle;
-    });
-
-    setFilteredData(filteredList); // Update filtered data
+    fetchPosts(1, searchValue, selectedLanguage, selectedCategory);
   };
 
   // Function to handle checkbox change
@@ -471,62 +520,10 @@ const ListPost = () => {
       ),
     },
   ];
-  
 
-    // Available filters
-    const availableLanguages = useMemo(
-      () => [{ _id: "all", name: "All Languages" }, ...(languages || [])],
-      [languages]
-    );
-
-    const availableCategories = useMemo(() => {
-      if (selectedLanguage === "all") {
-        return [
-          { _id: "all", name: "All Categories" },
-          ...(categories?.filter(cat => cat.parentCategory) || []),
-        ];
-      }
-      return [
-        { _id: "all", name: "All Categories" },
-        ...(categories?.filter(cat => {
-          const langId = cat.language?._id || cat.language;
-          return langId === selectedLanguage && cat.parentCategory;
-        }) || []),
-      ];
-    }, [categories, selectedLanguage]);
-
-    const handleSearch = (e) => {
-      setSearchValue(e.target.value);
-      fetchPosts(1, e.target.value);
-    };
-
-   // Fetch posts with current filters
-   const fetchPosts = (page = 1, search = searchValue, lang = selectedLanguage, cat = selectedCategory) => {
-    const languageFilter = lang === "all" ? "" : availableLanguages.find(l => l._id === lang)?.name || "";
-    const categoryFilter = cat === "all" ? "" : availableCategories.find(c => c._id === cat)?._id || "";
- 
-    const postTypeIdMapping = {
-      "popular-article": "66d9d564987787d3e3ff1312",
-      "popular-podcast": "66d9d564987787d3e3ff1313",
-      "popular-video": "66d9d564987787d3e3ff1314",
-    };
- 
-    const postTypeId = Object.keys(postTypeIdMapping).find(key =>
-      location.pathname.includes(key)
-    );
- 
-    if (postTypeId) {
-      dispatch(
-        fetchAllPostsByPostType({
-          postTypeId: postTypeIdMapping[postTypeId],
-          page,
-          limit: pageSize,
-          search,
-          language: languageFilter,
-          category: categoryFilter,
-        })
-      );
-    }
+  const handleSearch = (e) => {
+    setSearchValue(e.target.value);
+    fetchPosts(1, e.target.value);
   };
 
   const handleTableChange = (pagination) => {
@@ -574,7 +571,7 @@ const ListPost = () => {
       >
         <Form form={form} layout="vertical" style={{ marginTop: "20px" }}>
           <Row gutter={[5, 1]}>
-          <Col xs={24} sm={12} md={8} lg={6}>
+            <Col xs={24} sm={12} md={8} lg={6}>
               <Form.Item label="Language">
                 <Select
                   value={selectedLanguage}
@@ -608,16 +605,19 @@ const ListPost = () => {
               </Form.Item>
             </Col>
             {/* Title */}
-            {/* <Col xs={24} sm={12} md={20} lg={20} xl={12}>
+            <Col xs={24} sm={12} md={20} lg={20} xl={10}>
               <Form.Item name="title" label={"Title"}>
                 <AntInput
                   placeholder={`Enter title`}
                   value={selectedTitle}
-                  onChange={(e) => setSelectedTitle(e.target.value)} // Update title state
+                  onChange={(e) => {
+                    setSelectedTitle(e.target.value);
+                    setSearchValue(e.target.value); // Also update searchValue
+                  }}
                 />
               </Form.Item>
-            </Col> */}
-            <Col xs={24} sm={24} md={8} lg={10}>
+            </Col>
+            {/* <Col xs={24} sm={24} md={8} lg={10}>
               <Form.Item label="Search">
                 <Input
                   placeholder="Search by title..."
@@ -628,10 +628,10 @@ const ListPost = () => {
                   onPressEnter={(e) => handleSearch(e)}
                 />
               </Form.Item>
-            </Col>
+            </Col> */}
 
             {/* Filter button */}
-            {/* <Col xs={8} sm={12} md={4} lg={4} xl={2}>
+            <Col xs={8} sm={12} md={4} lg={4} xl={2}>
               <Form.Item label={labelContent}>
                 <Button
                   onClick={handleFilter}
@@ -641,27 +641,28 @@ const ListPost = () => {
                   Filter
                 </Button>
               </Form.Item>
-            </Col> */}
+            </Col>
           </Row>
           <div>
             {/*popup list Table */}
             <Table
-          columns={popupTableColumns}
-          dataSource={posts}
-          rowKey="_id"
-          loading={postsLoading}
-          rowSelection={{
-            selectedRowKeys,
-            onChange: (selectedRowKeys) => setSelectedRowKeys(selectedRowKeys),
-          }}
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total: totalCount,
-            showSizeChanger: false,
-          }}
-          onChange={handleTableChange}
-        />
+              columns={popupTableColumns}
+              dataSource={posts}
+              rowKey="_id"
+              loading={postsLoading}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: (selectedRowKeys) =>
+                  setSelectedRowKeys(selectedRowKeys),
+              }}
+              pagination={{
+                current: currentPage,
+                pageSize,
+                total: totalCount,
+                showSizeChanger: false,
+              }}
+              onChange={handleTableChange}
+            />
           </div>
         </Form>
       </Modal>
