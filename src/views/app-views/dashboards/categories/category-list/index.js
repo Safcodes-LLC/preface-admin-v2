@@ -147,7 +147,7 @@ const CategoriesList = () => {
             size={60}
             type="square"
             src={record.featuredImage}
-            name={record.name}
+            // name={record.name}
           />
         </div>
       ),

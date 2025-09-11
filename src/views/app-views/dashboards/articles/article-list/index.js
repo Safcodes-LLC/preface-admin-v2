@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllLanguages } from "store/slices/languagesSlice";
 import { deletePost, fetchAllPostsByPostType } from "store/slices/postSlice";
 import { fetchAllCategories } from "store/slices/categoriesSlice";
+import AvatarStatus from "components/shared-components/AvatarStatus";
 
 const { Option } = Select;
 
@@ -190,6 +191,20 @@ const ArticleList = () => {
       dataIndex: "title",
       ellipsis: false,
     },
+        {
+          title: "Image",
+          dataIndex: "featuredImage",
+          render: (_, record) => (
+            <div className="d-flex">
+              <AvatarStatus
+                size={60}
+                type="square"
+                src={record.thumbnail}
+                // name={record.name}
+              />
+            </div>
+          ),
+        },
     {
       title: "Language",
       dataIndex: "language",
