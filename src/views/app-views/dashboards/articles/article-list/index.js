@@ -266,6 +266,11 @@ const ArticleList = () => {
             onChange={onLanguageChange}
             loading={languagesLoading}
             style={{ width: 180, marginRight: 12 }}
+            dropdownMatchSelectWidth={false}
+            dropdownStyle={{ width: 'auto'}}
+            dropdownRender={(menu) => (
+              <div style={{ width: 'max-content' }}>{menu}</div>
+            )}
           >
             {availableLanguages.map((language) => (
               <Option key={language._id} value={language._id}>
@@ -279,6 +284,11 @@ const ArticleList = () => {
             onChange={onCategoryChange}
             loading={categoriesLoading}
             style={{ width: 180, marginRight: 12 }}
+            dropdownMatchSelectWidth={false}
+            dropdownStyle={{ width: 'auto', minWidth: '180px' }}
+            dropdownRender={(menu) => (
+              <div style={{ width: 'max-content' }}>{menu}</div>
+            )}
           >
             {availableCategories.map((category) => (
               <Option key={category._id} value={category._id}>
