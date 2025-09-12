@@ -40,6 +40,8 @@ const ArticleList = () => {
     (state) => state.categories
   );
 
+  console.log("posts 123456", posts);
+
   const [list, setList] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -67,7 +69,12 @@ const ArticleList = () => {
   }, [categories, selectedLanguage]);
 
   // helper: fetch posts with current filters
-  const fetchPosts = (page = currentPage, search = searchValue, lang = selectedLanguage, cat = selectedCategory) => {
+  const fetchPosts = (
+    page = currentPage,
+    search = searchValue,
+    lang = selectedLanguage,
+    cat = selectedCategory
+  ) => {
     const languageFilter =
       lang === "all"
         ? ""
@@ -114,7 +121,9 @@ const ArticleList = () => {
       selectedRows.length > 0 ? selectedRows.map((r) => r._id) : [row._id];
 
     try {
-      await Promise.all(idsToDelete.map((id) => dispatch(deletePost({ postId: id }))));
+      await Promise.all(
+        idsToDelete.map((id) => dispatch(deletePost({ postId: id })))
+      );
       message.success("Deleted Successfully");
       setList((prev) => prev.filter((item) => !idsToDelete.includes(item._id)));
       setSelectedRows([]);
@@ -191,20 +200,28 @@ const ArticleList = () => {
       dataIndex: "title",
       ellipsis: false,
     },
-        {
-          title: "Image",
-          dataIndex: "featuredImage",
-          render: (_, record) => (
-            <div className="d-flex">
-              <AvatarStatus
-                size={60}
-                type="square"
-                src={record.thumbnail}
-                // name={record.name}
-              />
-            </div>
-          ),
-        },
+    {
+      title: "Category",
+      dataIndex: "category",
+      render: (_, record) =>
+        record?.categories[0]?.parentCategory?.name +
+        " / " +
+        record?.categories[0]?.name,
+    },
+    {
+      title: "Image",
+      dataIndex: "featuredImage",
+      render: (_, record) => (
+        <div className="d-flex">
+          <AvatarStatus
+            size={60}
+            type="square"
+            src={record.thumbnail}
+            // name={record.name}
+          />
+        </div>
+      ),
+    },
     {
       title: "Language",
       dataIndex: "language",
@@ -266,7 +283,6 @@ const ArticleList = () => {
             onChange={onLanguageChange}
             loading={languagesLoading}
             style={{ width: 180, marginRight: 12 }}
-            
           >
             {availableLanguages.map((language) => (
               <Option key={language._id} value={language._id}>
@@ -281,9 +297,9 @@ const ArticleList = () => {
             loading={categoriesLoading}
             style={{ width: 180, marginRight: 12 }}
             dropdownMatchSelectWidth={false}
-            dropdownStyle={{ width: 'auto', minWidth: '180px' }}
+            dropdownStyle={{ width: "auto", minWidth: "180px" }}
             dropdownRender={(menu) => (
-              <div style={{ width: 'max-content' }}>{menu}</div>
+              <div style={{ width: "max-content" }}>{menu}</div>
             )}
           >
             {availableCategories.map((category) => (
@@ -292,7 +308,12 @@ const ArticleList = () => {
               </Option>
             ))}
           </Select>
-          <Button onClick={AddArticle} type="primary" icon={<PlusCircleOutlined />} block>
+          <Button
+            onClick={AddArticle}
+            type="primary"
+            icon={<PlusCircleOutlined />}
+            block
+          >
             Add Article
           </Button>
         </div>
