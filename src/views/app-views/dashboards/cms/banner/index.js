@@ -173,10 +173,10 @@ const Banner = () => {
 
   // Update categories list when Redux state changes
   useEffect(() => {
-    console.log('Categories from Redux:', categories);
-    console.log('Categories from Redux length:', categories?.length || 0);
-    console.log('Categories from Redux type:', typeof categories);
-    console.log('Is array?', Array.isArray(categories));
+    // console.log('Categories from Redux:', categories);
+    // console.log('Categories from Redux length:', categories?.length || 0);
+    // console.log('Categories from Redux type:', typeof categories);
+    // console.log('Is array?', Array.isArray(categories));
     
     if (categories && Array.isArray(categories) && categories.length > 0) {
       setCategoriesList(categories);
@@ -188,7 +188,7 @@ const Banner = () => {
 
   // Filter parent categories by language (same as GeneralField)
   const filteredParentCategories = categoriesList.filter((category) => {
-    console.log(category,'cat test - category item');
+    // console.log(category,'cat test - category item');
     
     const hasNoParent = !category.parentCategory;
     const matchesLanguage = selectedLanguage ? 
@@ -209,35 +209,35 @@ const Banner = () => {
 
   // Filter subcategories by parent category and language (same as GeneralField concept)
   const filteredSubCategories = categoriesList.filter((category) => {
-    console.log(selectedParentCategory,'selectedParentCategory');
+    // console.log(selectedParentCategory,'selectedParentCategory');
     
     const hasParent = category.parentCategory && category.parentCategory.id === selectedParentCategory;
     const matchesLanguage = selectedLanguage ? 
       (category.language?._id === selectedLanguage || category.language === selectedLanguage) : 
       true;
     
-    console.log(category,'sub test coming');
+    // console.log(category,'sub test coming');
     
-    console.log('Sub Category Filter:', {
-      categoryName: category.name,
-      hasParent,
-      parentCategoryId: category.parentCategory?._id,
-      selectedParentCategory,
-      matchesLanguage,
-      willShow: hasParent && matchesLanguage
-    });
+    // console.log('Sub Category Filter:', {
+    //   categoryName: category.name,
+    //   hasParent,
+    //   parentCategoryId: category.parentCategory?._id,
+    //   selectedParentCategory,
+    //   matchesLanguage,
+    //   willShow: hasParent && matchesLanguage
+    // });
     
     return hasParent && matchesLanguage;
   });
 
-  console.log('FILTERING DEBUG:', {
-    categoriesListLength: categoriesList.length,
-    selectedLanguage,
-    selectedParentCategory,
-    filteredParentCategoriesLength: filteredParentCategories.length,
-    filteredSubCategoriesLength: filteredSubCategories.length,
-    activeTab
-  });
+  // console.log('FILTERING DEBUG:', {
+  //   categoriesListLength: categoriesList.length,
+  //   selectedLanguage,
+  //   selectedParentCategory,
+  //   filteredParentCategoriesLength: filteredParentCategories.length,
+  //   filteredSubCategoriesLength: filteredSubCategories.length,
+  //   activeTab
+  // });
 
   // Fetch banner data when tab changes
   useEffect(() => {
