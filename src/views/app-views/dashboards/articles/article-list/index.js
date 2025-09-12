@@ -200,14 +200,7 @@ const ArticleList = () => {
       dataIndex: "title",
       ellipsis: false,
     },
-    {
-      title: "Category",
-      dataIndex: "category",
-      render: (_, record) =>
-        record?.categories[0]?.parentCategory?.name +
-        " / " +
-        record?.categories[0]?.name,
-    },
+
     {
       title: "Image",
       dataIndex: "featuredImage",
@@ -226,6 +219,14 @@ const ArticleList = () => {
       title: "Language",
       dataIndex: "language",
       render: (_, record) => record?.language?.name,
+    },
+    {
+      title: "Category",
+      dataIndex: "category",
+      render: (_, record) =>
+        record?.categories[0]?.parentCategory?.name +
+        " / " +
+        record?.categories[0]?.name,
     },
     {
       title: "Status",
