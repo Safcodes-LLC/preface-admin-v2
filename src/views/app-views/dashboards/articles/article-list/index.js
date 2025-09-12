@@ -266,11 +266,7 @@ const ArticleList = () => {
             onChange={onLanguageChange}
             loading={languagesLoading}
             style={{ width: 180, marginRight: 12 }}
-            dropdownMatchSelectWidth={false}
-            dropdownStyle={{ width: 'auto'}}
-            dropdownRender={(menu) => (
-              <div style={{ width: 'max-content' }}>{menu}</div>
-            )}
+            
           >
             {availableLanguages.map((language) => (
               <Option key={language._id} value={language._id}>
