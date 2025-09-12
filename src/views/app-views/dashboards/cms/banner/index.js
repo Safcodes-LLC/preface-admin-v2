@@ -850,15 +850,14 @@ const Banner = () => {
       dataIndex: "title" 
     },
     {
-      title: "Author",
+      title: "Image",
       dataIndex: "author",
       render: (_, record) => (
         <div className="d-flex">
           <AvatarStatus
             size={60}
             type="square"
-            src={record?.author?.profile_pic || "/img/avatars/default-avatar.jpg"}
-            name={record?.author?.username}
+            src={record?.thumbnail || "/img/avatars/default-avatar.jpg"}
           />
         </div>
       ),
