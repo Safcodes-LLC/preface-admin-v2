@@ -40,8 +40,6 @@ const ArticleList = () => {
     (state) => state.categories
   );
 
-  console.log("posts 123456", posts);
-
   const [list, setList] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
