@@ -724,6 +724,17 @@ const ArticleForm = (props) => {
   const [uploadThumbnailImgLoading, setUploadThumbnailImgLoading] =
     useState(false);
 
+  // For featured image
+  const [uploadedFeaturedImg, setFeaturedImage] = useState("");
+  const [allSelectedFeaturedImgs, setAllSelectedFeaturedImgs] = useState([]);
+  const [uploadFeaturedImgLoading, setUploadFeaturedImgLoading] =
+    useState(false);
+
+  // For image
+  const [uploadedImage, setImage] = useState("");
+  const [allSelectedImages, setAllSelectedImages] = useState([]);
+  const [uploadImageLoading, setUploadImageLoading] = useState(false);
+
   // For more images
   const [uploadedMoreImgs, setMoreImgs] = useState([]);
   const [allSelectedMoreImgs, setAllSelectedMoreImgs] = useState([]);
@@ -840,6 +851,13 @@ const ArticleForm = (props) => {
 
         setThumbnailImage(articleData.thumbnail);
         setAllSelectedThumbnailImgs([articleData.thumbnail]);
+
+        setFeaturedImage(articleData.featured_image);
+        setAllSelectedFeaturedImgs([articleData.featured_image]);
+
+        setImage(articleData.image);
+        setAllSelectedImages([articleData.image]);
+
         setMoreImgs(articleData.more_images);
         setAllSelectedMoreImgs(articleData.more_images);
 
@@ -861,6 +879,38 @@ const ArticleForm = (props) => {
           return [...prev, info.file.response.fileUrl];
         });
         setUploadThumbnailImgLoading(false);
+      }
+    }
+  };
+
+  const handleFeaturedImgUploadChange = (info) => {
+    if (info.file.status === "uploading") {
+      setUploadFeaturedImgLoading(true);
+      return;
+    }
+    if (info.file.status === "done") {
+      if (info.file.response.fileUrl) {
+        setFeaturedImage(info.file.response.fileUrl);
+        setAllSelectedFeaturedImgs((prev) => {
+          return [...prev, info.file.response.fileUrl];
+        });
+        setUploadFeaturedImgLoading(false);
+      }
+    }
+  };
+
+  const handleImageUploadChange = (info) => {
+    if (info.file.status === "uploading") {
+      setUploadImageLoading(true);
+      return;
+    }
+    if (info.file.status === "done") {
+      if (info.file.response.fileUrl) {
+        setImage(info.file.response.fileUrl);
+        setAllSelectedImages((prev) => {
+          return [...prev, info.file.response.fileUrl];
+        });
+        setUploadImageLoading(false);
       }
     }
   };
@@ -891,133 +941,144 @@ const ArticleForm = (props) => {
   };
 
   const onFinish = (saveType) => {
-  setSubmitLoading(true);
+    setSubmitLoading(true);
 
-  // Get raw content from editor and properly clean it for saving
-  const rawEditorContent = convertToRaw(editorState.getCurrentContent());
+    // Get raw content from editor and properly clean it for saving
+    const rawEditorContent = convertToRaw(editorState.getCurrentContent());
 
-  // Clean the content to prevent serialization issues
-  let cleanContent = JSON.stringify(rawEditorContent);
-  try {
-    // Attempt to clean complex objects from content
-    const contentObj = JSON.parse(cleanContent);
-    Object.keys(contentObj.entityMap || {}).forEach((key) => {
-      const entity = contentObj.entityMap[key];
-      if (entity.type === "LINK") {
-        // Only keep primitive values
-        entity.data = {
-          url: entity.data?.url || "",
-          target: entity.data?.target || "_blank",
-          tooltipContent: entity.data?.tooltipContent || "",
-          imageUrl: entity.data?.imageUrl || "",
-          linkType: entity.data?.linkType || "external",
-        };
-      }
-    });
-    cleanContent = JSON.stringify(contentObj);
-  } catch (error) {
-    console.error("Error cleaning content:", error);
-    // Keep using the original JSON stringified content
-  }
+    // Clean the content to prevent serialization issues
+    let cleanContent = JSON.stringify(rawEditorContent);
+    try {
+      // Attempt to clean complex objects from content
+      const contentObj = JSON.parse(cleanContent);
+      Object.keys(contentObj.entityMap || {}).forEach((key) => {
+        const entity = contentObj.entityMap[key];
+        if (entity.type === "LINK") {
+          // Only keep primitive values
+          entity.data = {
+            url: entity.data?.url || "",
+            target: entity.data?.target || "_blank",
+            tooltipContent: entity.data?.tooltipContent || "",
+            imageUrl: entity.data?.imageUrl || "",
+            linkType: entity.data?.linkType || "external",
+          };
+        }
+      });
+      cleanContent = JSON.stringify(contentObj);
+    } catch (error) {
+      console.error("Error cleaning content:", error);
+      // Keep using the original JSON stringified content
+    }
 
-  form
-    .validateFields()
-    .then((values) => {
-      console.log("=== FORM SUBMISSION DEBUG ===");
-      console.log("Raw form values:", values);
-      console.log("Categories field before processing:", values.categories);
-      console.log("Categories type:", typeof values.categories);
-      console.log("Categories is array:", Array.isArray(values.categories));
+    form
+      .validateFields()
+      .then((values) => {
+        console.log("=== FORM SUBMISSION DEBUG ===");
+        console.log("Raw form values:", values);
+        console.log("Categories field before processing:", values.categories);
+        console.log("Categories type:", typeof values.categories);
+        console.log("Categories is array:", Array.isArray(values.categories));
 
-      values.title = values.title.trim().replace(/\s+/g, " ");
-      // values.slug = values.slug.trim().replace(/\s+/g, " ");
-      values.postType = "66d9d564987787d3e3ff1312";
-      values.thumbnail = uploadedThumbnailImg;
-      values.allSelectedThumbnailImgs = allSelectedThumbnailImgs;
-      values.more_images = uploadedMoreImgs;
-      values.allSelectedMoreImgs = allSelectedMoreImgs;
-      values.content = cleanContent;
+        values.title = values.title.trim().replace(/\s+/g, " ");
+        // values.slug = values.slug.trim().replace(/\s+/g, " ");
+        values.postType = "66d9d564987787d3e3ff1312";
+        values.thumbnail = uploadedThumbnailImg;
+        values.featured_image = uploadedFeaturedImg;
+        values.image = uploadedImage;
+        values.allSelectedThumbnailImgs = allSelectedThumbnailImgs;
+        values.allSelectedFeaturedImgs = allSelectedFeaturedImgs;
+        values.allSelectedImages = allSelectedImages;
+        values.more_images = uploadedMoreImgs;
+        values.allSelectedMoreImgs = allSelectedMoreImgs;
+        values.content = cleanContent;
 
-      // UPDATED FIX FOR CATEGORIES: Handle both objects and strings
-      if (values.categories && Array.isArray(values.categories)) {
-        // Extract just the IDs from the category objects OR keep strings as-is
-        values.categories = values.categories.map((category) => {
-          if (typeof category === "object" && category.value) {
-            return category.value; // For objects with value property
-          } else if (typeof category === "string") {
-            return category; // Sub-sub category IDs are already strings
-          } else {
-            return category; // Fallback
-          }
-        });
-      }
-
-      console.log("Categories field after processing:", values.categories);
-      console.log("Final payload being sent:", values);
-
-      // Clean up form fields that shouldn't be sent to backend
-      delete values.finalParentCategory;
-
-      // set setIsFormSubmitted as true
-      setIsFormSubmitted(true);
-
-      setTimeout(() => {
-        setSubmitLoading(false);
-        if (mode === ADD) {
-          // call API to create a Article
-          dispatch(createPost({ postData: values })).then((result) => {
-            if (result.type.includes("rejected")) {
-              console.error("Error creating article:", result.payload);
-              message.error("Failed to create article");
+        // UPDATED FIX FOR CATEGORIES: Handle both objects and strings
+        if (values.categories && Array.isArray(values.categories)) {
+          // Extract just the IDs from the category objects OR keep strings as-is
+          values.categories = values.categories.map((category) => {
+            if (typeof category === "object" && category.value) {
+              return category.value; // For objects with value property
+            } else if (typeof category === "string") {
+              return category; // Sub-sub category IDs are already strings
             } else {
-              // reset the form and show the user created successfully
-              form.resetFields();
-              setThumbnailImage("");
-              setAllSelectedThumbnailImgs([]);
-              setMoreImgs([]);
-              setAllSelectedMoreImgs([]);
-              // Set is form submitted as a false because form is blank
-              setIsFormSubmitted(false);
-              navigate(`/admin/dashboards/articles/listing`);
-              message.success(
-                `Article ${values.title} is created successfully`
-              );
+              return category; // Fallback
             }
           });
         }
-        if (mode === EDIT) {
-          // call API to Update a Article
-          const { id } = param;
-          const draftValue = { draftContent: cleanContent }; // Use cleaned content here too
-          const updateValue =
-            saveType === "draft" &&
-            !user.userRoles.includes("Administrator") &&
-            !user.userRoles.includes("Post Admin")
-              ? draftValue
-              : values;
 
-          dispatch(updatePost({ postData: updateValue, postId: id })).then(
-            (result) => {
+        console.log("Categories field after processing:", values.categories);
+        console.log("Final payload being sent:", values);
+
+        // Clean up form fields that shouldn't be sent to backend
+        delete values.finalParentCategory;
+
+        // set setIsFormSubmitted as true
+        setIsFormSubmitted(true);
+
+        setTimeout(() => {
+          setSubmitLoading(false);
+          if (mode === ADD) {
+            // call API to create a Article
+            dispatch(createPost({ postData: values })).then((result) => {
               if (result.type.includes("rejected")) {
-                console.error("Error updating article:", result.payload);
-                message.error(result.payload || "Failed to update article");
+                console.error("Error creating article:", result.payload);
+                message.error("Failed to create article");
               } else {
-                setAllSelectedThumbnailImgs([result.payload.thumbnail]);
-                setAllSelectedMoreImgs(result.payload.more_images);
-                message.success("Article updated successfully!");
+                // reset the form and show the user created successfully
+                form.resetFields();
+                setThumbnailImage("");
+                setAllSelectedThumbnailImgs([]);
+                setFeaturedImage("");
+                setAllSelectedFeaturedImgs([]);
+                setImage("");
+                setAllSelectedImages([]);
+                setMoreImgs([]);
+                setAllSelectedMoreImgs([]);
+                // Set is form submitted as a false because form is blank
+                setIsFormSubmitted(false);
                 navigate(`/admin/dashboards/articles/listing`);
+                message.success(
+                  `Article ${values.title} is created successfully`
+                );
               }
-            }
-          );
-        }
-      }, 1500);
-    })
-    .catch((error) => {
-      setSubmitLoading(false);
-      console.error("Form validation failed:", error);
-      message.error("Please check all required fields");
-    });
-};
+            });
+          }
+          if (mode === EDIT) {
+            // call API to Update a Article
+            const { id } = param;
+            const draftValue = { draftContent: cleanContent }; // Use cleaned content here too
+            const updateValue =
+              saveType === "draft" &&
+              !user.userRoles.includes("Administrator") &&
+              !user.userRoles.includes("Post Admin")
+                ? draftValue
+                : values;
+
+            dispatch(updatePost({ postData: updateValue, postId: id })).then(
+              (result) => {
+                if (result.type.includes("rejected")) {
+                  console.error("Error updating article:", result.payload);
+                  message.error(result.payload || "Failed to update article");
+                } else {
+                  setAllSelectedThumbnailImgs([result.payload.thumbnail]);
+                  setAllSelectedFeaturedImgs([result.payload.featured_image]);
+                  setImage(result.payload.image);
+                  setAllSelectedImages([result.payload.image]);
+                  setAllSelectedMoreImgs(result.payload.more_images);
+                  message.success("Article updated successfully!");
+                  navigate(`/admin/dashboards/articles/listing`);
+                }
+              }
+            );
+          }
+        }, 1500);
+      })
+      .catch((error) => {
+        setSubmitLoading(false);
+        console.error("Form validation failed:", error);
+        message.error("Please check all required fields");
+      });
+  };
 
   // Forward declarations to fix reference issues
   let onApprove;
@@ -1332,10 +1393,18 @@ const ArticleForm = (props) => {
                 children: (
                   <GeneralField
                     uploadedThumbnailImg={uploadedThumbnailImg}
+                    uploadedFeaturedImg={uploadedFeaturedImg}
+                    uploadedImage={uploadedImage}
                     uploadThumbnailImgLoading={uploadThumbnailImgLoading}
+                    uploadFeaturedImgLoading={uploadFeaturedImgLoading}
+                    uploadImageLoading={uploadImageLoading}
                     handleThumbnailImgUploadChange={
                       handleThumbnailImgUploadChange
                     }
+                    handleFeaturedImgUploadChange={
+                      handleFeaturedImgUploadChange
+                    }
+                    handleImageUploadChange={handleImageUploadChange}
                     uploadedMoreImgs={uploadedMoreImgs}
                     uploadMoreImgLoading={uploadMoreImgLoading}
                     handleUploadMoreImagesChange={handleUploadMoreImagesChange}

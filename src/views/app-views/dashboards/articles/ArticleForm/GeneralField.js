@@ -94,6 +94,29 @@ const thumbnailUploadProps = {
     Authorization: localStorage.getItem(AUTH_TOKEN) || null,
   },
 };
+const featuredUploadProps = {
+  name: "file",
+  multiple: false,
+  listType: "picture-card",
+  showUploadList: false,
+  action:
+    "https://king-prawn-app-x9z27.ondigitalocean.app/api/fileupload/savefile/articles/thumbnails",
+  headers: {
+    Authorization: localStorage.getItem(AUTH_TOKEN) || null,
+  },
+};
+
+const imageUploadProps = {
+  name: "file",
+  multiple: false,
+  listType: "picture-card",
+  showUploadList: false,
+  action:
+    "https://king-prawn-app-x9z27.ondigitalocean.app/api/fileupload/savefile/articles/thumbnails",
+  headers: {
+    Authorization: localStorage.getItem(AUTH_TOKEN) || null,
+  },
+};
 
 // For more images
 const moreImagesUploadProps = {
@@ -375,7 +398,68 @@ const GeneralField = (props) => {
               )}
             </Dragger>
           </Card>
-          <Card title="More Images">
+          <Card title="Featured Image">
+            <Dragger
+              disabled={props.view}
+              {...featuredUploadProps}
+              beforeUpload={beforeUpload}
+              onChange={(e) => props.handleFeaturedImgUploadChange(e)}
+            >
+              {props.uploadedFeaturedImg ? (
+                <img
+                  src={props.uploadedFeaturedImg}
+                  alt="avatar"
+                  className="img-fluid"
+                />
+              ) : (
+                <div>
+                  {props.uploadFeaturedImgLoading ? (
+                    <div>
+                      <LoadingOutlined className="font-size-xxl text-primary" />
+                      <div className="mt-3">Uploading</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <CustomIcon className="display-3" svg={ImageSvg} />
+                      <p>Click or drag file to upload</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Dragger>
+          </Card>
+          <Card title="Image">
+            <Dragger
+              disabled={props.view}
+              {...imageUploadProps}
+              beforeUpload={beforeUpload}
+              onChange={(e) => props.handleImageUploadChange(e)}
+            >
+              {props.uploadedImage ? (
+                <img
+                  src={props.uploadedImage}
+                  alt="avatar"
+                  className="img-fluid"
+                />
+              ) : (
+                <div>
+                  {props.uploadImageLoading ? (
+                    <div>
+                      <LoadingOutlined className="font-size-xxl text-primary" />
+                      <div className="mt-3">Uploading</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <CustomIcon className="display-3" svg={ImageSvg} />
+                      <p>Click or drag file to upload</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Dragger>
+          </Card>
+          
+          {/* <Card title="More Images">
             <Dragger
               disabled={props.view}
               {...moreImagesUploadProps}
@@ -412,7 +496,7 @@ const GeneralField = (props) => {
                 </div>
               )}
             </Dragger>
-          </Card>
+          </Card> */}
           <Card>
             {props.uploadedMoreImgs && props.uploadedMoreImgs.length ? (
               <Button
