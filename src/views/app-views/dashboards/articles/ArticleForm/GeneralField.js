@@ -497,7 +497,7 @@ const GeneralField = (props) => {
               )}
             </Dragger>
           </Card> */}
-          <Card>
+          {/* <Card>
             {props.uploadedMoreImgs && props.uploadedMoreImgs.length ? (
               <Button
                 type="primary"
@@ -508,7 +508,7 @@ const GeneralField = (props) => {
             ) : (
               ""
             )}
-          </Card>
+          </Card> */}
           <Card title="Language AND Categories">
             <Form.Item name="language" label="Language" rules={rules.language}>
               <Select
