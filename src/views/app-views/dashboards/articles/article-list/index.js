@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllLanguages } from "store/slices/languagesSlice";
 import { deletePost, fetchAllPostsByPostType } from "store/slices/postSlice";
@@ -21,15 +21,60 @@ const { Option } = Select;
 const ArticleList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // pagination
-  const [currentPage, setCurrentPage] = useState(1);
+  // Query param helpers using URLSearchParams
+  const parseQuery = () => {
+    const params = new URLSearchParams(location.search);
+    return {
+      searchValue: params.get("search") || "",
+      selectedLanguage: params.get("lang") || "all",
+      selectedCategory: params.get("cat") || "all",
+      currentPage: params.get("page") ? parseInt(params.get("page"), 10) : 1,
+    };
+  };
+  // Set initial state from query params
+  const [searchValue, setSearchValue] = useState(parseQuery().searchValue);
+  const [selectedLanguage, setSelectedLanguage] = useState(parseQuery().selectedLanguage);
+  const [selectedCategory, setSelectedCategory] = useState(parseQuery().selectedCategory);
+  const [currentPage, setCurrentPage] = useState(parseQuery().currentPage);
   const [pageSize] = useState(10);
 
-  // filters
-  const [searchValue, setSearchValue] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  // Update URL query params util (with URLSearchParams)
+  const updateQueryParams = (updates) => {
+    const prev = parseQuery();
+    const newParams = {
+      ...prev, // existing
+      ...updates, // changes
+    };
+    // Prepare query params
+    const paramMap = {
+      search: newParams.searchValue,
+      lang: newParams.selectedLanguage,
+      cat: newParams.selectedCategory,
+      page: newParams.currentPage,
+    };
+    // Build search string, omitting defaults
+    const urlParams = new URLSearchParams();
+    if (paramMap.search) urlParams.set("search", paramMap.search);
+    if (paramMap.lang && paramMap.lang !== "all") urlParams.set("lang", paramMap.lang);
+    if (paramMap.cat && paramMap.cat !== "all") urlParams.set("cat", paramMap.cat);
+    if (paramMap.page && paramMap.page !== 1) urlParams.set("page", paramMap.page);
+    navigate({ search: urlParams.toString() }, { replace: true });
+  };
+
+  // Keep state in sync with URL on mount & URL change
+  useEffect(() => {
+    const parsed = parseQuery();
+    setSearchValue(parsed.searchValue);
+    setSelectedLanguage(parsed.selectedLanguage);
+    setSelectedCategory(parsed.selectedCategory);
+    setCurrentPage(parsed.currentPage);
+    // Fetch posts IF any query param changed (also on mount!)
+    fetchPosts(parsed.currentPage, parsed.searchValue, parsed.selectedLanguage, parsed.selectedCategory);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   // redux states
   const { posts, totalCount, loading } = useSelector((state) => state.post);
@@ -39,6 +84,17 @@ const ArticleList = () => {
   const { categories, loading: categoriesLoading } = useSelector(
     (state) => state.categories
   );
+
+  // helper states for loaded
+  const [langsLoaded, setLangsLoaded] = useState(false);
+  const [catsLoaded, setCatsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!languagesLoading && languages && languages.length > 0) setLangsLoaded(true);
+  }, [languagesLoading, languages]);
+  useEffect(() => {
+    if (!categoriesLoading && categories && categories.length > 0) setCatsLoaded(true);
+  }, [categoriesLoading, categories]);
 
   const [list, setList] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -95,12 +151,24 @@ const ArticleList = () => {
     );
   };
 
-  // initial load
+  // initial load (fetch lang/cat lists only)
   useEffect(() => {
     dispatch(fetchAllLanguages());
     dispatch(fetchAllCategories({ page: 1, limit: 100 }));
-    fetchPosts(1); // initial fetch
+    // fetchPosts(1); // REMOVE THIS LINE, data fetch will be handled by URL/filters effect
   }, [dispatch]);
+
+  // Only fetch posts when both languages & categories are loaded and location/search changes
+  useEffect(() => {
+    if (!langsLoaded || !catsLoaded) return;
+    const parsed = parseQuery();
+    setSearchValue(parsed.searchValue);
+    setSelectedLanguage(parsed.selectedLanguage);
+    setSelectedCategory(parsed.selectedCategory);
+    setCurrentPage(parsed.currentPage);
+    fetchPosts(parsed.currentPage, parsed.searchValue, parsed.selectedLanguage, parsed.selectedCategory);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, langsLoaded, catsLoaded]);
 
   // update list whenever posts change
   useEffect(() => {
@@ -158,30 +226,42 @@ const ArticleList = () => {
     </Menu>
   );
 
-  // handlers: trigger fetch immediately
+  // handlers: update state AND URL, triggering effect above
   const onSearch = (e) => {
     const val = e.target.value;
     setSearchValue(val);
     setCurrentPage(1);
-    fetchPosts(1, val, selectedLanguage, selectedCategory);
+    updateQueryParams({
+      searchValue: val,
+      currentPage: 1,
+    });
   };
 
   const onLanguageChange = (val) => {
     setSelectedLanguage(val);
     setSelectedCategory("all");
     setCurrentPage(1);
-    fetchPosts(1, searchValue, val, "all");
+    updateQueryParams({
+      selectedLanguage: val,
+      selectedCategory: "all",
+      currentPage: 1,
+    });
   };
 
   const onCategoryChange = (val) => {
     setSelectedCategory(val);
     setCurrentPage(1);
-    fetchPosts(1, searchValue, selectedLanguage, val);
+    updateQueryParams({
+      selectedCategory: val,
+      currentPage: 1,
+    });
   };
 
   const onPageChange = (page) => {
     setCurrentPage(page);
-    fetchPosts(page, searchValue, selectedLanguage, selectedCategory);
+    updateQueryParams({
+      currentPage: page,
+    });
   };
 
   // table columns
