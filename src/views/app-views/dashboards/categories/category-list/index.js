@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Card, Table, Input, Button, Menu, Select } from "antd";
-import CategoriesListData from "assets/data/categories-list.data.json";
 import {
   EyeOutlined,
   DeleteOutlined,
@@ -11,7 +10,7 @@ import {
 import AvatarStatus from "components/shared-components/AvatarStatus";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import utils from "utils";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -23,12 +22,48 @@ const { Option } = Select;
 
 const CategoriesList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ Use useCallback for stable reference
+  const parseQuery = useCallback(() => {
+    const params = new URLSearchParams(location.search);
+    return {
+      selectedLanguage: params.get("lang") || "All Languages",
+      searchValue: params.get("search") || "",
+    };
+  }, [location.search]);
+
+  // Initialize state
+  const [selectedLanguage, setSelectedLanguage] = useState(parseQuery().selectedLanguage);
+  const [searchValue, setSearchValue] = useState(parseQuery().searchValue);
+
+  // Update URL when filters change
+  const updateQueryParams = (updates) => {
+    const prev = parseQuery();
+    const newParams = { ...prev, ...updates };
+    const paramMap = {
+      lang: newParams.selectedLanguage,
+      search: newParams.searchValue,
+    };
+    const urlParams = new URLSearchParams();
+    if (paramMap.lang && paramMap.lang !== "All Languages") urlParams.set("lang", paramMap.lang);
+    if (paramMap.search) urlParams.set("search", paramMap.search);
+    navigate({ search: urlParams.toString() }, { replace: true });
+  };
+
   useEffect(() => {
-    // Dispatch the action to fetch all categories data
+    // Fetch all categories
     dispatch(fetchAllCategories());
   }, [dispatch]);
 
-  const navigate = useNavigate();
+  // Sync state when URL changes
+  useEffect(() => {
+    const parsed = parseQuery();
+    setSelectedLanguage(parsed.selectedLanguage);
+    setSearchValue(parsed.searchValue);
+  }, [location.search, parseQuery]);
+
   const categoriesListOfArticles = useSelector(
     (state) => state.categories.categories
   );
@@ -36,36 +71,32 @@ const CategoriesList = () => {
   const [list, setList] = useState(categoriesListOfArticles);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [selectedLanguage, setSelectedLanguage] = useState("All Languages");
-  const [searchValue, setSearchValue] = useState("");
 
-  // Get unique languages from the data
+  // Unique languages
   const availableLanguages = useMemo(() => {
     const languages = new Set();
-    categoriesListOfArticles.forEach(item => {
+    categoriesListOfArticles.forEach((item) => {
       const languageName = item?.language?.name || "No Language";
       languages.add(languageName);
     });
     return Array.from(languages).sort();
   }, [categoriesListOfArticles]);
 
-  // Filter data based on language and search
+  // Filter list by language + search
   useEffect(() => {
     let filteredData = categoriesListOfArticles;
-    
-    // Filter by language
+
     if (selectedLanguage && selectedLanguage !== "All Languages") {
-      filteredData = filteredData.filter(item => {
+      filteredData = filteredData.filter((item) => {
         const itemLanguage = item?.language?.name || "No Language";
         return itemLanguage === selectedLanguage;
       });
     }
-    
-    // Filter by search value
+
     if (searchValue) {
       filteredData = utils.wildCardSearch(filteredData, searchValue);
     }
-    
+
     setList(filteredData);
     setSelectedRowKeys([]);
   }, [categoriesListOfArticles, selectedLanguage, searchValue]);
@@ -117,7 +148,6 @@ const CategoriesList = () => {
         data = utils.deleteArrayRow(data, objKey, elm._id);
         setList(data);
         setSelectedRows([]);
-        // Need to dispatch the delete category
         dispatch(deleteCategory({ categoryId: elm._id }));
       });
     } else {
@@ -143,12 +173,7 @@ const CategoriesList = () => {
       dataIndex: "featuredImage",
       render: (_, record) => (
         <div className="d-flex">
-          <AvatarStatus
-            size={60}
-            type="square"
-            src={record.featuredImage}
-            // name={record.name}
-          />
+          <AvatarStatus size={60} type="square" src={record.featuredImage} />
         </div>
       ),
     },
@@ -184,20 +209,16 @@ const CategoriesList = () => {
 
   const onSearch = (e) => {
     const value = e.currentTarget.value;
-    setSearchValue(value);
+    updateQueryParams({ searchValue: value });
   };
 
   const onLanguageChange = (value) => {
-    setSelectedLanguage(value);
+    updateQueryParams({ selectedLanguage: value });
   };
 
   return (
     <Card>
-      <Flex
-        alignItems="center"
-        justifyContent="space-between"
-        mobileFlex={false}
-      >
+      <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
         <Flex className="mb-1" mobileFlex={false}>
           <div className="mr-md-3 mb-3">
             <Input
@@ -205,10 +226,11 @@ const CategoriesList = () => {
               prefix={<SearchOutlined />}
               onChange={(e) => onSearch(e)}
               style={{ width: 200 }}
+              value={searchValue}
             />
           </div>
         </Flex>
-        <div className="d-flex  gap-2">
+        <div className="d-flex gap-2">
           <Select
             placeholder="Filter by Language"
             value={selectedLanguage}
@@ -216,7 +238,7 @@ const CategoriesList = () => {
             style={{ width: 180, marginRight: 12 }}
           >
             <Option value="All Languages">All Languages</Option>
-            {availableLanguages.map(language => (
+            {availableLanguages.map((language) => (
               <Option key={language} value={language}>
                 {language}
               </Option>
