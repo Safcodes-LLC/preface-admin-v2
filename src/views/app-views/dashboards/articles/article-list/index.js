@@ -22,6 +22,8 @@ const ArticleList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+ 
+  const STORAGE_KEY = "articleListFilters";
 
   // pagination
   // Query param helpers using URLSearchParams
@@ -41,7 +43,6 @@ const ArticleList = () => {
   const [currentPage, setCurrentPage] = useState(parseQuery().currentPage);
   const [pageSize] = useState(10);
 
-  // Update URL query params util (with URLSearchParams)
   const updateQueryParams = (updates) => {
     const prev = parseQuery();
     const newParams = {
@@ -62,7 +63,38 @@ const ArticleList = () => {
     if (paramMap.cat && paramMap.cat !== "all") urlParams.set("cat", paramMap.cat);
     if (paramMap.page && paramMap.page !== 1) urlParams.set("page", paramMap.page);
     navigate({ search: urlParams.toString() }, { replace: true });
+
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(newParams));
+    } catch (e) {
+      
+    }
   };
+
+  useEffect(() => {
+    if (!location.search) {
+      try {
+        const saved = sessionStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsedSaved = JSON.parse(saved);
+          updateQueryParams(parsedSaved);
+        }
+      } catch (e) {
+        
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      const parsed = parseQuery();
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    } catch (e) {
+      
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   // Keep state in sync with URL on mount & URL change
   useEffect(() => {

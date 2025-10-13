@@ -25,6 +25,8 @@ const CategoriesList = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const STORAGE_KEY = "categoryListFilters";
+
   // ✅ Use useCallback for stable reference
   const parseQuery = useCallback(() => {
     const params = new URLSearchParams(location.search);
@@ -50,6 +52,9 @@ const CategoriesList = () => {
     if (paramMap.lang && paramMap.lang !== "All Languages") urlParams.set("lang", paramMap.lang);
     if (paramMap.search) urlParams.set("search", paramMap.search);
     navigate({ search: urlParams.toString() }, { replace: true });
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(newParams));
+    } catch (e) {}
   };
 
   useEffect(() => {
@@ -63,6 +68,30 @@ const CategoriesList = () => {
     setSelectedLanguage(parsed.selectedLanguage);
     setSearchValue(parsed.searchValue);
   }, [location.search, parseQuery]);
+
+  useEffect(() => {
+    if (!location.search) {
+      try {
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsedSaved = JSON.parse(raw);
+          const params = new URLSearchParams();
+          if (parsedSaved.selectedLanguage && parsedSaved.selectedLanguage !== "All Languages") params.set("lang", parsedSaved.selectedLanguage);
+          if (parsedSaved.searchValue) params.set("search", parsedSaved.searchValue);
+          navigate({ search: params.toString() }, { replace: true });
+        }
+      } catch (e) {}
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      const parsed = parseQuery();
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    } catch (e) {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   const categoriesListOfArticles = useSelector(
     (state) => state.categories.categories
