@@ -368,7 +368,7 @@ const GeneralField = (props) => {
           </Card>
         </Col>
         <Col xs={24} sm={24} md={7}>
-          <Card title="Article thumbnail">
+          <Card title="Article Banner Image">
             <Dragger
               disabled={props.view}
               {...thumbnailUploadProps}
