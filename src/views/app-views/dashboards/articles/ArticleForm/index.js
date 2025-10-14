@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import {
   Tabs,
@@ -25,7 +25,7 @@ import {
   updateStatusByAdmin,
 } from "store/slices/postSlice";
 import { useDispatch, useSelector } from "react-redux";
-import FilesServices from "services/FilesServices";
+// import FilesServices from "services/FilesServices";
 import { fetchUserData } from "store/slices/userSlice";
 import {
   CompositeDecorator,
@@ -175,6 +175,24 @@ const ArticleForm = (props) => {
   const auth = useSelector((state) => state.auth);
 
   const navigate = useNavigate();
+
+  const STORAGE_KEY = "articleListFilters";
+  const getListingPathWithFilters = () => {
+    let search = "";
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const { searchValue, selectedLanguage, selectedCategory, currentPage } = JSON.parse(raw);
+        const params = new URLSearchParams();
+        if (searchValue) params.set("search", searchValue);
+        if (selectedLanguage && selectedLanguage !== "all") params.set("lang", selectedLanguage);
+        if (selectedCategory && selectedCategory !== "all") params.set("cat", selectedCategory);
+        if (currentPage && Number(currentPage) !== 1) params.set("page", currentPage);
+        search = params.toString();
+      }
+    } catch (e) {}
+    return `/admin/dashboards/articles/listing${search ? `?${search}` : ""}`;
+  };
 
   const [editorState, setEditorState] = useState(() => {
     if (initialContent) {
@@ -655,7 +673,7 @@ const ArticleForm = (props) => {
     },
   };
 
-  const ApproveTextFun = (status, editingSession) => {
+  const ApproveTextFun = useCallback((status, editingSession) => {
     const statusIsValid = [
       "content_review_1",
       "content_review_2",
@@ -689,7 +707,7 @@ const ArticleForm = (props) => {
     } else {
       setApproval(false);
     }
-  };
+  }, [userRoles]);
 
   useEffect(() => {
     // Check if userData is not null in auth
@@ -716,7 +734,7 @@ const ArticleForm = (props) => {
         }
       }
     }
-  }, [dispatch, user.userRoles, auth.token, auth.userRoles, userRoles]);
+  }, [dispatch, user.userRoles, auth.token, auth.userRoles, auth.roles]);
 
   // For thumbnail
   const [uploadedThumbnailImg, setThumbnailImage] = useState("");
@@ -751,7 +769,7 @@ const ArticleForm = (props) => {
   const [editOn, setEditOn] = useState(false);
 
   // to track is form submitted
-  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+  // const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [isPostsFetched, setIsPostsFetched] = useState(false);
 
   // check it is in global state
@@ -766,7 +784,7 @@ const ArticleForm = (props) => {
       setLoading(false);
     }
     setIsPostsFetched(true);
-  }, [articles_list, dispatch]);
+  }, [articles_list, dispatch, mode, isPostsFetched]);
 
   const columns = [
     {
@@ -865,7 +883,7 @@ const ArticleForm = (props) => {
         setSelectedStatus(articleData.status);
       }
     }
-  }, [form, mode, param, props, list, loading]);
+  }, [form, mode, param, props, list, loading, ApproveTextFun, user.userData._id]);
 
   const handleThumbnailImgUploadChange = (info) => {
     if (info.file.status === "uploading") {
@@ -1013,7 +1031,7 @@ const ArticleForm = (props) => {
         delete values.finalParentCategory;
 
         // set setIsFormSubmitted as true
-        setIsFormSubmitted(true);
+        // setIsFormSubmitted(true);
 
         setTimeout(() => {
           setSubmitLoading(false);
@@ -1035,8 +1053,8 @@ const ArticleForm = (props) => {
                 setMoreImgs([]);
                 setAllSelectedMoreImgs([]);
                 // Set is form submitted as a false because form is blank
-                setIsFormSubmitted(false);
-                navigate(`/admin/dashboards/articles/listing`);
+                // setIsFormSubmitted(false);
+                navigate(getListingPathWithFilters());
                 message.success(
                   `Article ${values.title} is created successfully`
                 );
@@ -1066,7 +1084,7 @@ const ArticleForm = (props) => {
                   setAllSelectedImages([result.payload.image]);
                   setAllSelectedMoreImgs(result.payload.more_images);
                   message.success("Article updated successfully!");
-                  navigate(`/admin/dashboards/articles/listing`);
+                  navigate(getListingPathWithFilters());
                 }
               }
             );

@@ -29,6 +29,22 @@ const CategoryForm = (props) => {
 
   const navigate = useNavigate();
 
+  const STORAGE_KEY = "categoryListFilters";
+  const getListingPathWithFilters = () => {
+    let search = "";
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const { selectedLanguage, searchValue } = JSON.parse(raw);
+        const params = new URLSearchParams();
+        if (selectedLanguage && selectedLanguage !== "All Languages") params.set("lang", selectedLanguage);
+        if (searchValue) params.set("search", searchValue);
+        search = params.toString();
+      }
+    } catch (e) {}
+    return `/admin/dashboards/categories/category-list${search ? `?${search}` : ""}`;
+  };
+
   const articles_categories_list = useSelector(
     (state) => state.categories.categories
   );
@@ -40,7 +56,7 @@ const CategoryForm = (props) => {
       setList(articles_categories_list);
     }
     setLoading(false);
-  }, [articles_categories_list, dispatch]);
+  }, [articles_categories_list, dispatch, loading]);
 
   useEffect(() => {
     if ((mode === EDIT || view) && !loading) {
@@ -165,7 +181,7 @@ const CategoryForm = (props) => {
                   setFeaturedImage("");
                   setFeaturedIcon("");
                   SetAllSelectedFeaturedImages([]);
-                  navigate(`/admin/dashboards/categories/category-list`);
+                  navigate(getListingPathWithFilters());
                 }
               }
             );
@@ -182,7 +198,7 @@ const CategoryForm = (props) => {
                 message.error(result.payload || "Failed to update category");
               } else {
                 message.success("Category updated successfully!");
-                navigate(`/admin/dashboards/categories/category-list`);
+                navigate(getListingPathWithFilters());
               }
             });
           }
