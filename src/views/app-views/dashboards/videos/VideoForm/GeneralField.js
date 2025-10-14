@@ -71,13 +71,13 @@ const rules = {
   ],
   ParentCategory: [
     {
-      required: true,
+      required: false,
       message: "Please select Parent Category",
     },
   ],
   categories: [
     {
-      required: true,
+      required: false,
       message: "Please select at least one Sub Category",
     },
   ],
