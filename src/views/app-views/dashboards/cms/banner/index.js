@@ -47,7 +47,6 @@ import TextArea from "antd/es/input/TextArea";
 import Dragger from "antd/es/upload/Dragger";
 import axios from "axios";
 import { API_BASE_URL } from "configs/AppConfig";
-import { Option } from "antd/es/mentions";
 
 const { TabPane } = Tabs;
 
@@ -93,6 +92,9 @@ const Banner = () => {
   const [originalData, setOriginalData] = useState([]);
   const [bannerStatusChanges, setBannerStatusChanges] = useState({});
   const [allPosts, setAllPosts] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalPagination, setModalPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+  const [modalFilters, setModalFilters] = useState({ language: undefined, parentCategory: undefined, categories: [], title: "" });
 
   // Define label logic for responsive design
   let labelContent;
@@ -211,7 +213,7 @@ const Banner = () => {
   const filteredSubCategories = categoriesList.filter((category) => {
     // console.log(selectedParentCategory,'selectedParentCategory');
     
-    const hasParent = category.parentCategory && category.parentCategory.id === selectedParentCategory;
+    const hasParent = category.parentCategory && (category.parentCategory._id === selectedParentCategory || category.parentCategory.id === selectedParentCategory);
     const matchesLanguage = selectedLanguage ? 
       (category.language?._id === selectedLanguage || category.language === selectedLanguage) : 
       true;
@@ -418,39 +420,12 @@ const Banner = () => {
     }
   };
 
-  // Fetch all posts for the modal selection
+  // Prepare modal on open: clear previous results and reset pagination; await user filters
   useEffect(() => {
     if (isModalVisible) {
-      const fetchAllPosts = async () => {
-        try {
-          const token = localStorage.getItem("auth_token");
-          const postTypeId = tabConfig[activeTab].postTypeId;
-          
-          const response = await axios.get(`${API_BASE_URL}/banner/posts/manage/${postTypeId}`, {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token,
-            },
-            params: {
-              page: 1,
-              limit: 100,
-              sortBy: 'priority'
-            }
-          });
-
-          if (response?.data?.status === "success") {
-            setAllPosts(response.data.data);
-            setOriginalData(response.data.data);
-            // Don't show any data initially - user must select language and filter
-            setFilteredData([]);
-          }
-        } catch (error) {
-          console.error("Error fetching all posts:", error);
-          message.error("Failed to fetch posts");
-        }
-      };
-
-      fetchAllPosts();
+      setFilteredData([]);
+      setModalPagination({ current: 1, pageSize: 10, total: 0 });
+      setModalFilters({ language: undefined, parentCategory: undefined, categories: [], title: "" });
     }
   }, [isModalVisible, activeTab]);
 
@@ -605,59 +580,147 @@ const Banner = () => {
   const handleClearFilters = () => {
     form.resetFields();
     setFilteredData([]); // Clear data - user must select language and filter again
+    setModalPagination({ current: 1, pageSize: modalPagination.pageSize, total: 0 });
+    setModalFilters({ language: undefined, parentCategory: undefined, categories: [], title: "" });
   };
 
-  const handleFilter = () => {
+  const handleFilter = async () => {
     const languageValue = form.getFieldValue('language');
     const categoryValue = form.getFieldValue('ParentCategory');
     const subCategoryValue = form.getFieldValue('categories');
     const titleValue = form.getFieldValue('title');
 
-    // Require language selection
     if (!languageValue) {
       message.warning("Please select a language first");
       return;
     }
 
-    console.log('Filter Values:', {
-      languageValue,
-      categoryValue,
-      subCategoryValue,
-      titleValue
+    setModalLoading(true);
+    setModalFilters({
+      language: languageValue,
+      parentCategory: categoryValue,
+      categories: subCategoryValue || [],
+      title: titleValue || "",
     });
 
-    const filteredList = originalData.filter((item) => {
-      // Language filter - must match selected language
-      const matchesLanguage = item.language && item.language._id === languageValue;
+    try {
+      const token = localStorage.getItem("auth_token");
+      const postTypeId = tabConfig[activeTab].postTypeId;
+      const page = 1;
+      const limit = modalPagination.pageSize;
+console.log("languageValue===",languageValue);
 
-      // Category filtering logic
-      let matchesCategory = true;
-      
-      if (subCategoryValue && subCategoryValue.length > 0) {
-        matchesCategory = item.categories && item.categories.some((category) => 
-          subCategoryValue.includes(category._id)
-        );
-      } else if (categoryValue) {
-        matchesCategory = item.categories && item.categories.some((category) => {
-          if (category._id === categoryValue) {
-            return true;
-          }
-          return category.parentCategory && category.parentCategory.id === categoryValue;
-        });
+      const params = {
+        page,
+        limit,
+        sortBy: 'priority',
+        languageId: languageValue,
+        language: languageValue,
+        parentCategoryId: categoryValue,
+        parentCategory: categoryValue,
+        categories: Array.isArray(subCategoryValue) ? subCategoryValue : undefined,
+        categoriesCsv: Array.isArray(subCategoryValue) ? subCategoryValue.join(',') : undefined,
+        title: titleValue,
+        search: titleValue,
+      };
+
+      console.log('Banner manage filter params:', params);
+      const response = await axios.get(`${API_BASE_URL}/banner/posts/manage/${postTypeId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        params,
+        paramsSerializer: (params) => {
+          const q = new URLSearchParams();
+          Object.entries(params).forEach(([key, value]) => {
+            if (value === undefined || value === null || value === '') return;
+            if (Array.isArray(value)) {
+              q.set(key, value.join(','));
+            } else {
+              q.set(key, String(value));
+            }
+          });
+          return q.toString();
+        }
+      });
+
+      if (response?.data?.status === 'success') {
+        const payload = response.data;
+        const items = Array.isArray(payload.data) ? payload.data : Array.isArray(payload.docs) ? payload.docs : [];
+        const p = payload.pagination || {};
+        setFilteredData(items);
+        setModalPagination({ current: p.page || page, pageSize: p.limit || limit, total: p.total || 0 });
+      } else {
+        setFilteredData([]);
+        setModalPagination({ current: 1, pageSize: limit, total: 0 });
       }
+    } catch (err) {
+      console.error('Error filtering posts:', err?.response || err);
+      const serverMsg = err?.response?.data?.message || err?.message || 'Failed to fetch filtered posts';
+      message.error(serverMsg);
+      setFilteredData([]);
+      setModalPagination({ current: 1, pageSize: modalPagination.pageSize, total: 0 });
+    } finally {
+      setModalLoading(false);
+    }
+  };
 
-      // Title filter
-      const matchesTitle = titleValue && titleValue.trim()
-        ? item.title && item.title.toLowerCase().includes(titleValue.toLowerCase())
-        : true;
+  const fetchModalPage = async (page, pageSize) => {
+    const { language, parentCategory, categories, title } = modalFilters;
+    if (!language) return;
+    setModalLoading(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const postTypeId = tabConfig[activeTab].postTypeId;
+      const params = {
+        page,
+        limit: pageSize,
+        sortBy: 'priority',
+        languageId: language,
+        language,
+        parentCategoryId: parentCategory,
+        parentCategory,
+        categories: Array.isArray(categories) ? categories : undefined,
+        categoriesCsv: Array.isArray(categories) ? categories.join(',') : undefined,
+        title,
+        search: title,
+      };
 
-      return matchesLanguage && matchesCategory && matchesTitle;
-    });
+      const response = await axios.get(`${API_BASE_URL}/banner/posts/manage/${postTypeId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        params,
+        paramsSerializer: (params) => {
+          const q = new URLSearchParams();
+          Object.entries(params).forEach(([key, value]) => {
+            if (value === undefined || value === null || value === '') return;
+            if (Array.isArray(value)) {
+              q.set(key, value.join(','));
+            } else {
+              q.set(key, String(value));
+            }
+          });
+          return q.toString();
+        }
+      });
 
-    console.log('Original Data Count:', originalData.length);
-    console.log('Filtered Data Count:', filteredList.length);
-
-    setFilteredData(filteredList);
+      if (response?.data?.status === 'success') {
+        const payload = response.data;
+        const items = Array.isArray(payload.data) ? payload.data : Array.isArray(payload.docs) ? payload.docs : [];
+        const p = payload.pagination || {};
+        setFilteredData(items);
+        setModalPagination({ current: p.page || page, pageSize: p.limit || pageSize, total: p.total || 0 });
+      }
+    } catch (err) {
+      console.error('Error fetching modal page:', err?.response || err);
+      const serverMsg = err?.response?.data?.message || err?.message || 'Failed to fetch posts page';
+      message.error(serverMsg);
+    } finally {
+      setModalLoading(false);
+    }
   };
 
   // Updated function to handle toggling the highlight status
@@ -951,22 +1014,14 @@ const Banner = () => {
                     value={selectedLanguageForHighlights}
                     onChange={(value) => {
                       setSelectedLanguageForHighlights(value);
-                      // Clear highlighted posts if no language selected
                       if (!value) {
                         setHighlightedPosts([]);
                         setHighlightStats({});
-                        // Show all banner posts if no language filter
                         setList(originalBannerData);
                       }
-                      // The useEffect will handle fetching when value changes
                     }}
-                  >
-                    {languages.map((language) => (
-                      <Option key={language._id} value={language._id}>
-                        {language.name}
-                      </Option>
-                    ))}
-                  </Select>
+                    options={languages.map(l => ({ label: l.name, value: l._id }))}
+                  />
                 </div>
               </Flex>
               <div>
@@ -1019,13 +1074,8 @@ const Banner = () => {
                   style={{ width: "100%" }}
                   placeholder="Select Language"
                   allowClear
-                >
-                  {languages.map((language) => (
-                    <Option key={language._id} value={language._id}>
-                      {language.name}
-                    </Option>
-                  ))}
-                </Select>
+                  options={languages.map(l => ({ label: l.name, value: l._id }))}
+                />
               </Form.Item>
             </Col>
 
@@ -1044,13 +1094,8 @@ const Banner = () => {
                   }
                   disabled={!selectedLanguage}
                   allowClear
-                >
-                  {filteredParentCategories.map((category) => (
-                    <Option key={category._id} value={category._id}>
-                      {category.name}
-                    </Option>
-                  ))}
-                </Select>
+                  options={filteredParentCategories.map(c => ({ label: c.name, value: c._id }))}
+                />
               </Form.Item>
             </Col>
 
@@ -1070,13 +1115,8 @@ const Banner = () => {
                   }
                   disabled={!selectedParentCategory}
                   allowClear
-                >
-                  {filteredSubCategories.map((category) => (
-                    <Option key={category._id} value={category._id}>
-                      {category.name}
-                    </Option>
-                  ))}
-                </Select>
+                  options={filteredSubCategories.map(c => ({ label: c.name, value: c._id }))}
+                />
               </Form.Item>
             </Col>
 
@@ -1124,15 +1164,21 @@ const Banner = () => {
               style={{ marginTop: "20px" }}
               columns={getModalTableColumns()}
               dataSource={filteredData}
+              loading={modalLoading}
               rowKey="_id"
               locale={{
-                emptyText: filteredData.length === 0 && originalData.length > 0 
-                  ? "Please select a language and click Filter to view posts" 
-                  : "No posts available"
+                emptyText: filteredData.length === 0 && !modalLoading
+                  ? "Select a language and click Find to load posts"
+                  : undefined
               }}
               pagination={{
+                current: modalPagination.current,
+                pageSize: modalPagination.pageSize,
+                total: modalPagination.total,
                 showSizeChanger: true,
-                showQuickJumper: true,
+                showQuickJumper: false,
+                onChange: (page, pageSize) => fetchModalPage(page, pageSize),
+                onShowSizeChange: (current, size) => fetchModalPage(1, size),
                 showTotal: (total, range) => total > 0 ? `${range[0]}-${range[1]} of ${total} posts` : "0 posts",
               }}
             />
