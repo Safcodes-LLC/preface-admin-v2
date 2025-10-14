@@ -564,14 +564,14 @@ const dashBoardNavTree = [
             breadcrumb: true,
             submenu: [],
           },
-          {
-            key: "preface-to-islam",
-            path: `${APP_PREFIX_PATH}/dashboards/cms/preface-to-islam`,
-            title: "sidenav.dashboards.cms.preface-to-islam",
-            icon: AppstoreAddOutlined,
-            breadcrumb: true,
-            submenu: [],
-          },
+          // {
+          //   key: "preface-to-islam",
+          //   path: `${APP_PREFIX_PATH}/dashboards/cms/preface-to-islam`,
+          //   title: "sidenav.dashboards.cms.preface-to-islam",
+          //   icon: AppstoreAddOutlined,
+          //   breadcrumb: true,
+          //   submenu: [],
+          // },
           // {
           //   key: "elite-author",
           //   path: `${APP_PREFIX_PATH}/dashboards/cms/elite-author`,
