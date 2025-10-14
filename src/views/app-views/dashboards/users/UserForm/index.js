@@ -78,7 +78,7 @@ const UserForm = (props) => {
         });
       }
     }
-  }, [mode, param]);
+}, [mode, param, list, loading, form]);
 
   // Rest of your component code...
 
