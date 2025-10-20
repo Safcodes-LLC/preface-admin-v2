@@ -541,6 +541,14 @@ const dashBoardNavTree = [
             submenu: [],
           },
           {
+            key: "featured-articles",
+            path: `${APP_PREFIX_PATH}/dashboards/cms/featured-articles`,
+            title: "sidenav.dashboards.cms.featured-articles",
+            icon: EditOutlined,
+            breadcrumb: true,
+            submenu: [],
+          },
+          {
             key: "popular-aricle",
             path: `${APP_PREFIX_PATH}/dashboards/cms/popular-article`,
             title: "sidenav.dashboards.cms.popular-article",

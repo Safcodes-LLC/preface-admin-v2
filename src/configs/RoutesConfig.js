@@ -937,6 +937,14 @@ export const protectedRoutes = [
   //   ],
   // },
   {
+    key: "featured-articles",
+    path: `${APP_PREFIX_PATH}/dashboards/cms/featured-articles`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/cms/featured-articles")
+    ),
+    authority: ["Administrator"],
+  },
+  {
     key: "popular-article",
     path: `${APP_PREFIX_PATH}/dashboards/cms/popular-article`,
     component: React.lazy(() =>
