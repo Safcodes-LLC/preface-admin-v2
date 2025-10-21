@@ -3,9 +3,7 @@ import {
   Card,
   Table,
   Input,
-  Button,
-  Dropdown,
-  Menu,
+  Button, 
   Tag,
   message,
   Form,
@@ -16,35 +14,25 @@ import {
   Select,
   Row,
   Tabs,
-  Checkbox,
   Grid,
-  Space,
   Tooltip,
 } from "antd";
 import {
-  EyeOutlined,
-  DeleteOutlined,
+  EyeOutlined, 
   SearchOutlined,
-  PlusCircleOutlined,
-  EditOutlined,
-  UploadOutlined,
+  PlusCircleOutlined, 
   VideoCameraOutlined,
-  FileTextOutlined,
-  TagsOutlined,
+  FileTextOutlined, 
   FilterOutlined,
   ClearOutlined,
 } from "@ant-design/icons";
-import AvatarStatus from "components/shared-components/AvatarStatus";
-import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
+import AvatarStatus from "components/shared-components/AvatarStatus"; 
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import utils from "utils";
-import { useDispatch, useSelector } from "react-redux";
-import { deletePost, fetchAllPostsByPostType } from "store/slices/postSlice";
+import { useDispatch, useSelector } from "react-redux"; 
 import { fetchAllCategories } from "store/slices/categoriesSlice";
-import { fetchAllLanguages } from "store/slices/languagesSlice";
-import TextArea from "antd/es/input/TextArea";
-import Dragger from "antd/es/upload/Dragger";
+import { fetchAllLanguages } from "store/slices/languagesSlice"; 
 import axios from "axios";
 import { API_BASE_URL } from "configs/AppConfig";
 
@@ -62,6 +50,7 @@ const FeaturedArticles = () => {
   // Watch form fields for reactive filtering
   const selectedLanguage = Form.useWatch("language", form);
   const selectedParentCategory = Form.useWatch("ParentCategory", form);
+  const selectedSubCategory = Form.useWatch("categories", form);
 
   const navigate = useNavigate();
 
@@ -69,30 +58,18 @@ const FeaturedArticles = () => {
   const categories = useSelector((state) => state.categories.categories);
   const languages = useSelector((state) => state.languages.languages);
 
-  const [list, setList] = useState([]); // Banner selected posts (filtered)
-  const [originalBannerData, setOriginalBannerData] = useState([]); // Original banner data (unfiltered)
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [highlightedPosts, setHighlightedPosts] = useState([]); // Array for multiple highlights
-  const [contentData, setContentData] = useState({
-    video: [],
-    article: [],
-    topics: [],
-  });
+  const [list, setList] = useState([]); // Feature selected posts (filtered)
+  const [originalBannerData, setOriginalBannerData] = useState([]); // Original feature data (unfiltered) 
 
   // New state for language-specific highlighting
   const [selectedLanguageForHighlights, setSelectedLanguageForHighlights] =
     useState(null);
-  const [highlightStats, setHighlightStats] = useState({});
 
   // Categories list from Redux
   const [categoriesList, setCategoriesList] = useState([]);
 
   // Filter states for modal (only keep non-form related states)
-  const [filteredData, setFilteredData] = useState([]);
-  const [originalData, setOriginalData] = useState([]);
-  const [bannerStatusChanges, setBannerStatusChanges] = useState({});
-  const [allPosts, setAllPosts] = useState([]);
+  const [filteredData, setFilteredData] = useState([]); 
   const [modalLoading, setModalLoading] = useState(false);
   const [modalPagination, setModalPagination] = useState({
     current: 1,
@@ -102,7 +79,7 @@ const FeaturedArticles = () => {
   const [modalFilters, setModalFilters] = useState({
     language: undefined,
     parentCategory: undefined,
-    categories: [],
+    categories: undefined,
     title: "",
   });
 
@@ -119,27 +96,51 @@ const FeaturedArticles = () => {
     video: {
       title: "home page",
       icon: <VideoCameraOutlined />,
-      addButtonText: "Manage featured home page",
-      modalTitle: "Manage featured home page Selection",
-      endpoint: "video",
+      addButtonText: "Manage Featured Articles",
+      modalTitle: "Manage Featured Articles Selection",
+      endpoint: "article",
       postTypeId: "66d9d564987787d3e3ff1312",
     },
     article: {
       title: "category page",
       icon: <FileTextOutlined />,
-      addButtonText: "Manage featured category page",
-      modalTitle: "Manage featured category page Selection",
+      addButtonText: "Manage Featured Articles",
+      modalTitle: "Manage Featured Articles Selection",
       endpoint: "article",
       postTypeId: "66d9d564987787d3e3ff1312",
     },
-    // topics: {
-    //   title: "Topics",
-    //   icon: <TagsOutlined />,
-    //   addButtonText: "Manage Topic Banner",
-    //   modalTitle: "Manage Topic Banner Selection",
-    //   endpoint: "topics",
-    //   postTypeId: "66d9d564987787d3e3ff1313"
-    // }
+  };
+
+  // API call to toggle featured selection (for modal 'Select for featured')
+  const toggleFeaturedSelectionAPI = async (postId) => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      message.error("Authorization token is missing");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/featured/posts/${postId}/toggle-featured-selection`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Failed to update featured selection"
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
   };
 
   // Reset parent category when language changes
@@ -185,12 +186,7 @@ const FeaturedArticles = () => {
   }, [languages, selectedLanguageForHighlights]);
 
   // Update categories list when Redux state changes
-  useEffect(() => {
-    // console.log('Categories from Redux:', categories);
-    // console.log('Categories from Redux length:', categories?.length || 0);
-    // console.log('Categories from Redux type:', typeof categories);
-    // console.log('Is array?', Array.isArray(categories));
-
+  useEffect(() => { 
     if (categories && Array.isArray(categories) && categories.length > 0) {
       setCategoriesList(categories);
     } else {
@@ -201,30 +197,16 @@ const FeaturedArticles = () => {
 
   // Filter parent categories by language (same as GeneralField)
   const filteredParentCategories = categoriesList.filter((category) => {
-    // console.log(category,'cat test - category item');
-
     const hasNoParent = !category.parentCategory;
     const matchesLanguage = selectedLanguage
       ? category.language?._id === selectedLanguage ||
         category.language === selectedLanguage
       : true;
-
-    // console.log('Parent Category Filter:', {
-    //   categoryName: category.name,
-    //   hasNoParent,
-    //   categoryLanguage: category.language,
-    //   selectedLanguage,
-    //   matchesLanguage,
-    //   willShow: hasNoParent && matchesLanguage
-    // });
-
     return hasNoParent && matchesLanguage;
   });
 
   // Filter subcategories by parent category and language (same as GeneralField concept)
   const filteredSubCategories = categoriesList.filter((category) => {
-    // console.log(selectedParentCategory,'selectedParentCategory');
-
     const hasParent =
       category.parentCategory &&
       (category.parentCategory._id === selectedParentCategory ||
@@ -233,150 +215,63 @@ const FeaturedArticles = () => {
       ? category.language?._id === selectedLanguage ||
         category.language === selectedLanguage
       : true;
-
-    // console.log(category,'sub test coming');
-
-    // console.log('Sub Category Filter:', {
-    //   categoryName: category.name,
-    //   hasParent,
-    //   parentCategoryId: category.parentCategory?._id,
-    //   selectedParentCategory,
-    //   matchesLanguage,
-    //   willShow: hasParent && matchesLanguage
-    // });
-
     return hasParent && matchesLanguage;
   });
 
-  // console.log('FILTERING DEBUG:', {
-  //   categoriesListLength: categoriesList.length,
-  //   selectedLanguage,
-  //   selectedParentCategory,
-  //   filteredParentCategoriesLength: filteredParentCategories.length,
-  //   filteredSubCategoriesLength: filteredSubCategories.length,
-  //   activeTab
-  // });
-
-  // Fetch banner data when tab changes
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("auth_token");
-        const postTypeId = tabConfig[activeTab].postTypeId;
-
-        const response = await axios.get(
-          `${API_BASE_URL}/banner/posts/banner-selected/${postTypeId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token,
-            },
-          }
-        );
-
-        if (response?.data?.status === "success") {
-          const data = response.data.data || [];
-          setContentData((prev) => ({
-            ...prev,
-            [activeTab]: data,
-          }));
-          setOriginalBannerData(data); // Store original data
-          // Apply language filter immediately if one is selected
-          applyLanguageFilterToBannerData(data, selectedLanguageForHighlights);
+  // Fetch featured posts for main table with filters
+  const fetchMainFeaturedPosts = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const params = {
+        lang: selectedLanguage || undefined,
+        parentCategory: selectedParentCategory || undefined,
+        category: Array.isArray(selectedSubCategory)
+          ? selectedSubCategory[0]
+          : selectedSubCategory || undefined,
+      };
+      const response = await axios.get(
+        `${API_BASE_URL}/featured/featured-posts`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+          params,
         }
-      } catch (error) {
-        console.error("Error fetching banner data:", error);
-        message.error("Failed to fetch banner data");
+      );
+      if (response?.data?.status === "success") {
+        const data = response.data.data || [];
+        const sorted = [...data].sort(
+          (a, b) => (b?.selectedForHomeFeatured === true) - (a?.selectedForHomeFeatured === true)
+        );
+        setOriginalBannerData(sorted);
+        setList(sorted);
       }
-    };
-
-    fetchData();
-  }, [activeTab]);
-
-  // New function to apply language filter to banner data
-  const applyLanguageFilterToBannerData = (data, languageId) => {
-    if (!languageId) {
-      setList(data); // Show all if no language selected
-      return;
+    } catch (error) {
+      console.error("Error fetching featured posts:", error);
+      message.error("Failed to fetch featured posts");
     }
-
-    const filteredData = data.filter(
-      (post) => post.language && post.language._id === languageId
-    );
-    setList(filteredData);
   };
 
-  // Apply language filter when language selection changes
+  // Fetch on tab or filter changes
   useEffect(() => {
-    if (originalBannerData.length > 0) {
-      applyLanguageFilterToBannerData(
-        originalBannerData,
-        selectedLanguageForHighlights
-      );
-    }
-  }, [selectedLanguageForHighlights, originalBannerData]);
+    fetchMainFeaturedPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    activeTab,
+    selectedLanguage,
+    selectedParentCategory,
+    selectedSubCategory,
+  ]);
 
-  // Fetch highlighted posts when language changes (separate effect)
-  useEffect(() => {
-    if (selectedLanguageForHighlights && activeTab) {
-      const fetchHighlights = async () => {
-        try {
-          const token = localStorage.getItem("auth_token");
-          const postTypeId = tabConfig[activeTab].postTypeId;
-
-          let url = `${API_BASE_URL}/banner/posts/highlighted/${postTypeId}?languageId=${selectedLanguageForHighlights}`;
-
-          const response = await axios.get(url, {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token,
-            },
-          });
-
-          if (response?.data?.status === "success") {
-            const posts = response.data.data;
-            const stats = response.data.details || {};
-            const languageBreakdown = response.data.languageBreakdown || [];
-
-            if (Array.isArray(posts)) {
-              setHighlightedPosts(posts);
-            } else if (posts && typeof posts === "object") {
-              setHighlightedPosts([posts]);
-            } else {
-              setHighlightedPosts([]);
-            }
-
-            setHighlightStats({
-              ...stats,
-              languageBreakdown,
-            });
-          } else {
-            setHighlightedPosts([]);
-            setHighlightStats({});
-          }
-        } catch (error) {
-          console.error("Error fetching highlighted posts:", error);
-          setHighlightedPosts([]);
-          setHighlightStats({});
-        }
-      };
-
-      fetchHighlights();
-    } else {
-      // Clear highlighted posts if no language selected
-      setHighlightedPosts([]);
-      setHighlightStats({});
-    }
-  }, [selectedLanguageForHighlights, activeTab]);
-
-  // Helper function to refresh banner data
+  // Helper function to refresh Feature data
   const refreshBannerData = async () => {
     try {
       const token = localStorage.getItem("auth_token");
-      const postTypeId = tabConfig[activeTab].postTypeId;
+      // const postTypeId = tabConfig[activeTab].postTypeId;
 
       const response = await axios.get(
-        `${API_BASE_URL}/banner/posts/banner-selected/${postTypeId}`,
+        `${API_BASE_URL}/featured/featured-posts`, 
         {
           headers: {
             "Content-Type": "application/json",
@@ -387,61 +282,15 @@ const FeaturedArticles = () => {
 
       if (response?.data?.status === "success") {
         const data = response.data.data || [];
-        setContentData((prev) => ({
-          ...prev,
-          [activeTab]: data,
-        }));
-        setOriginalBannerData(data);
-        applyLanguageFilterToBannerData(data, selectedLanguageForHighlights);
+        const sorted = [...data].sort(
+          (a, b) => (b?.selectedForHomeFeatured === true) - (a?.selectedForHomeFeatured === true)
+        );
+        setOriginalBannerData(sorted);
+        setList(sorted);
       }
     } catch (error) {
-      console.error("Error fetching banner data:", error);
-      message.error("Failed to fetch banner data");
-    }
-  };
-
-  // Helper function to refresh highlighted posts
-  const refreshHighlightedPosts = async (languageId) => {
-    if (!languageId) return;
-
-    try {
-      const token = localStorage.getItem("auth_token");
-      const postTypeId = tabConfig[activeTab].postTypeId;
-
-      let url = `${API_BASE_URL}/banner/posts/highlighted/${postTypeId}?languageId=${languageId}`;
-
-      const response = await axios.get(url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-      });
-
-      if (response?.data?.status === "success") {
-        const posts = response.data.data;
-        const stats = response.data.details || {};
-        const languageBreakdown = response.data.languageBreakdown || [];
-
-        if (Array.isArray(posts)) {
-          setHighlightedPosts(posts);
-        } else if (posts && typeof posts === "object") {
-          setHighlightedPosts([posts]);
-        } else {
-          setHighlightedPosts([]);
-        }
-
-        setHighlightStats({
-          ...stats,
-          languageBreakdown,
-        });
-      } else {
-        setHighlightedPosts([]);
-        setHighlightStats({});
-      }
-    } catch (error) {
-      console.error("Error fetching highlighted posts:", error);
-      setHighlightedPosts([]);
-      setHighlightStats({});
+      console.error("Error fetching feature data:", error);
+      message.error("Failed to fetch feature data");
     }
   };
 
@@ -453,132 +302,58 @@ const FeaturedArticles = () => {
       setModalFilters({
         language: undefined,
         parentCategory: undefined,
-        categories: [],
+        categories: undefined,
         title: "",
       });
     }
   }, [isModalVisible, activeTab]);
 
-  const dropdownMenu = (row) => (
-    <Menu>
-      <Menu.Item onClick={() => viewDetails(row)}>
-        <Flex alignItems="center">
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
-      </Menu.Item>
-      <Menu.Item onClick={() => editDetails(row)}>
-        <Flex alignItems="center">
-          <EditOutlined />
-          <span className="ml-2">Edit Details</span>
-        </Flex>
-      </Menu.Item>
-      <Menu.Item onClick={() => removeFromBanner(row)}>
-        <Flex alignItems="center">
-          <DeleteOutlined />
-          <span className="ml-2">Remove from Banner</span>
-        </Flex>
-      </Menu.Item>
-    </Menu>
-  );
-
   const AddContent = () => {
     setIsModalVisible(true);
-    form.resetFields();
-    setBannerStatusChanges({});
-    setSelectedRowKeys([]);
+    form.resetFields(); 
     setFilteredData([]); // Ensure no data is shown initially
 
-    // Don't auto-set the modal language dropdown to avoid infinite loops
-    // Let user select language manually in the modal
+ 
   };
 
   const handleOk = async () => {
     const updates = [];
 
-    // Process banner status changes
-    for (const [postId, newStatus] of Object.entries(bannerStatusChanges)) {
-      updates.push(toggleBannerSelectionAPI(postId, newStatus));
-    }
-
     try {
       await Promise.all(updates);
-      message.success("Banner selections updated successfully");
+      message.success("Featured selections updated successfully");
 
       // Refresh data
       await refreshBannerData();
-      if (selectedLanguageForHighlights) {
-        await refreshHighlightedPosts(selectedLanguageForHighlights);
-      }
     } catch (error) {
-      message.error("Failed to update banner selections");
+      message.error("Failed to update featured selections");
     } finally {
-      setIsModalVisible(false);
-      setBannerStatusChanges({});
-      setSelectedRowKeys([]);
+      setIsModalVisible(false); 
     }
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
-    form.resetFields();
-    setBannerStatusChanges({});
-    setSelectedRowKeys([]);
+    form.resetFields(); 
     setFilteredData([]); // Clear filtered data when closing modal
   };
 
-  // API call to toggle banner selection
-  const toggleBannerSelectionAPI = async (postId, selectedForBanner) => {
+  // API call to toggle highlight (home page) with language scoping
+  const toggleHighlightAPI = async (postId, languageId) => {
     const token = localStorage.getItem("auth_token");
     if (!token) {
       message.error("Authorization token is missing");
       return;
     }
-
     try {
       const response = await fetch(
-        `${API_BASE_URL}/banner/posts/${postId}/toggle-banner-selection`,
+        `${API_BASE_URL}/featured/posts/${postId}/toggle-home-featured-selection/${languageId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: token,
           },
-          body: JSON.stringify({ selectedForBanner }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Failed to update banner selection"
-        );
-      }
-
-      return await response.json();
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // API call to toggle highlight
-  const toggleHighlightAPI = async (postId, highlighted) => {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      message.error("Authorization token is missing");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/banner/posts/${postId}/toggle-highlight`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-          body: JSON.stringify({ highlighted }),
         }
       );
 
@@ -595,27 +370,25 @@ const FeaturedArticles = () => {
     }
   };
 
-  const toggleBannerSelection = (postId, currentStatus) => {
-    const newStatus = !currentStatus;
-    setBannerStatusChanges((prev) => ({
-      ...prev,
-      [postId]: newStatus,
-    }));
+  const handleFeaturedSwitch = async (record) => {
+    try {
+      const result = await toggleFeaturedSelectionAPI(record._id);
+      if (result?.status === "success") {
+        message.success(result?.message || "Featured selection updated");
+        // Refresh modal list if filters are active, else do nothing
+        if (modalFilters.language && modalFilters.categories) {
+          await fetchModalPage(modalPagination.current, modalPagination.pageSize);
+        }
+        // Refresh main Feature/featured data to reflect changes
+        await refreshBannerData();
+      } else {
+        message.error("Failed to update featured selection");
+      }
+    } catch (e) {
+      message.error(e?.message || "Failed to update featured selection");
+    }
   };
 
-  const handleCheckboxChange = (record) => {
-    const selected = selectedRowKeys.includes(record._id)
-      ? selectedRowKeys.filter((key) => key !== record._id)
-      : [...selectedRowKeys, record._id];
-    setSelectedRowKeys(selected);
-
-    toggleBannerSelection(
-      record._id,
-      bannerStatusChanges[record._id] ?? record.selectedForBanner
-    );
-  };
-
-  // Clear all filters and show no data (user must select language and filter)
   const handleClearFilters = () => {
     form.resetFields();
     setFilteredData([]); // Clear data - user must select language and filter again
@@ -627,7 +400,7 @@ const FeaturedArticles = () => {
     setModalFilters({
       language: undefined,
       parentCategory: undefined,
-      categories: [],
+      categories: undefined,
       title: "",
     });
   };
@@ -642,12 +415,16 @@ const FeaturedArticles = () => {
       message.warning("Please select a language first");
       return;
     }
+    if (!subCategoryValue) {
+      message.warning("Please select a sub category to filter");
+      return;
+    }
 
     setModalLoading(true);
     setModalFilters({
       language: languageValue,
       parentCategory: categoryValue,
-      categories: subCategoryValue || [],
+      categories: subCategoryValue || undefined,
       title: titleValue || "",
     });
 
@@ -666,17 +443,13 @@ const FeaturedArticles = () => {
         language: languageValue,
         parentCategoryId: categoryValue,
         parentCategory: categoryValue,
-        category: Array.isArray(subCategoryValue)
-          ? subCategoryValue
-          : undefined,
-        categoriesCsv: Array.isArray(subCategoryValue)
-          ? subCategoryValue.join(",")
-          : undefined,
+        category: subCategoryValue,
+        categoriesCsv: subCategoryValue,
         title: titleValue,
         search: titleValue,
       };
 
-      console.log("Banner manage filter params:", params);
+      console.log("Feature manage filter params:", params);
       const response = await axios.get(
         `${API_BASE_URL}/banner/posts/manage/${postTypeId}`,
         {
@@ -708,7 +481,10 @@ const FeaturedArticles = () => {
           ? payload.docs
           : [];
         const p = payload.pagination || {};
-        setFilteredData(items);
+        const sortedItems = [...items].sort(
+          (a, b) => (b?.selectedForFeatured === true) - (a?.selectedForFeatured === true)
+        );
+        setFilteredData(sortedItems);
         setModalPagination({
           current: p.page || page,
           pageSize: p.limit || limit,
@@ -738,7 +514,7 @@ const FeaturedArticles = () => {
 
   const fetchModalPage = async (page, pageSize) => {
     const { language, parentCategory, categories, title } = modalFilters;
-    if (!language) return;
+    if (!language || !categories) return;
     setModalLoading(true);
     try {
       const token = localStorage.getItem("auth_token");
@@ -751,10 +527,8 @@ const FeaturedArticles = () => {
         language,
         parentCategoryId: parentCategory,
         parentCategory,
-        category: Array.isArray(categories) ? categories : undefined,
-        categoriesCsv: Array.isArray(categories)
-          ? categories.join(",")
-          : undefined,
+        category: categories,
+        categoriesCsv: categories,
         title,
         search: title,
       };
@@ -790,7 +564,10 @@ const FeaturedArticles = () => {
           ? payload.docs
           : [];
         const p = payload.pagination || {};
-        setFilteredData(items);
+        const sortedItems = [...items].sort(
+          (a, b) => (b?.selectedForFeatured === true) - (a?.selectedForFeatured === true)
+        );
+        setFilteredData(sortedItems);
         setModalPagination({
           current: p.page || page,
           pageSize: p.limit || pageSize,
@@ -809,20 +586,16 @@ const FeaturedArticles = () => {
     }
   };
 
-  // Updated function to handle toggling the highlight status
-  const toggleHighlight = async (postId, shouldHighlight) => {
+  // Updated function to handle toggling the highlight status (home page only, single active)
+  const toggleHighlight = async (postId, shouldHighlight, languageId) => {
     try {
-      const result = await toggleHighlightAPI(postId, shouldHighlight);
+      const result = await toggleHighlightAPI(postId, languageId);
 
       if (result.status === "success") {
-        // Show detailed message about language-specific highlighting
-        message.success(result.message);
+        message.success(result.message || "Highlight updated");
 
         // Refresh data to ensure proper state
         await refreshBannerData();
-        if (selectedLanguageForHighlights) {
-          await refreshHighlightedPosts(selectedLanguageForHighlights);
-        }
       } else {
         message.error(
           `Failed to ${shouldHighlight ? "highlight" : "unhighlight"} post`
@@ -838,56 +611,21 @@ const FeaturedArticles = () => {
     }
   };
 
-  const viewDetails = (row) => {
-    navigate(`/admin/dashboards/articles/view-article/${row._id}`);
-  };
-
-  const editDetails = (row) => {
-    navigate(`/admin/dashboards/cms/${activeTab}/edit-${activeTab}/${row._id}`);
-  };
-
-  const removeFromBanner = async (row) => {
-    try {
-      await toggleBannerSelectionAPI(row._id, false);
-      message.success("Post removed from banner successfully");
-
-      // Refresh data
-      await refreshBannerData();
-      if (selectedLanguageForHighlights) {
-        await refreshHighlightedPosts(selectedLanguageForHighlights);
-      }
-    } catch (error) {
-      message.error("Failed to remove post from banner");
-    }
-  };
+   
 
   const handleTabChange = (key) => {
     setActiveTab(key);
-    setSelectedRowKeys([]);
-    setSelectedRows([]);
-    setHighlightedPosts([]);
-    setHighlightStats({});
-
-    // Keep the current language selection instead of resetting
-    // The useEffect will handle fetching data for the new tab
-
     form.resetFields();
   };
 
   const onSearch = (e) => {
     const value = e.currentTarget.value;
-    // Apply search on the already language-filtered data
-    const searchArray = value
-      ? list
-      : selectedLanguageForHighlights
-      ? originalBannerData.filter(
-          (post) =>
-            post.language && post.language._id === selectedLanguageForHighlights
-        )
-      : originalBannerData;
-    const data = utils.wildCardSearch(searchArray, value);
-    setList(data);
-    setSelectedRowKeys([]);
+    // Client-side title search on the current list
+    const data = utils.wildCardSearch(originalBannerData, value);
+    const sorted = [...data].sort(
+      (a, b) => (b?.selectedForHomeFeatured === true) - (a?.selectedForHomeFeatured === true)
+    );
+    setList(sorted);
   };
 
   const getMainTableColumns = () => [
@@ -920,68 +658,73 @@ const FeaturedArticles = () => {
       render: (_, record) => record?.language?.name || "No Language",
     },
     {
-      title: "Categories",
-      dataIndex: "categories",
+      title: "Parent Category",
+      dataIndex: "parentCategory",
       render: (_, record) =>
-        record?.categories?.map((item) => item?.name).join(", ") ||
-        "Uncategorized",
+        record?.categories[0]?.parentCategory?.name || "Uncategorized",
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      render: (_, record) => {
-        return (
-          <>
-            <Tag color={record?.status?.includes("sendback") ? "red" : "green"}>
-              {record?.status}
-            </Tag>
-            {record?.editingSession?.id && (
-              <Tag color={"grey"}>Edit in progress</Tag>
-            )}
-          </>
-        );
-      },
+      title: "Sub Category",
+      dataIndex: "subCategory",
+      render: (_, record) => record?.categories[0]?.name || "Uncategorized",
     },
-    {
-      title: "Highlight",
-      dataIndex: "highlight",
-      render: (_, record) => {
-        // Check if this post is highlighted
-        const isHighlighted =
-          Array.isArray(highlightedPosts) &&
-          highlightedPosts.some((post) => post._id === record._id);
-
-        return (
-          <div>
-            <Tooltip
-              title={
-                !record.selectedForBanner
-                  ? "Post must be selected for banner first"
-                  : !record.language
-                  ? "Post must have a language assigned"
-                  : isHighlighted
-                  ? "Click to remove highlight"
-                  : "Click to highlight this post"
-              }
-            >
-              <Switch
-                checked={isHighlighted}
-                onChange={(checked) => toggleHighlight(record._id, checked)}
-                disabled={!record.selectedForBanner || !record.language}
-                size="small"
-              />
-            </Tooltip>
-          </div>
-        );
-      },
-    },
+    // Conditionally include Highlight column only when NOT on category page
+    ...(activeTab === "article"
+      ? []
+      : [
+          {
+            title: "Highlight",
+            dataIndex: "highlight",
+            render: (_, record) => {
+              const isHighlighted = record.selectedForHomeFeatured;
+              return (
+                <div>
+                  <Tooltip
+                    title={
+                      isHighlighted
+                        ? "Click to remove highlight"
+                        : "Click to highlight this post"
+                    }
+                  >
+                    <Switch
+                      checked={isHighlighted}
+                      onChange={(checked) =>
+                        toggleHighlight(
+                          record._id,
+                          checked,
+                          record?.language?._id || record?.language
+                        )
+                      } 
+                      size="small"
+                    />
+                  </Tooltip>
+                </div>
+              );
+            },
+          },
+        ]),
     {
       title: "",
       dataIndex: "actions",
-      render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
+      render: (_, row) => (
+        <button
+          onClick={() =>
+            navigate(`/admin/dashboards/articles/view-article/${row._id}`)
+          }
+          style={{
+            border: "none",
+            background: "#3e79f7",
+            cursor: "pointer",
+            color: "white",
+            borderRadius: "5px",
+          }}
+          className="px-2 py-1"
+        >
+          <Flex alignItems="center">
+            <EyeOutlined />
+            <span className="ml-1">View Details</span>
+          </Flex>
+        </button>
       ),
     },
   ];
@@ -1051,14 +794,21 @@ const FeaturedArticles = () => {
       title: "Select for featured",
       dataIndex: "select",
       render: (_, record) => (
-        <Checkbox
-          checked={
-            bannerStatusChanges[record._id] !== undefined
-              ? bannerStatusChanges[record._id]
-              : record?.selectedForBanner || false
-          }
-          onChange={() => handleCheckboxChange(record)}
-        />
+        <div>
+          <Tooltip
+            title={
+              record?.selectedForFeatured
+                ? "Unselect from featured"
+                : "Select as featured"
+            }
+          >
+            <Switch
+              checked={record?.selectedForFeatured || false}
+              onChange={() => handleFeaturedSwitch(record)}
+              size="small"
+            />
+          </Tooltip>
+        </div>
       ),
     },
   ];
@@ -1082,34 +832,61 @@ const FeaturedArticles = () => {
               mobileFlex={false}
             >
               <Flex className="mb-1" mobileFlex={false}>
-                <div className="mr-md-3 mb-3">
-                  <Input
-                    placeholder="Search banner posts"
-                    prefix={<SearchOutlined />}
-                    onChange={(e) => onSearch(e)}
-                  />
-                </div>
-                {/* Language filter for highlights - inline with search */}
-                <div className="mr-md-3 mb-3">
-                  <Select
-                    style={{ width: 200 }}
-                    placeholder="Select language"
-                    allowClear
-                    value={selectedLanguageForHighlights}
-                    onChange={(value) => {
-                      setSelectedLanguageForHighlights(value);
-                      if (!value) {
-                        setHighlightedPosts([]);
-                        setHighlightStats({});
-                        setList(originalBannerData);
+                {/* Main table filters */}
+                <Form form={form} layout="inline">
+                  <Form.Item name="language" className="mr-md-3 mb-3">
+                    <Select
+                      placeholder="Language"
+                      style={{ minWidth: 160 }}
+                      allowClear
+                      options={languages.map((l) => ({
+                        label: l.name,
+                        value: l._id,
+                      }))}
+                    />
+                  </Form.Item>
+                  <Form.Item name="ParentCategory" className="mr-md-3 mb-3">
+                    <Select
+                      placeholder={
+                        selectedLanguage
+                          ? "Parent Category"
+                          : "Select language first"
                       }
-                    }}
-                    options={languages.map((l) => ({
-                      label: l.name,
-                      value: l._id,
-                    }))}
-                  />
-                </div>
+                      style={{ minWidth: 180 }}
+                      disabled={!selectedLanguage}
+                      allowClear
+                      options={filteredParentCategories.map((c) => ({
+                        label: c.name,
+                        value: c._id,
+                      }))}
+                    />
+                  </Form.Item>
+                  <Form.Item name="categories" className="mr-md-3 mb-3">
+                    <Select
+                      placeholder={
+                        selectedParentCategory
+                          ? "Sub Category"
+                          : "Select parent first"
+                      }
+                      style={{ minWidth: 180 }}
+                      disabled={!selectedParentCategory}
+                      allowClear
+                      options={filteredSubCategories.map((c) => ({
+                        label: c.name,
+                        value: c._id,
+                      }))}
+                    />
+                  </Form.Item>
+                  <Form.Item className="mr-md-3 mb-3">
+                    <Input
+                      placeholder="Search title"
+                      prefix={<SearchOutlined />}
+                      onChange={onSearch}
+                      allowClear
+                      style={{ minWidth: 220 }}
+                    />
+                  </Form.Item>
+                </Form>
               </Flex>
               <div>
                 <Button
@@ -1132,7 +909,7 @@ const FeaturedArticles = () => {
                   showSizeChanger: true,
                   showQuickJumper: true,
                   showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} of ${total} banner posts`,
+                    `${range[0]}-${range[1]} of ${total} feature posts`,
                 }}
               />
             </div>
@@ -1140,13 +917,13 @@ const FeaturedArticles = () => {
         ))}
       </Tabs>
 
-      {/* Modal for Managing Banner Content */}
+      {/* Modal for Managing Feature Content */}
       <Modal
         title={tabConfig[activeTab].modalTitle}
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
-        okText="Update Banner Selections"
+        okText="Update Featured Selections"
         cancelText="Cancel"
         width={"90%"}
       >
@@ -1192,7 +969,6 @@ const FeaturedArticles = () => {
               <Form.Item label="Sub Category" name="categories">
                 <Select
                   style={{ width: "100%" }}
-                  mode="multiple"
                   placeholder={
                     selectedParentCategory
                       ? "Select sub categories"
