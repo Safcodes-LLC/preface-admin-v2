@@ -18,7 +18,7 @@ import {
   Tooltip,
 } from "antd";
 import {
-  EyeOutlined, 
+  // EyeOutlined, 
   SearchOutlined,
   PlusCircleOutlined, 
   VideoCameraOutlined,
@@ -28,7 +28,7 @@ import {
 } from "@ant-design/icons";
 import AvatarStatus from "components/shared-components/AvatarStatus"; 
 import Flex from "components/shared-components/Flex";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import utils from "utils";
 import { useDispatch, useSelector } from "react-redux"; 
 import { fetchAllCategories } from "store/slices/categoriesSlice";
@@ -52,7 +52,7 @@ const FeaturedArticles = () => {
   const selectedParentCategory = Form.useWatch("ParentCategory", form);
   const selectedSubCategory = Form.useWatch("categories", form);
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // Get categories and languages from Redux store
   const categories = useSelector((state) => state.categories.categories);
