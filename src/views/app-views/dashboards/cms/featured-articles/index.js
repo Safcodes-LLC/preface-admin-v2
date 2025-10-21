@@ -703,30 +703,30 @@ const FeaturedArticles = () => {
             },
           },
         ]),
-    {
-      title: "",
-      dataIndex: "actions",
-      render: (_, row) => (
-        <button
-          onClick={() =>
-            navigate(`/admin/dashboards/articles/view-article/${row._id}`)
-          }
-          style={{
-            border: "none",
-            background: "#3e79f7",
-            cursor: "pointer",
-            color: "white",
-            borderRadius: "5px",
-          }}
-          className="px-2 py-1"
-        >
-          <Flex alignItems="center">
-            <EyeOutlined />
-            <span className="ml-1">View Details</span>
-          </Flex>
-        </button>
-      ),
-    },
+      // {
+      //   title: "",
+      //   dataIndex: "actions",
+      //   render: (_, row) => (
+      //     <button
+      //       onClick={() =>
+      //         navigate(`/admin/dashboards/articles/view-article/${row._id}`)
+      //       }
+      //       style={{
+      //         border: "none",
+      //         background: "#3e79f7",
+      //         cursor: "pointer",
+      //         color: "white",
+      //         borderRadius: "5px",
+      //       }}
+      //       className="px-2 py-1"
+      //     >
+      //       <Flex alignItems="center">
+      //         <EyeOutlined />
+      //         <span className="ml-1">View Details</span>
+      //       </Flex>
+      //     </button>
+      //   ),
+      // },
   ];
 
   const getModalTableColumns = () => [
