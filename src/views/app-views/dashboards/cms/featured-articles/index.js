@@ -3,7 +3,7 @@ import {
   Card,
   Table,
   Input,
-  Button, 
+  Button,
   Tag,
   message,
   Form,
@@ -18,23 +18,24 @@ import {
   Tooltip,
 } from "antd";
 import {
-  // EyeOutlined, 
+  // EyeOutlined,
   SearchOutlined,
-  PlusCircleOutlined, 
-  VideoCameraOutlined,
-  FileTextOutlined, 
+  PlusCircleOutlined,
+  // VideoCameraOutlined,
+  FileTextOutlined,
   FilterOutlined,
   ClearOutlined,
 } from "@ant-design/icons";
-import AvatarStatus from "components/shared-components/AvatarStatus"; 
+import AvatarStatus from "components/shared-components/AvatarStatus";
 import Flex from "components/shared-components/Flex";
 // import { useNavigate } from "react-router-dom";
 import utils from "utils";
-import { useDispatch, useSelector } from "react-redux"; 
+import { useDispatch, useSelector } from "react-redux";
 import { fetchAllCategories } from "store/slices/categoriesSlice";
-import { fetchAllLanguages } from "store/slices/languagesSlice"; 
+import { fetchAllLanguages } from "store/slices/languagesSlice";
 import axios from "axios";
 import { API_BASE_URL } from "configs/AppConfig";
+import CustomFeaturedForm from "./customFeaturedForm";
 
 const { TabPane } = Tabs;
 
@@ -44,6 +45,7 @@ const FeaturedArticles = () => {
 
   const dispatch = useDispatch();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isCustomModalVisible, setIsCustomModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState("video");
 
@@ -59,7 +61,7 @@ const FeaturedArticles = () => {
   const languages = useSelector((state) => state.languages.languages);
 
   const [list, setList] = useState([]); // Feature selected posts (filtered)
-  const [originalBannerData, setOriginalBannerData] = useState([]); // Original feature data (unfiltered) 
+  const [originalBannerData, setOriginalBannerData] = useState([]); // Original feature data (unfiltered)
 
   // New state for language-specific highlighting
   const [selectedLanguageForHighlights, setSelectedLanguageForHighlights] =
@@ -69,7 +71,7 @@ const FeaturedArticles = () => {
   const [categoriesList, setCategoriesList] = useState([]);
 
   // Filter states for modal (only keep non-form related states)
-  const [filteredData, setFilteredData] = useState([]); 
+  const [filteredData, setFilteredData] = useState([]);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalPagination, setModalPagination] = useState({
     current: 1,
@@ -94,18 +96,22 @@ const FeaturedArticles = () => {
   // Tab configuration with correct post type IDs
   const tabConfig = {
     video: {
-      title: "home page",
-      icon: <VideoCameraOutlined />,
+      title: "Home Page",
+      icon: <FileTextOutlined />,
       addButtonText: "Manage Featured Articles",
+      addCustomButtonText: "Manage Custom Featured Article",
       modalTitle: "Manage Featured Articles Selection",
+      modalTitleCustom: "Manage Custom Featured Article",
       endpoint: "article",
       postTypeId: "66d9d564987787d3e3ff1312",
     },
     article: {
-      title: "category page",
+      title: "Category Page",
       icon: <FileTextOutlined />,
       addButtonText: "Manage Featured Articles",
+      addCustomButtonText: "Manage Custom Featured Article",
       modalTitle: "Manage Featured Articles Selection",
+      modalTitleCustom: "Manage Custom Featured Article",
       endpoint: "article",
       postTypeId: "66d9d564987787d3e3ff1312",
     },
@@ -186,7 +192,7 @@ const FeaturedArticles = () => {
   }, [languages, selectedLanguageForHighlights]);
 
   // Update categories list when Redux state changes
-  useEffect(() => { 
+  useEffect(() => {
     if (categories && Array.isArray(categories) && categories.length > 0) {
       setCategoriesList(categories);
     } else {
@@ -242,7 +248,9 @@ const FeaturedArticles = () => {
       if (response?.data?.status === "success") {
         const data = response.data.data || [];
         const sorted = [...data].sort(
-          (a, b) => (b?.selectedForHomeFeatured === true) - (a?.selectedForHomeFeatured === true)
+          (a, b) =>
+            (b?.selectedForHomeFeatured === true) -
+            (a?.selectedForHomeFeatured === true)
         );
         setOriginalBannerData(sorted);
         setList(sorted);
@@ -271,7 +279,7 @@ const FeaturedArticles = () => {
       // const postTypeId = tabConfig[activeTab].postTypeId;
 
       const response = await axios.get(
-        `${API_BASE_URL}/featured/featured-posts`, 
+        `${API_BASE_URL}/featured/featured-posts`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -283,7 +291,9 @@ const FeaturedArticles = () => {
       if (response?.data?.status === "success") {
         const data = response.data.data || [];
         const sorted = [...data].sort(
-          (a, b) => (b?.selectedForHomeFeatured === true) - (a?.selectedForHomeFeatured === true)
+          (a, b) =>
+            (b?.selectedForHomeFeatured === true) -
+            (a?.selectedForHomeFeatured === true)
         );
         setOriginalBannerData(sorted);
         setList(sorted);
@@ -310,10 +320,12 @@ const FeaturedArticles = () => {
 
   const AddContent = () => {
     setIsModalVisible(true);
-    form.resetFields(); 
+    form.resetFields();
     setFilteredData([]); // Ensure no data is shown initially
-
- 
+  };
+  const AddCustomContent = () => {
+    setIsCustomModalVisible(true);
+    form.resetFields();
   };
 
   const handleOk = async () => {
@@ -328,14 +340,19 @@ const FeaturedArticles = () => {
     } catch (error) {
       message.error("Failed to update featured selections");
     } finally {
-      setIsModalVisible(false); 
+      setIsModalVisible(false);
     }
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
-    form.resetFields(); 
+    form.resetFields();
     setFilteredData([]); // Clear filtered data when closing modal
+  };
+
+  const handleCustomCancel = () => {
+    setIsCustomModalVisible(false);
+    form.resetFields();
   };
 
   // API call to toggle highlight (home page) with language scoping
@@ -377,7 +394,10 @@ const FeaturedArticles = () => {
         message.success(result?.message || "Featured selection updated");
         // Refresh modal list if filters are active, else do nothing
         if (modalFilters.language && modalFilters.categories) {
-          await fetchModalPage(modalPagination.current, modalPagination.pageSize);
+          await fetchModalPage(
+            modalPagination.current,
+            modalPagination.pageSize
+          );
         }
         // Refresh main Feature/featured data to reflect changes
         await refreshBannerData();
@@ -482,7 +502,9 @@ const FeaturedArticles = () => {
           : [];
         const p = payload.pagination || {};
         const sortedItems = [...items].sort(
-          (a, b) => (b?.selectedForFeatured === true) - (a?.selectedForFeatured === true)
+          (a, b) =>
+            (b?.selectedForFeatured === true) -
+            (a?.selectedForFeatured === true)
         );
         setFilteredData(sortedItems);
         setModalPagination({
@@ -565,7 +587,9 @@ const FeaturedArticles = () => {
           : [];
         const p = payload.pagination || {};
         const sortedItems = [...items].sort(
-          (a, b) => (b?.selectedForFeatured === true) - (a?.selectedForFeatured === true)
+          (a, b) =>
+            (b?.selectedForFeatured === true) -
+            (a?.selectedForFeatured === true)
         );
         setFilteredData(sortedItems);
         setModalPagination({
@@ -611,8 +635,6 @@ const FeaturedArticles = () => {
     }
   };
 
-   
-
   const handleTabChange = (key) => {
     setActiveTab(key);
     form.resetFields();
@@ -623,7 +645,9 @@ const FeaturedArticles = () => {
     // Client-side title search on the current list
     const data = utils.wildCardSearch(originalBannerData, value);
     const sorted = [...data].sort(
-      (a, b) => (b?.selectedForHomeFeatured === true) - (a?.selectedForHomeFeatured === true)
+      (a, b) =>
+        (b?.selectedForHomeFeatured === true) -
+        (a?.selectedForHomeFeatured === true)
     );
     setList(sorted);
   };
@@ -694,7 +718,7 @@ const FeaturedArticles = () => {
                           checked,
                           record?.language?._id || record?.language
                         )
-                      } 
+                      }
                       size="small"
                     />
                   </Tooltip>
@@ -703,30 +727,30 @@ const FeaturedArticles = () => {
             },
           },
         ]),
-      // {
-      //   title: "",
-      //   dataIndex: "actions",
-      //   render: (_, row) => (
-      //     <button
-      //       onClick={() =>
-      //         navigate(`/admin/dashboards/articles/view-article/${row._id}`)
-      //       }
-      //       style={{
-      //         border: "none",
-      //         background: "#3e79f7",
-      //         cursor: "pointer",
-      //         color: "white",
-      //         borderRadius: "5px",
-      //       }}
-      //       className="px-2 py-1"
-      //     >
-      //       <Flex alignItems="center">
-      //         <EyeOutlined />
-      //         <span className="ml-1">View Details</span>
-      //       </Flex>
-      //     </button>
-      //   ),
-      // },
+    // {
+    //   title: "",
+    //   dataIndex: "actions",
+    //   render: (_, row) => (
+    //     <button
+    //       onClick={() =>
+    //         navigate(`/admin/dashboards/articles/view-article/${row._id}`)
+    //       }
+    //       style={{
+    //         border: "none",
+    //         background: "#3e79f7",
+    //         cursor: "pointer",
+    //         color: "white",
+    //         borderRadius: "5px",
+    //       }}
+    //       className="px-2 py-1"
+    //     >
+    //       <Flex alignItems="center">
+    //         <EyeOutlined />
+    //         <span className="ml-1">View Details</span>
+    //       </Flex>
+    //     </button>
+    //   ),
+    // },
   ];
 
   const getModalTableColumns = () => [
@@ -888,7 +912,15 @@ const FeaturedArticles = () => {
                   </Form.Item>
                 </Form>
               </Flex>
-              <div>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <Button
+                  onClick={AddCustomContent}
+                  type="default"
+                  icon={<PlusCircleOutlined />}
+                  block
+                >
+                  {config.addCustomButtonText}
+                </Button>
                 <Button
                   onClick={AddContent}
                   type="primary"
@@ -1052,6 +1084,16 @@ const FeaturedArticles = () => {
             />
           </div>
         </Form>
+      </Modal>
+      {/* Modal for Managing Custom Featured Article */}
+      <Modal
+        title={tabConfig[activeTab].modalTitleCustom}
+        visible={isCustomModalVisible}
+        width={"80%"}
+        footer={null}
+        onCancel={handleCustomCancel}
+      >
+        <CustomFeaturedForm />
       </Modal>
     </Card>
   );
