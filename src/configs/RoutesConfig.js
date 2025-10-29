@@ -969,6 +969,14 @@ export const protectedRoutes = [
     authority: ["Administrator"],
   },
   {
+    key: "visuals-page-management",
+    path: `${APP_PREFIX_PATH}/dashboards/cms/visuals-page-management`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/cms/visuals-page-management")
+    ),
+    authority: ["Administrator"],
+  },
+  {
     key: "preface-to-islam",
     path: `${APP_PREFIX_PATH}/dashboards/cms/preface-to-islam`,  
     component: React.lazy(() =>
