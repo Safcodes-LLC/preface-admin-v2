@@ -72,14 +72,7 @@ const CustomFormPopup = (props) => {
     useState(false);
   const [deactivating, setDeactivating] = useState(false);
 
-  const normalizeVideoUrl = (value) => {
-    if (!value) return "";
-    // Already an absolute or blob URL
-    if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('blob:')) return value;
-    const API_HOST = 'https://king-prawn-app-x9z27.ondigitalocean.app';
-    if (value.startsWith('/')) return `${API_HOST}${value}`;
-    return `${API_HOST}/${value}`;
-  };
+  // REMOVED normalizeVideoUrl function and its usages will now just directly use value
 
   // Removed fullscreen toggle button per request
 
@@ -92,7 +85,6 @@ const CustomFormPopup = (props) => {
     if (record && record._id) {
       const langId = record?.language?._id || record?.language;
       const videoLinkVal = record?.videoLink || record?.video_link || record?.link || "";
-      const rawRemoteVideo = record?.video || record?.videoUrl || record?.video_url || "";
       setSelectedLanguage(langId || null);
       form.setFieldsValue({
         title: record?.title || "",
@@ -102,11 +94,7 @@ const CustomFormPopup = (props) => {
       });
       setUploadedFeaturedImg(record?.image || "");
       setStatusBool(Boolean(record?.status));
-      if (rawRemoteVideo) {
-        setVideoPreviewUrl(normalizeVideoUrl(rawRemoteVideo));
-      } else {
-        setVideoPreviewUrl("");
-      }
+      setVideoPreviewUrl(record.video || record.videoUrl || record.video_url)
     }
   }, [record, form]);
 
@@ -125,7 +113,7 @@ const CustomFormPopup = (props) => {
       setStatusBool(false);
       setSelectedLanguage(null);
     }
-  }, [record, form, videoPreviewUrl]);
+  }, [record, form]);
 
   // Cleanup object URL on unmount or when URL changes
   useEffect(() => {
@@ -172,10 +160,7 @@ const CustomFormPopup = (props) => {
           });
           setUploadedFeaturedImg(data.image || "");
           setStatusBool(Boolean(data.status));
-          if (data.video || data.videoUrl || data.video_url) {
-            const raw = data.video || data.videoUrl || data.video_url;
-            setVideoPreviewUrl(normalizeVideoUrl(raw));
-          }
+          setVideoPreviewUrl(data.video || data.videoUrl || data.video_url)
         }
       } catch (e) {
         message.error(
@@ -184,7 +169,7 @@ const CustomFormPopup = (props) => {
       }
     };
     load();
-  }, [selectedLanguageCode, languages, form, record, viewModeProp]);
+  }, [selectedLanguageCode, languages, form, record]);
 
   const handleFeaturedImgUploadChange = (info) => {
     const file = info?.file?.originFileObj || info?.file;

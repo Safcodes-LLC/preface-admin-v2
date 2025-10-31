@@ -8,7 +8,7 @@ import {
   Upload,
   message,
   Select,
-  Button,
+  // Button,
 } from "antd";
 import { ImageSvg } from "assets/svg/icon";
 import CustomIcon from "components/util-components/CustomIcon";
@@ -19,7 +19,7 @@ import { fetchAllCategoriesByPostType } from "store/slices/categoriesSlice";
 import { fetchAllLanguages } from "store/slices/languagesSlice";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 
-const { Dragger } = Upload;
+// const { Dragger } = Upload;
 const { Option } = Select;
 
 const rules = {

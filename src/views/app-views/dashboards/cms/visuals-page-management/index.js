@@ -9,6 +9,7 @@ import {
   Modal,
   Select,
   Tabs,
+  Popconfirm,
 } from "antd";
 import {
   SearchOutlined,
@@ -286,14 +287,21 @@ const FeaturedArticles = () => {
           >
             Edit
           </Button>
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record._id)}
-          >
-            Delete
-          </Button>
+          <Popconfirm
+            title="Are you sure you want to delete this visual?"
+            okText="Delete"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => handleDelete(record._id)}
+         >
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+            >
+              Delete
+            </Button>
+          </Popconfirm>
         </div>
       ),
     },
@@ -374,7 +382,11 @@ const FeaturedArticles = () => {
 
       {/* Modal for Managing Custom Visual */}
       <Modal
-        title={tabConfig[activeTab].modalTitleCustom}
+        title={
+          selectedRecord
+            ? (viewMode ? "View Visual" : "Edit Visual")
+            : "Add Visual"
+        }
         visible={isCustomModalVisible}
         width={"80%"}
         footer={null}

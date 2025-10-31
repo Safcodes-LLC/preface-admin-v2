@@ -5,7 +5,7 @@ import Flex from "components/shared-components/Flex";
 import GeneralField from "./GeneralField";
 import { useDispatch, useSelector } from "react-redux";
 import { createUser, fetchAllUsers, updateUser } from "store/slices/userSlice";
-import Password from "antd/es/input/Password";
+// import Password from "antd/es/input/Password";
 import { useNavigate } from "react-router-dom";
 
 const ADD = "ADD";
