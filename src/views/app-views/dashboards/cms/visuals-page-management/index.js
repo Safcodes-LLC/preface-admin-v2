@@ -184,6 +184,20 @@ const FeaturedArticles = () => {
     }
   };
 
+  // Show confirmation dialog before deleting
+  const showDeleteConfirm = (id, title) => {
+    Modal.confirm({
+      title: 'Delete Visual',
+      content: `Are you sure you want to delete "${title || 'this visual'}"?`,
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        await handleDelete(id);
+      },
+    });
+  };
+
   // Removed: highlight logic (not applicable for visuals)
 
   const handleTabChange = (key) => {
@@ -298,7 +312,7 @@ const FeaturedArticles = () => {
             type="link"
             danger
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record._id)}
+            onClick={() => showDeleteConfirm(record._id, record.title)}
           >
             Delete
           </Button>
