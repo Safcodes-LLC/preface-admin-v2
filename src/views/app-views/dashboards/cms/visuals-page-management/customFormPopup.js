@@ -7,6 +7,12 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllLanguages } from 'store/slices/languagesSlice';
 import axios from 'axios';
+// Helper to build auth header using raw token (project convention)
+const buildAuthHeader = () => {
+	const t = localStorage.getItem('auth_token');
+	if (!t) return null;
+	return { Authorization: t };
+};
 
 const { Dragger } = Upload;
 const { Option } = Select;
@@ -113,21 +119,29 @@ const CustomFormPopup = (props) => {
 	}, [record, form]);
 
 	// Reset form when creating a new visual (no record provided)
+	// NOTE: do NOT include videoPreviewUrl in deps — selecting a local video would trigger
+	// this effect and immediately clear the selection. Only run when `record` changes.
 	useEffect(() => {
 		if (!record || !record._id) {
+			// If there is an existing blob URL, revoke it
+			if (videoPreviewUrl && videoPreviewUrl.startsWith && videoPreviewUrl.startsWith('blob:')) {
+				try {
+					URL.revokeObjectURL(videoPreviewUrl);
+				} catch (err) {
+					// ignore
+				}
+			}
 			form.resetFields();
 			setUploadedFeaturedImg('');
 			setFeaturedFile(null);
 			setVideoFile(null);
-			if (videoPreviewUrl) {
-				URL.revokeObjectURL(videoPreviewUrl);
-			}
 			setVideoPreviewUrl('');
 			setRemovedVideo(false);
 			setStatusBool(false);
 			setSelectedLanguage(null);
 		}
-	}, [record, form, videoPreviewUrl]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [record, form]);
 
 	// Cleanup object URL on unmount or when URL changes
 	useEffect(() => {
@@ -149,13 +163,13 @@ const CustomFormPopup = (props) => {
 			if (!viewModeProp) return;
 
 			try {
-				const token = localStorage.getItem('auth_token');
-				const res = await axios.get(`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals?lang=${selectedLanguageCode}&page=1&limit=10`, {
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: token,
-					},
-				});
+				const auth = buildAuthHeader();
+				const headers = { 'Content-Type': 'application/json' };
+				if (auth) Object.assign(headers, auth);
+				const res = await axios.get(
+					`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals?lang=${selectedLanguageCode}&page=1&limit=10`,
+					{ headers }
+				);
 				const arr = Array.isArray(res?.data?.data) ? res.data.data : [];
 				const data = arr?.[0] || {};
 				if (data) {
@@ -176,6 +190,7 @@ const CustomFormPopup = (props) => {
 					setVideoPreviewUrl(data.video || '');
 				}
 			} catch (e) {
+				console.error('Load visuals error', e?.response || e);
 				message.error(e?.response?.data?.message || 'Failed to load visuals');
 			}
 		};
@@ -195,10 +210,14 @@ const CustomFormPopup = (props) => {
 	};
 
 	const handleDeactivate = async () => {
-		try {
-			setDeactivating(true);
-			const token = localStorage.getItem('auth_token');
-			const values = await form.validateFields(['title']);
+			try {
+				setDeactivating(true);
+				const auth = buildAuthHeader();
+				if (!auth) {
+					message.error('Authentication required');
+					return;
+				}
+				const values = await form.validateFields(['title']);
 			if (!selectedLanguage) {
 				message.warning('Language is required');
 				return;
@@ -215,15 +234,17 @@ const CustomFormPopup = (props) => {
 			if (videoFile) {
 				formData.append('video', videoFile);
 			}
+			// Let axios set the multipart Content-Type with proper boundary
 			await axios.post(`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals`, formData, {
 				headers: {
-					Authorization: token,
+					Authorization: auth.Authorization,
 					'Content-Type': 'multipart/form-data',
 				},
 			});
 			message.success('Visual saved as deactivated');
 			onSuccess();
 		} catch (e) {
+			console.error('Deactivate error', e?.response || e);
 			const msg = e?.response?.data?.message || e?.message || 'Failed to submit';
 			message.error(msg);
 		} finally {
@@ -232,8 +253,12 @@ const CustomFormPopup = (props) => {
 	};
 
 	const submitFeaturedArticle = async () => {
-		try {
-			const token = localStorage.getItem('auth_token');
+			try {
+				const auth = buildAuthHeader();
+				if (!auth) {
+					message.error('Authentication required');
+					return;
+				}
 			const fieldsToValidate = ['title']; // always need title
 			if (!(record && record._id)) {
 				fieldsToValidate.push('language'); // only require language on add
@@ -285,17 +310,19 @@ const CustomFormPopup = (props) => {
 				formData.append('video', '');
 			}
 			if (record && record._id) {
+				// Let axios set the multipart Content-Type header (with boundary)
 				await axios.put(`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals/${record._id}`, formData, {
 					headers: {
-						Authorization: token,
+						Authorization: auth.Authorization,
 						'Content-Type': 'multipart/form-data',
 					},
 				});
 				message.success('Visual updated');
 			} else {
+				// Let axios set the multipart Content-Type header (with boundary)
 				await axios.post(`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals`, formData, {
 					headers: {
-						Authorization: token,
+						Authorization: auth.Authorization,
 						'Content-Type': 'multipart/form-data',
 					},
 				});
@@ -396,10 +423,10 @@ const CustomFormPopup = (props) => {
 										controls
 										playsInline
 										preload="metadata"
-										crossOrigin="anonymous"
 										onError={(e) => {
-											console.error('Video error:', e);
-											message.error('Unable to load video. Please ensure the video URL is accessible.');
+											console.error('Video error loading URL:', videoPreviewUrl, e);
+											// Give user a clearer hint
+											message.error('Unable to load video. Check that the video URL is accessible and CORS allows playback.');
 										}}
 									>
 										<source 

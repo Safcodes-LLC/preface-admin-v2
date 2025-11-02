@@ -96,22 +96,18 @@ const FeaturedArticles = () => {
   // Fetch visuals for main table with filters
   const fetchMainFeaturedPosts = async () => {
     try {
-      const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem("auth_token");
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = token;
       const langCode = (() => {
         if (!selectedLanguage) return undefined;
         const l = languages.find((x) => x._id === selectedLanguage);
         return l?.code || undefined;
       })();
-      const response = await axios.get(
-        `https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-          params: { lang: langCode, page: 1, limit: 10 },
-        }
-      );
+      const response = await axios.get(`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals`, {
+        headers,
+        params: { lang: langCode, page: 1, limit: 10 },
+      });
       const data = Array.isArray(response?.data?.data)
         ? response.data.data
         : [];
@@ -132,22 +128,18 @@ const FeaturedArticles = () => {
   // Helper function to refresh Visuals data
   const refreshBannerData = async () => {
     try {
-      const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem("auth_token");
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = token;
       const langCode = (() => {
         if (!selectedLanguage) return undefined;
         const l = languages.find((x) => x._id === selectedLanguage);
         return l?.code || undefined;
       })();
-      const response = await axios.get(
-        `https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-          params: { lang: langCode, page: 1, limit: 10 },
-        }
-      );
+      const response = await axios.get(`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals`, {
+        headers,
+        params: { lang: langCode, page: 1, limit: 10 },
+      });
       const data = Array.isArray(response?.data?.data)
         ? response.data.data
         : [];
@@ -176,16 +168,10 @@ const FeaturedArticles = () => {
 
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem("auth_token");
-      await axios.delete(
-        `https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals/${id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-        }
-      );
+  const token = localStorage.getItem("auth_token");
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = token;
+  await axios.delete(`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals/${id}`, { headers });
       message.success("Visual deleted");
       // If the currently opened record is deleted, close and reset the modal
       if (selectedRecord && selectedRecord._id === id) {
@@ -203,6 +189,22 @@ const FeaturedArticles = () => {
   const handleTabChange = (key) => {
     setActiveTab(key);
     form.resetFields();
+  };
+
+  // Fetch a single visual by id to ensure we have full data before opening modal
+  const fetchVisualById = async (id) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const resp = await axios.get(`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals/${id}`, { headers });
+      // API returns either the object directly or wrapped; handle both
+      return resp?.data || resp?.data?.data || resp?.data?.visual || null;
+    } catch (err) {
+      console.error('Failed to fetch visual by id', err?.response || err);
+      message.error(err?.response?.data?.message || 'Failed to load visual');
+      return null;
+    }
   };
 
   const onSearch = (e) => {
@@ -267,8 +269,11 @@ const FeaturedArticles = () => {
           <Button
             type="link"
             icon={<EyeOutlined />}
-            onClick={() => {
-              setSelectedRecord(record);
+            onClick={async () => {
+              // fetch full record and open in view mode
+              const full = await fetchVisualById(record._id);
+              if (!full) return;
+              setSelectedRecord(full);
               setViewMode(true);
               setIsCustomModalVisible(true);
             }}
@@ -278,8 +283,11 @@ const FeaturedArticles = () => {
           <Button
             type="link"
             icon={<EditOutlined />}
-            onClick={() => {
-              setSelectedRecord(record);
+            onClick={async () => {
+              // fetch fresh record before editing
+              const full = await fetchVisualById(record._id);
+              if (!full) return;
+              setSelectedRecord(full);
               setViewMode(false);
               setIsCustomModalVisible(true);
             }}
