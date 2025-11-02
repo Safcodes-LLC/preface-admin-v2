@@ -8,18 +8,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllLanguages } from 'store/slices/languagesSlice';
 import axios from 'axios';
 
-// Create an axios instance specifically for file uploads
-const uploadInstance = axios.create({
-    baseURL: 'https://king-prawn-app-x9z27.ondigitalocean.app',
-    timeout: 60000, // 60 seconds
-    maxContentLength: Infinity,
-    maxBodyLength: Infinity,
-    headers: {
-        'Content-Type': 'multipart/form-data',
-        'Accept': 'application/json',
-    }
-});
-
 const { Dragger } = Upload;
 const { Option } = Select;
 
@@ -52,7 +40,6 @@ const beforeUpload = (file) => {
 	return false;
 };
 
-
 const CustomFormPopup = (props) => {
 	const { record, onSuccess } = props || {};
 	const viewModeProp = props?.view || false;
@@ -72,24 +59,25 @@ const CustomFormPopup = (props) => {
 	const [statusBool, setStatusBool] = useState(false);
 	const [uploadFeaturedImgLoading, setUploadFeaturedImgLoading] = useState(false);
 	const [deactivating, setDeactivating] = useState(false);
-	const [loadingRecord, setLoadingRecord] = useState(false);
 
 	const normalizeVideoUrl = (value) => {
 		if (!value) return "";
 		// For blob URLs (local file previews)
 		if (value.startsWith('blob:')) return value;
-
-		// For DigitalOcean Spaces URLs (do NOT append timestamp for videos)
+		
+		// For DigitalOcean Spaces URLs
 		if (value.includes('digitaloceanspaces.com')) {
-			// Ensure HTTPS
-			return value.replace('http://', 'https://');
+			// Ensure HTTPS and add CORS-friendly query param
+			const baseUrl = value.replace('http://', 'https://');
+			// Add a timestamp to prevent caching issues
+			return `${baseUrl}?${new Date().getTime()}`;
 		}
-
+		
 		// For relative paths or API paths
 		const API_HOST = 'https://king-prawn-app-x9z27.ondigitalocean.app';
 		if (value.startsWith('/')) return `${API_HOST}${value}`;
 		if (!value.startsWith('http')) return `${API_HOST}/${value}`;
-
+		
 		// For all other URLs
 		return value;
 	};
@@ -100,45 +88,29 @@ const CustomFormPopup = (props) => {
 		if (!languages.length) dispatch(fetchAllLanguages());
 	}, [dispatch, languages.length]);
 
-
-	// Fetch latest data by ID for edit/view mode
+	// If editing, prefill from record
 	useEffect(() => {
-		const fetchById = async (id) => {
-			setLoadingRecord(true);
-			try {
-				const token = localStorage.getItem('auth_token');
-				const res = await axios.get(`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals/${id}`, {
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: token,
-					},
-				});
-				const data = res?.data || {};
-				// Handle language as string or object
-				const langId = data?.language?._id || data?.language;
-				const langObj = languages.find((l) => l._id === langId || l.code === data.language);
-				setSelectedLanguage(langObj?._id || langId || null);
-				setSelectedLanguageCode(langObj?.code || '');
-				form.setFieldsValue({
-					title: data?.title || '',
-					link: data?.videoLink || data?.video_link || data?.link || '',
-					language: langObj?._id || langId || null,
-					featured_image: data?.image || '',
-				});
-				setUploadedFeaturedImg(data?.image || '');
-				setStatusBool(Boolean(data?.status));
-				setVideoPreviewUrl(data?.video || data?.videoUrl || data?.video_url || '');
-			} catch (e) {
-				message.error(e?.response?.data?.message || 'Failed to load visual');
-			} finally {
-				setLoadingRecord(false);
-			}
-		};
-
 		if (record && record._id) {
-			fetchById(record._id);
+			const langId = record?.language?._id || record?.language;
+			const videoLinkVal = record?.videoLink || record?.video_link || record?.link || '';
+			const rawRemoteVideo = record?.video || record?.videoUrl || record?.video_url || '';
+			setSelectedLanguage(langId || null);
+			form.setFieldsValue({
+				title: record?.title || '',
+				link: videoLinkVal,
+				language: langId || null,
+				featured_image: record?.image || '',
+			});
+			setUploadedFeaturedImg(record?.image || '');
+			setStatusBool(Boolean(record?.status));
+			if (rawRemoteVideo) {
+				// Don't normalize here - we'll do it in the video component
+				setVideoPreviewUrl(rawRemoteVideo);
+			} else {
+				setVideoPreviewUrl('');
+			}
 		}
-	}, [record, form, languages]);
+	}, [record, form]);
 
 	// Reset form when creating a new visual (no record provided)
 	useEffect(() => {
@@ -154,7 +126,6 @@ const CustomFormPopup = (props) => {
 			setRemovedVideo(false);
 			setStatusBool(false);
 			setSelectedLanguage(null);
-			setSelectedLanguageCode('en');
 		}
 	}, [record, form, videoPreviewUrl]);
 
@@ -238,27 +209,17 @@ const CustomFormPopup = (props) => {
 			formData.append('status', false);
 			const linkVal = (form.getFieldValue('link') || '').trim();
 			formData.append('videoLink', linkVal);
-
-			// Handle image file
 			if (featuredFile) {
-				formData.append('image', featuredFile, featuredFile.name);
+				formData.append('image', featuredFile);
 			}
-
-			// Handle video file
 			if (videoFile) {
-				// Ensure proper video MIME type
-				const videoType = videoFile.type || 'video/mp4';
-				const videoBlob = new Blob([videoFile], { type: videoType });
-				formData.append('video', videoBlob, videoFile.name);
+				formData.append('video', videoFile);
 			}
 			await axios.post(`https://king-prawn-app-x9z27.ondigitalocean.app/api/visuals`, formData, {
 				headers: {
 					Authorization: token,
 					'Content-Type': 'multipart/form-data',
-					'Accept': 'application/json',
 				},
-				maxBodyLength: Infinity,
-				maxContentLength: Infinity,
 			});
 			message.success('Visual saved as deactivated');
 			onSuccess();
@@ -312,18 +273,13 @@ const CustomFormPopup = (props) => {
 			}
 			formData.append('status', statusBool === undefined || statusBool === null ? false : statusBool);
 			formData.append('videoLink', linkVal);
-
-			// Handle image file
 			if (featuredFile) {
-				formData.append('image', featuredFile, featuredFile.name);
+				formData.append('image', featuredFile);
 			}
-
-			// Handle video file
 			if (videoFile) {
 				formData.append('video', videoFile);
 			}
-
-			// Handle video removal in edit mode
+			// If user removed existing video in edit and didn't upload a new one, signal removal
 			if (record && record._id && removedVideo && !videoFile) {
 				formData.append('removeVideo', 'true');
 				formData.append('video', '');
@@ -463,20 +419,10 @@ const CustomFormPopup = (props) => {
 												onChange={(info) => {
 													const file = info?.file?.originFileObj || info?.file;
 													if (!file) return;
-
-													// Check file size (100MB limit)
-													const isLt100M = file.size / 1024 / 1024 < 100;
-													if (!isLt100M) {
-														message.error('Video must be smaller than 100MB');
-														return;
-													}
-
 													const supported = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
 													if (file.type && !supported.includes(file.type)) {
 														message.warning('This video format may not play in all browsers. Prefer MP4 (H.264) or WebM.');
 													}
-
-													// Use the file directly
 													setVideoFile(file);
 													if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
 													const url = URL.createObjectURL(file);
