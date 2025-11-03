@@ -65,6 +65,8 @@ const CustomFormPopup = (props) => {
 	const [statusBool, setStatusBool] = useState(false);
 	const [uploadFeaturedImgLoading, setUploadFeaturedImgLoading] = useState(false);
 	const [deactivating, setDeactivating] = useState(false);
+	// Track original values for edit mode to detect changes
+	const [originalValues, setOriginalValues] = useState(null);
 
 	const normalizeVideoUrl = (value) => {
 		if (!value) return "";
@@ -115,6 +117,14 @@ const CustomFormPopup = (props) => {
 			} else {
 				setVideoPreviewUrl('');
 			}
+			// Store original values for change detection in PUT
+			setOriginalValues({
+				title: record?.title || '',
+				videoLink: videoLinkVal,
+				status: Boolean(record?.status),
+				image: record?.image || '',
+				video: rawRemoteVideo,
+			});
 		}
 	}, [record, form]);
 
@@ -275,6 +285,11 @@ const CustomFormPopup = (props) => {
 			const hasVideoFile = !!videoFile;
 			const linkVal = (form.getFieldValue('link') || '').trim();
 			const hasVideoLink = linkVal !== '';
+			
+			// For edit mode, check if existing video/link data exists and not removed
+			const hasExistingVideo = (record && record._id) ? (!!videoPreviewUrl && !removedVideo) : false;
+			const hasExistingLink = (record && record._id) ? (!!originalValues?.videoLink && linkVal === originalValues?.videoLink) : false;
+			
 			if (!hasTitle) {
 				message.warning('Title is required');
 				return;
@@ -287,27 +302,60 @@ const CustomFormPopup = (props) => {
 				message.warning('Status is required');
 				return;
 			}
-			if (!hasVideoFile && !hasVideoLink) {
+			// Always require at least one: new video file, new video link, or existing video/link that hasn't been removed
+			if (!hasVideoFile && !hasVideoLink && !hasExistingVideo && !hasExistingLink) {
 				message.warning('Provide either a video file or a video link');
 				return;
 			}
 			const formData = new FormData();
-			formData.append('title', values.title);
-			if (!(record && record._id)) {
+			
+			// For PUT requests (editing), only send changed fields
+			if (record && record._id) {
+				// Check what has changed
+				const titleChanged = values.title !== originalValues?.title;
+				const linkChanged = linkVal !== originalValues?.videoLink;
+				const statusChanged = statusBool !== originalValues?.status;
+				const imageChanged = !!featuredFile; // new file uploaded
+				const videoChanged = !!videoFile || removedVideo; // new file or removal
+				
+				if (titleChanged) {
+					formData.append('title', values.title);
+				}
+				if (statusChanged) {
+					formData.append('status', statusBool);
+				}
+				if (linkChanged) {
+					formData.append('videoLink', linkVal);
+				}
+				if (imageChanged) {
+					formData.append('image', featuredFile);
+				}
+				if (videoFile) {
+					formData.append('video', videoFile);
+				}
+				// If user removed existing video in edit and didn't upload a new one, signal removal
+				if (removedVideo && !videoFile) {
+					formData.append('removeVideo', 'true');
+					formData.append('video', '');
+				}
+				
+				// Check if any field actually changed
+				if (!titleChanged && !linkChanged && !statusChanged && !imageChanged && !videoChanged) {
+					message.info('No changes detected');
+					return;
+				}
+			} else {
+				// For POST requests (creating), send all fields
+				formData.append('title', values.title);
 				formData.append('language', selectedLanguage);
-			}
-			formData.append('status', statusBool === undefined || statusBool === null ? false : statusBool);
-			formData.append('videoLink', linkVal);
-			if (featuredFile) {
-				formData.append('image', featuredFile);
-			}
-			if (videoFile) {
-				formData.append('video', videoFile);
-			}
-			// If user removed existing video in edit and didn't upload a new one, signal removal
-			if (record && record._id && removedVideo && !videoFile) {
-				formData.append('removeVideo', 'true');
-				formData.append('video', '');
+				formData.append('status', statusBool === undefined || statusBool === null ? false : statusBool);
+				formData.append('videoLink', linkVal);
+				if (featuredFile) {
+					formData.append('image', featuredFile);
+				}
+				if (videoFile) {
+					formData.append('video', videoFile);
+				}
 			}
 			if (record && record._id) {
 				// Let axios set the multipart Content-Type header (with boundary)
