@@ -420,10 +420,107 @@ const ArticleForm = (props) => {
 		message.success('Link removed successfully!');
 	};
 
+	// Edit link handler
+	const handleEditLink = () => {
+		const selection = editorState.getSelection();
+		const currentContent = editorState.getCurrentContent();
+
+		// Check if text is selected
+		if (selection.isCollapsed()) {
+			message.warning('Please select a link to edit');
+			return;
+		}
+
+		// Get the entity at the selection
+		const startKey = selection.getStartKey();
+		const startOffset = selection.getStartOffset();
+		const blockWithSelection = currentContent.getBlockForKey(startKey);
+		const entityKey = blockWithSelection.getEntityAt(startOffset);
+
+		if (!entityKey) {
+			message.warning('No link found at selection. Please select text with a link.');
+			return;
+		}
+
+		const entity = currentContent.getEntity(entityKey);
+		const entityType = entity.getType();
+
+		if (entityType !== 'LINK') {
+			message.warning('Selected text is not a link');
+			return;
+		}
+
+		// Get existing link data
+		const entityData = entity.getData();
+		const selectedText = blockWithSelection.getText().slice(selection.getStartOffset(), selection.getEndOffset());
+
+		// Determine if it's a simple link or advanced link
+		const hasTooltip = entityData.tooltipContent && entityData.tooltipContent.trim() !== '';
+		const hasImage = entityData.imageUrl && entityData.imageUrl.trim() !== '';
+
+		if (hasTooltip || hasImage) {
+			// Open advanced link form
+			Modal.confirm({
+				title: 'Edit Link with Tooltip',
+				icon: null,
+				width: 500,
+				content: (
+					<div style={{ marginTop: '15px' }}>
+						<CustomLinkForm
+							selectedText={selectedText}
+							initialData={entityData}
+							onSubmit={(linkData) => {
+								// Create new entity with updated data
+								const contentState = editorState.getCurrentContent();
+								const contentStateWithEntity = contentState.replaceEntityData(entityKey, linkData);
+								const newEditorState = EditorState.push(editorState, contentStateWithEntity, 'apply-entity');
+
+								setEditorState(newEditorState);
+								message.success('Link updated successfully!');
+								Modal.destroyAll();
+							}}
+							onCancel={() => Modal.destroyAll()}
+						/>
+					</div>
+				),
+				footer: null,
+				okButtonProps: { style: { display: 'none' } },
+				cancelButtonProps: { style: { display: 'none' } },
+			});
+		} else {
+			// Open simple link form
+			Modal.confirm({
+				title: 'Edit Hyperlink',
+				icon: null,
+				width: 450,
+				content: (
+					<SimpleLinkForm
+						selectedText={selectedText}
+						initialData={entityData}
+						onSubmit={(linkData) => {
+							// Create new entity with updated data
+							const contentState = editorState.getCurrentContent();
+							const contentStateWithEntity = contentState.replaceEntityData(entityKey, linkData);
+							const newEditorState = EditorState.push(editorState, contentStateWithEntity, 'apply-entity');
+
+							setEditorState(newEditorState);
+							message.success('Link updated successfully!');
+							Modal.destroyAll();
+						}}
+						onCancel={() => Modal.destroyAll()}
+					/>
+				),
+				footer: null,
+				okButtonProps: { style: { display: 'none' } },
+				cancelButtonProps: { style: { display: 'none' } },
+			});
+		}
+	};
+
 	// Simple Link Form Component
-	const SimpleLinkForm = ({ onSubmit, onCancel, selectedText }) => {
-		const [url, setUrl] = useState('');
-		const [openInNewTab, setOpenInNewTab] = useState(true);
+	const SimpleLinkForm = ({ onSubmit, onCancel, selectedText, initialData = {} }) => {
+		const [url, setUrl] = useState(initialData?.url || '');
+		const [openInNewTab, setOpenInNewTab] = useState(initialData?.target === '_blank' || !initialData?.target);
 
 		const handleSubmit = () => {
 			if (!url.trim()) {
@@ -557,7 +654,7 @@ const ArticleForm = (props) => {
 		const [linkType, setLinkType] = useState(initialData?.linkType || 'external');
 		const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || '');
 		const [uploadImageLoading, setUploadImageLoading] = useState(false);
-		const [showImageSection, setShowImageSection] = useState(false);
+		const [showImageSection, setShowImageSection] = useState(initialData?.imageUrl ? true : false);
 		const [target, setTarget] = useState(initialData?.target || '_blank');
 
 		// Set the target based on the link type
@@ -1438,14 +1535,19 @@ const ArticleForm = (props) => {
 														Add Link
 													</Button>
 
+													{/* Advanced Custom Link Button */}
+													<Button key="add-link-tooltip" type="primary" size="small" onClick={handleCustomLinkClick}>
+														Tooltip Link
+													</Button>
+
+													{/* Edit Link Button */}
+													<Button key="edit-link" type="default" size="small" style={{ borderColor: '#52c41a', color: '#52c41a' }} onClick={handleEditLink}>
+														Edit Link
+													</Button>
+
 													{/* Remove Link Button */}
 													<Button key="remove-link" type="default" size="small" style={{ borderColor: '#ff6b72', color: '#ff6b72' }} onClick={handleRemoveLink}>
 														Remove Link
-													</Button>
-
-													{/* Advanced Custom Link Button */}
-													<Button key="add-link-tooltip" type="primary" size="small" onClick={handleCustomLinkClick}>
-														Add Link with Tooltip
 													</Button>
 
 													{/* Undo Button */}
@@ -1460,7 +1562,7 @@ const ArticleForm = (props) => {
 
 													{/* Remove All Styles Button */}
 													<Button key="remove-styles" danger size="small" onClick={removeAllStyles}>
-														Remove All Styles
+														Remove Styles
 													</Button>
 												</div>,
 											]}
@@ -1472,7 +1574,7 @@ const ArticleForm = (props) => {
 												},
 												blockType: {
 													inDropdown: false,
-													options: ['Normal', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote', 'Code'],
+													options: ['Normal', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote'],
 												},
 												list: {
 													inDropdown: false,
