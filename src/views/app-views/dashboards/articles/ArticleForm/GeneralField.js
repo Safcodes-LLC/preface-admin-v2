@@ -360,9 +360,9 @@ const GeneralField = (props) => {
             <div
               className={`editor-container ${isFullscreen ? "fullscreen" : ""}`}
             >
-              <button onClick={toggleFullscreen} className="min-full-btn">
+              {/* <button onClick={toggleFullscreen} className="min-full-btn">
                 {isFullscreen ? "X" : <ArrowsAltOutlined />}
-              </button>
+              </button> */}
               {props.children}
             </div>
           </Card>
