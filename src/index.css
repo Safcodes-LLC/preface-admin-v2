@@ -34,7 +34,7 @@
     margin-bottom: 10px;
     position: sticky;
     top: 64px; /* offset for fixed top nav */
-    z-index: 1001;
+    z-index: 10;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
 
@@ -51,7 +51,7 @@
     margin-bottom: 10px;
     position: sticky;
     top: 64px; /* offset for fixed top nav */
-    z-index: 1001;
+    z-index: 10;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
 
@@ -236,7 +236,7 @@
     width: 75% !important;
   }
 
-  /* Custom font weight styles */
+  /* Custom font weight styles - Inline styles for Draft.js */
   .font-weight-normal {
     font-weight: 400 !important;
   }
@@ -259,5 +259,34 @@
 
   .font-weight-extrabold {
     font-weight: 800 !important;
+  }
+
+  /* Ensure Draft.js custom inline styles work properly */
+  .public-DraftStyleDefault-block {
+    margin: 0;
+  }
+
+  /* Make sure custom inline styles are applied with higher specificity */
+  .demo-editor .public-DraftEditor-content [data-contents="true"] span[style*="font-weight"],
+  .demo-editor .public-DraftEditor-content [data-contents="true"] span[style*="background-color"] {
+    display: inline !important;
+  }
+
+  /* Ensure highlight styles are visible - force inline display and padding */
+  .demo-editor span[style*="background-color"],
+  .public-DraftEditor-content span[style*="background-color"] {
+    padding: 2px 0 !important;
+    display: inline !important;
+  }
+
+  /* Force font-weight styles to apply */
+  .demo-editor span[style*="font-weight"],
+  .public-DraftEditor-content span[style*="font-weight"] {
+    display: inline !important;
+  }
+
+  /* Override any default Draft.js span styling that might interfere */
+  .DraftEditor-root span[style] {
+    display: inline !important;
   }
 

@@ -207,24 +207,33 @@ const ArticleForm = (props) => {
 
 	// Font weight toggle handlers
 	const toggleFontWeight = (fontWeight) => {
-		const newEditorState = EditorState.push(
-			editorState,
-			// Remove all font weight styles first
-			['FONTWEIGHT_NORMAL', 'FONTWEIGHT_SLIM', 'FONTWEIGHT_MEDIUM', 'FONTWEIGHT_SEMIBOLD', 'FONTWEIGHT_BOLD', 'FONTWEIGHT_EXTRABOLD'].reduce((contentState, style) => {
-				return Modifier.removeInlineStyle(contentState, editorState.getSelection(), style);
-			}, editorState.getCurrentContent()),
-			'change-inline-style'
-		);
+		const selection = editorState.getSelection();
 
-		// Apply the new font weight
-		setEditorState(
-			EditorState.forceSelection(
-				fontWeight !== 'NONE'
-					? EditorState.push(newEditorState, Modifier.applyInlineStyle(newEditorState.getCurrentContent(), newEditorState.getSelection(), fontWeight), 'change-inline-style')
-					: newEditorState,
-				newEditorState.getSelection()
-			)
-		);
+		// Check if text is selected
+		if (selection.isCollapsed()) {
+			message.warning('Please select some text first');
+			return;
+		}
+
+		const currentContent = editorState.getCurrentContent();
+
+		// Remove all existing font weight styles first
+		const fontWeightStyles = ['FONTWEIGHT_NORMAL', 'FONTWEIGHT_SLIM', 'FONTWEIGHT_MEDIUM', 'FONTWEIGHT_SEMIBOLD', 'FONTWEIGHT_BOLD', 'FONTWEIGHT_EXTRABOLD'];
+		let contentState = currentContent;
+		fontWeightStyles.forEach((style) => {
+			contentState = Modifier.removeInlineStyle(contentState, selection, style);
+		});
+
+		// Apply the new font weight if not 'NONE'
+		if (fontWeight !== 'NONE') {
+			contentState = Modifier.applyInlineStyle(contentState, selection, fontWeight);
+			message.success(`Font weight applied: ${fontWeight}`);
+		} else {
+			message.info('Font weight removed');
+		}
+
+		const newEditorState = EditorState.push(editorState, contentState, 'change-inline-style');
+		setEditorState(EditorState.forceSelection(newEditorState, selection));
 	};
 
 	// Remove all inline styles
@@ -314,7 +323,7 @@ const ArticleForm = (props) => {
 	// Highlight toggle handler
 	const toggleHighlight = (highlightColor) => {
 		const selection = editorState.getSelection();
-		
+
 		// Check if text is selected
 		if (selection.isCollapsed()) {
 			message.warning('Please select some text to highlight');
@@ -322,21 +331,167 @@ const ArticleForm = (props) => {
 		}
 
 		const currentContent = editorState.getCurrentContent();
-		
+
 		// Remove all existing highlight styles first
 		const highlightStyles = ['HIGHLIGHT_YELLOW', 'HIGHLIGHT_GREEN', 'HIGHLIGHT_BLUE', 'HIGHLIGHT_PINK', 'HIGHLIGHT_ORANGE', 'HIGHLIGHT_PURPLE'];
 		let contentState = currentContent;
 		highlightStyles.forEach((style) => {
 			contentState = Modifier.removeInlineStyle(contentState, selection, style);
 		});
-		
+
 		// Apply the new highlight color
 		if (highlightColor !== 'NONE') {
 			contentState = Modifier.applyInlineStyle(contentState, selection, highlightColor);
+			message.success(`Highlight applied: ${highlightColor}`);
+		} else {
+			message.info('Highlight removed');
 		}
-		
+
 		const newEditorState = EditorState.push(editorState, contentState, 'change-inline-style');
 		setEditorState(EditorState.forceSelection(newEditorState, selection));
+	};
+
+	// Simple hyperlink handler
+	const handleSimpleLinkClick = () => {
+		const selection = editorState.getSelection();
+		const currentContent = editorState.getCurrentContent();
+
+		// Check if text is selected
+		if (selection.isCollapsed()) {
+			message.warning('Please select some text first before adding a link');
+			return;
+		}
+
+		// Get the selected text
+		const startKey = selection.getStartKey();
+		const startOffset = selection.getStartOffset();
+		const endOffset = selection.getEndOffset();
+		const blockWithSelection = currentContent.getBlockForKey(startKey);
+		const selectedText = blockWithSelection.getText().slice(startOffset, endOffset);
+
+		// Create a simple modal for URL input
+		Modal.confirm({
+			title: 'Add Hyperlink',
+			icon: null,
+			width: 450,
+			content: (
+				<SimpleLinkForm
+					selectedText={selectedText}
+					onSubmit={(linkData) => {
+						// Create entity with the link data
+						const contentState = editorState.getCurrentContent();
+						const contentStateWithEntity = contentState.createEntity('LINK', 'MUTABLE', linkData);
+						const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+
+						// Apply entity to selection
+						const newContentState = Modifier.applyEntity(contentStateWithEntity, selection, entityKey);
+						const newEditorState = EditorState.push(editorState, newContentState, 'apply-entity');
+
+						setEditorState(newEditorState);
+						message.success('Link added successfully!');
+						Modal.destroyAll();
+					}}
+					onCancel={() => Modal.destroyAll()}
+				/>
+			),
+			footer: null,
+			okButtonProps: { style: { display: 'none' } },
+			cancelButtonProps: { style: { display: 'none' } },
+		});
+	};
+
+	// Remove link handler
+	const handleRemoveLink = () => {
+		const selection = editorState.getSelection();
+
+		// Check if text is selected
+		if (selection.isCollapsed()) {
+			message.warning('Please select linked text to remove the link');
+			return;
+		}
+
+		const currentContent = editorState.getCurrentContent();
+
+		// Remove entity (link) from selection
+		const newContentState = Modifier.applyEntity(currentContent, selection, null);
+		const newEditorState = EditorState.push(editorState, newContentState, 'apply-entity');
+
+		setEditorState(EditorState.forceSelection(newEditorState, selection));
+		message.success('Link removed successfully!');
+	};
+
+	// Simple Link Form Component
+	const SimpleLinkForm = ({ onSubmit, onCancel, selectedText }) => {
+		const [url, setUrl] = useState('');
+		const [openInNewTab, setOpenInNewTab] = useState(true);
+
+		const handleSubmit = () => {
+			if (!url.trim()) {
+				message.error('URL is required');
+				return;
+			}
+
+			// Basic URL validation
+			let finalUrl = url.trim();
+			if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('/')) {
+				finalUrl = 'https://' + finalUrl;
+			}
+
+			onSubmit({
+				url: finalUrl,
+				target: openInNewTab ? '_blank' : '_self',
+				tooltipContent: '', // Empty tooltip for simple links
+				linkType: openInNewTab ? 'external' : 'internal',
+				imageUrl: '',
+			});
+		};
+
+		return (
+			<div style={{ padding: '15px' }}>
+				{selectedText && (
+					<div
+						style={{
+							marginBottom: '15px',
+							padding: '10px',
+							background: '#f0f7ff',
+							border: '1px solid #91d5ff',
+							borderRadius: '4px',
+						}}>
+						<div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#1890ff' }}>Selected Text:</div>
+						<div style={{ fontStyle: 'italic' }}>"{selectedText}"</div>
+					</div>
+				)}
+
+				<div style={{ marginBottom: '15px' }}>
+					<label
+						style={{
+							display: 'block',
+							marginBottom: '5px',
+							fontWeight: 'bold',
+						}}>
+						URL <span style={{ color: 'red' }}>*</span>
+					</label>
+					<Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com or /internal-page" onPressEnter={handleSubmit} autoFocus />
+					<div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>Enter full URL (https://...) or relative path (/page)</div>
+				</div>
+
+				<div style={{ marginBottom: '15px' }}>
+					<label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+						<input type="checkbox" checked={openInNewTab} onChange={(e) => setOpenInNewTab(e.target.checked)} style={{ marginRight: '8px' }} />
+						<span>Open link in new tab</span>
+					</label>
+				</div>
+
+				<div style={{ textAlign: 'right', marginTop: '20px' }}>
+					<Button style={{ marginRight: '10px' }} onClick={onCancel}>
+						Cancel
+					</Button>
+					<Button type="primary" onClick={handleSubmit}>
+						Add Link
+					</Button>
+				</div>
+			</div>
+		);
 	};
 
 	const handleCustomLinkClick = () => {
@@ -1236,9 +1391,9 @@ const ArticleForm = (props) => {
 												<div key="custom-toolbar" style={{ display: 'flex', gap: '5px', margin: '5px', paddingRight: '5px', alignItems: 'center' }}>
 													{/* Font Weight Dropdown */}
 													<Select placeholder="Font Weight" style={{ width: 150 }} size="small" onChange={(value) => toggleFontWeight(value)} allowClear onClear={() => toggleFontWeight('NONE')}>
-														<Option value="FONTWEIGHT_SLIM" style={{ fontWeight: 300 }}>
+														{/* <Option value="FONTWEIGHT_SLIM" style={{ fontWeight: 300 }}>
 															Slim (300)
-														</Option>
+														</Option> */}
 														<Option value="FONTWEIGHT_NORMAL" style={{ fontWeight: 400 }}>
 															Normal (400)
 														</Option>
@@ -1278,7 +1433,17 @@ const ArticleForm = (props) => {
 														</Option>
 													</Select>
 
-													{/* Custom Link Button */}
+													{/* Simple Hyperlink Button */}
+													<Button key="add-link" type="default" size="small" style={{ borderColor: '#3e79f7', color:"#3e79f7" }} onClick={handleSimpleLinkClick}>
+														Add Link
+													</Button>
+
+													{/* Remove Link Button */}
+													<Button key="remove-link" type="default" size="small" style={{ borderColor: '#ff6b72', color: '#ff6b72' }} onClick={handleRemoveLink}>
+														Remove Link
+													</Button>
+
+													{/* Advanced Custom Link Button */}
 													<Button key="add-link-tooltip" type="primary" size="small" onClick={handleCustomLinkClick}>
 														Add Link with Tooltip
 													</Button>
@@ -1300,7 +1465,7 @@ const ArticleForm = (props) => {
 												</div>,
 											]}
 											toolbar={{
-												options: ['inline', 'blockType', 'list', 'textAlign', 'embedded', 'image'],
+												options: ['inline', 'blockType', 'list', 'textAlign'],
 												inline: {
 													inDropdown: false,
 													options: ['bold', 'italic', 'underline', 'strikethrough'],
@@ -1317,49 +1482,49 @@ const ArticleForm = (props) => {
 													inDropdown: false,
 													options: ['left', 'center', 'right', 'justify'],
 												},
-												embedded: {
-													defaultSize: {
-														height: 'auto',
-														width: 'auto',
-													},
-												},
-												image: {
-													urlEnabled: true,
-													uploadEnabled: true,
-													alignmentEnabled: true,
-													uploadCallback: async (file) => {
-														try {
-															const formData = new FormData();
-															formData.append('file', file);
+												// embedded: {
+												// 	defaultSize: {
+												// 		height: 'auto',
+												// 		width: 'auto',
+												// 	},
+												// },
+												// image: {
+												// 	urlEnabled: true,
+												// 	uploadEnabled: true,
+												// 	alignmentEnabled: true,
+												// 	uploadCallback: async (file) => {
+												// 		try {
+												// 			const formData = new FormData();
+												// 			formData.append('file', file);
 
-															const response = await fetch('https://king-prawn-app-x9z27.ondigitalocean.app/api/fileupload/savefile/articles/content', {
-																method: 'POST',
-																headers: {
-																	Authorization: localStorage.getItem(AUTH_TOKEN) || '',
-																},
-																body: formData,
-															});
+												// 			const response = await fetch('https://king-prawn-app-x9z27.ondigitalocean.app/api/fileupload/savefile/articles/content', {
+												// 				method: 'POST',
+												// 				headers: {
+												// 					Authorization: localStorage.getItem(AUTH_TOKEN) || '',
+												// 				},
+												// 				body: formData,
+												// 			});
 
-															if (!response.ok) {
-																throw new Error('Upload failed');
-															}
+												// 			if (!response.ok) {
+												// 				throw new Error('Upload failed');
+												// 			}
 
-															const data = await response.json();
-															return { data: { link: data.fileUrl } };
-														} catch (error) {
-															console.error('Error uploading image:', error);
-															message.error('Failed to upload image');
-															return { data: { link: '' } };
-														}
-													},
-													previewImage: true,
-													inputAccept: 'image/gif,image/jpeg,image/jpg,image/png,image/svg',
-													alt: { present: true, mandatory: false },
-													defaultSize: {
-														height: 'auto',
-														width: 'auto',
-													},
-												},
+												// 			const data = await response.json();
+												// 			return { data: { link: data.fileUrl } };
+												// 		} catch (error) {
+												// 			console.error('Error uploading image:', error);
+												// 			message.error('Failed to upload image');
+												// 			return { data: { link: '' } };
+												// 		}
+												// 	},
+												// 	previewImage: true,
+												// 	inputAccept: 'image/gif,image/jpeg,image/jpg,image/png,image/svg',
+												// 	alt: { present: true, mandatory: false },
+												// 	defaultSize: {
+												// 		height: 'auto',
+												// 		width: 'auto',
+												// 	},
+												// },
 												// remove: {},
 												// history: {
 												// 	inDropdown: false,
