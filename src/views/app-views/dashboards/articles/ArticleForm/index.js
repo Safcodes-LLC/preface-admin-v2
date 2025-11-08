@@ -1485,7 +1485,7 @@ const ArticleForm = (props) => {
 											toolbarClassName="demo-toolbar"
 											customStyleMap={customStyleMap}
 											toolbarCustomButtons={[
-												<div key="custom-toolbar" style={{ display: 'flex', gap: '5px', margin: '5px', paddingRight: '5px', alignItems: 'center' }}>
+												<div key="custom-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', margin: '5px', paddingRight: '5px', alignItems: 'center' }}>
 													{/* Font Weight Dropdown */}
 													<Select placeholder="Font Weight" style={{ width: 150 }} size="small" onChange={(value) => toggleFontWeight(value)} allowClear onClear={() => toggleFontWeight('NONE')}>
 														{/* <Option value="FONTWEIGHT_SLIM" style={{ fontWeight: 300 }}>
@@ -1531,7 +1531,7 @@ const ArticleForm = (props) => {
 													</Select>
 
 													{/* Simple Hyperlink Button */}
-													<Button key="add-link" type="default" size="small" style={{ borderColor: '#3e79f7', color:"#3e79f7" }} onClick={handleSimpleLinkClick}>
+													<Button key="add-link" type="default" size="small" style={{ borderColor: '#3e79f7', color: '#3e79f7' }} onClick={handleSimpleLinkClick}>
 														Add Link
 													</Button>
 
@@ -1544,7 +1544,7 @@ const ArticleForm = (props) => {
 													<Button key="edit-link" type="default" size="small" style={{ borderColor: '#52c41a', color: '#52c41a' }} onClick={handleEditLink}>
 														Edit Link
 													</Button>
-
+													 
 													{/* Remove Link Button */}
 													<Button key="remove-link" type="default" size="small" style={{ borderColor: '#ff6b72', color: '#ff6b72' }} onClick={handleRemoveLink}>
 														Remove Link
