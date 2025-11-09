@@ -994,9 +994,34 @@ export const protectedRoutes = [
   },
    //CMS end
 
+   //ask the scholar start
+  {
+    key: "guest",
+    path: `${APP_PREFIX_PATH}/dashboards/ask-the-scholar/guest`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/ask-the-scholar/guest")
+    ),
+    authority: ["Administrator"],
+  },
+  {
+    key: "user",
+    path: `${APP_PREFIX_PATH}/dashboards/ask-the-scholar/user`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/ask-the-scholar/user")
+    ),
+    authority: ["Administrator"],
+  },
+  {
+    key: "user-view-history",
+    path: `${APP_PREFIX_PATH}/dashboards/ask-the-scholar/user/view-history/:id`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/ask-the-scholar/user/ViewHistory")
+    ),
+    authority: ["Administrator"],
+  },
+   //ask the scholar end
 
   // administrator
-
   {
     key: "dashboard.administrator",
     path: `${APP_PREFIX_PATH}/dashboards/administrator`,

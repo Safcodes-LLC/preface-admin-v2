@@ -77,7 +77,10 @@
 	"sidenav.dashboards.cms.popular-video": "Popular Videos",
 	"sidenav.dashboards.cms.visuals-page-management": "Visuals Page Management",
 	"sidenav.dashboards.cms.preface-to-islam": "Preface To Islam",
-	
+
+	"sidenav.dashboards.ask-the-scholar": "Ask The Scholar",
+	"sidenav.dashboards.ask-the-scholar.guest": "Guest User",
+	"sidenav.dashboards.ask-the-scholar.user": "Registered User",
 
 	"sidenav.dashboards.administrator.user-roles": "User Roles",
 	"sidenav.dashboards.administrator.user-roles.listing" : "All Roles",

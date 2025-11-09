@@ -5,7 +5,7 @@ import {
 } from "constants/ThemeConstant";
 import { env } from "./EnvironmentConfig";
 
-export const APP_NAME = "Emilus";
+export const APP_NAME = "Preface To Islam";
 export const API_BASE_URL = env.API_ENDPOINT_URL;
 export const APP_PREFIX_PATH = "/admin";
 export const AUTH_PREFIX_PATH = "/admin/auth";
