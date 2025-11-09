@@ -152,6 +152,17 @@ const customStyleMap = {
 	},
 };
 
+// Block style function to handle text alignment
+const blockStyleFn = (contentBlock) => {
+	const textAlign = contentBlock.getData().get('text-align');
+	if (textAlign) {
+		// Debug log to verify alignment is being applied
+		console.log('Applying text alignment:', textAlign, 'to block');
+		return `text-align-${textAlign}`;
+	}
+	return '';
+};
+
 const ArticleForm = (props) => {
 	const dispatch = useDispatch();
 
@@ -1094,6 +1105,14 @@ const ArticleForm = (props) => {
 		// Get raw content from editor and properly clean it for saving
 		const rawEditorContent = convertToRaw(editorState.getCurrentContent());
 
+		// DEBUG: Log the raw content to verify alignment data is present
+		console.log('=== RAW EDITOR CONTENT ===');
+		console.log('Blocks:', rawEditorContent.blocks.map(block => ({
+			text: block.text,
+			type: block.type,
+			data: block.data
+		})));
+
 		// Clean the content to prevent serialization issues
 		let cleanContent = JSON.stringify(rawEditorContent);
 		try {
@@ -1113,6 +1132,14 @@ const ArticleForm = (props) => {
 				}
 			});
 			cleanContent = JSON.stringify(contentObj);
+			
+			// DEBUG: Log final content being saved
+			console.log('=== FINAL CONTENT TO BE SAVED ===');
+			console.log(JSON.parse(cleanContent).blocks.map(block => ({
+				text: block.text,
+				type: block.type,
+				data: block.data
+			})));
 		} catch (error) {
 			console.error('Error cleaning content:', error);
 			// Keep using the original JSON stringified content
@@ -1484,6 +1511,7 @@ const ArticleForm = (props) => {
 											editorClassName="demo-editor"
 											toolbarClassName="demo-toolbar"
 											customStyleMap={customStyleMap}
+											blockStyleFn={blockStyleFn}
 											toolbarCustomButtons={[
 												<div key="custom-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', margin: '5px', paddingRight: '5px', alignItems: 'center' }}>
 													{/* Font Weight Dropdown */}

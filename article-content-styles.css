@@ -1,4 +1,46 @@
-/* Article Content Styles - Custom Font Weights and Highlights */
+/* Article Content Styles - Custom Font Weights, Highlights, and Text Alignment */
+
+/* Text Alignment Classes for Draft.js Blocks */
+.text-align-left,
+.text-align-left > div,
+.text-align-left > * {
+  text-align: left !important;
+}
+
+.text-align-center,
+.text-align-center > div,
+.text-align-center > * {
+  text-align: center !important;
+}
+
+.text-align-right,
+.text-align-right > div,
+.text-align-right > * {
+  text-align: right !important;
+}
+
+.text-align-justify,
+.text-align-justify > div,
+.text-align-justify > * {
+  text-align: justify !important;
+}
+
+/* Ensure alignment works in article content display */
+.article-content .text-align-left {
+  text-align: left !important;
+}
+
+.article-content .text-align-center {
+  text-align: center !important;
+}
+
+.article-content .text-align-right {
+  text-align: right !important;
+}
+
+.article-content .text-align-justify {
+  text-align: justify !important;
+}
 
 /* Ensure inline styles from Draft.js are displayed properly */
 .article-content span[style*="font-weight"],

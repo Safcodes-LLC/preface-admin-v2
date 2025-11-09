@@ -290,3 +290,65 @@
     display: inline !important;
   }
 
+  /* Text Alignment Classes for Draft.js Editor - Critical Styles */
+  .text-align-left {
+    text-align: left !important;
+    display: block !important;
+  }
+  
+  .text-align-center {
+    text-align: center !important;
+    display: block !important;
+  }
+  
+  .text-align-right {
+    text-align: right !important;
+    display: block !important;
+  }
+  
+  .text-align-justify {
+    text-align: justify !important;
+    display: block !important;
+  }
+
+  /* Ensure alignment works in the Draft.js editor with maximum specificity */
+  .demo-editor .text-align-left,
+  .demo-editor .public-DraftStyleDefault-block.text-align-left,
+  .DraftEditor-root .text-align-left,
+  .public-DraftEditor-content .text-align-left {
+    text-align: left !important;
+    display: block !important;
+  }
+  
+  .demo-editor .text-align-center,
+  .demo-editor .public-DraftStyleDefault-block.text-align-center,
+  .DraftEditor-root .text-align-center,
+  .public-DraftEditor-content .text-align-center {
+    text-align: center !important;
+    display: block !important;
+  }
+  
+  .demo-editor .text-align-right,
+  .demo-editor .public-DraftStyleDefault-block.text-align-right,
+  .DraftEditor-root .text-align-right,
+  .public-DraftEditor-content .text-align-right {
+    text-align: right !important;
+    display: block !important;
+  }
+  
+  .demo-editor .text-align-justify,
+  .demo-editor .public-DraftStyleDefault-block.text-align-justify,
+  .DraftEditor-root .text-align-justify,
+  .public-DraftEditor-content .text-align-justify {
+    text-align: justify !important;
+    display: block !important;
+  }
+
+  /* Apply to all children elements within aligned blocks */
+  .text-align-left > *,
+  .text-align-center > *,
+  .text-align-right > *,
+  .text-align-justify > * {
+    text-align: inherit !important;
+  }
+

@@ -10,3 +10,77 @@
   .toolbar-class {
     border: 1px solid #ccc;
   }
+
+  /* Text Alignment Classes for Draft.js Editor */
+  .text-align-left,
+  .text-align-left > div,
+  .text-align-left > * {
+    text-align: left !important;
+  }
+  
+  .text-align-center,
+  .text-align-center > div,
+  .text-align-center > * {
+    text-align: center !important;
+  }
+  
+  .text-align-right,
+  .text-align-right > div,
+  .text-align-right > * {
+    text-align: right !important;
+  }
+  
+  .text-align-justify,
+  .text-align-justify > div,
+  .text-align-justify > * {
+    text-align: justify !important;
+  }
+
+  /* Ensure alignment works in all Draft.js block contexts */
+  .DraftEditor-root .text-align-left,
+  .public-DraftStyleDefault-block.text-align-left,
+  .public-DraftEditor-content .text-align-left,
+  div[class*="text-align-left"] {
+    text-align: left !important;
+  }
+  
+  .DraftEditor-root .text-align-center,
+  .public-DraftStyleDefault-block.text-align-center,
+  .public-DraftEditor-content .text-align-center,
+  div[class*="text-align-center"] {
+    text-align: center !important;
+  }
+  
+  .DraftEditor-root .text-align-right,
+  .public-DraftStyleDefault-block.text-align-right,
+  .public-DraftEditor-content .text-align-right,
+  div[class*="text-align-right"] {
+    text-align: right !important;
+  }
+  
+  .DraftEditor-root .text-align-justify,
+  .public-DraftStyleDefault-block.text-align-justify,
+  .public-DraftEditor-content .text-align-justify,
+  div[class*="text-align-justify"] {
+    text-align: justify !important;
+  }
+
+  /* Override any conflicting styles from the editor wrapper */
+  .demo-editor .text-align-left,
+  .demo-editor .text-align-center,
+  .demo-editor .text-align-right,
+  .demo-editor .text-align-justify {
+    display: block !important;
+  }
+
+  .demo-editor .text-align-center {
+    text-align: center !important;
+  }
+
+  .demo-editor .text-align-right {
+    text-align: right !important;
+  }
+
+  .demo-editor .text-align-justify {
+    text-align: justify !important;
+  }
