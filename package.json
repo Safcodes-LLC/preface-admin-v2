@@ -67,7 +67,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "cross-env CI=false react-scripts build",
     "copy-files": "xcopy build C:\\Users\\ruhiv\\Desktop\\preface_build_folders\\admin /E /I /H /Y",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -92,6 +92,7 @@
     ]
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "autoprefixer": "^9.8.4",
     "gulp": "^4.0.2",
     "gulp-csso": "^4.0.1",
