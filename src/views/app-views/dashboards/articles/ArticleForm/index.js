@@ -1078,6 +1078,24 @@ const ArticleForm = (props) => {
 		setMoreImgs([]);
 	};
 
+	// Handle remove thumbnail image
+	const handleRemoveThumbnailImg = () => {
+		setThumbnailImage('');
+		message.success('Thumbnail image removed');
+	};
+
+	// Handle remove featured image
+	const handleRemoveFeaturedImg = () => {
+		setFeaturedImage('');
+		message.success('Featured image removed');
+	};
+
+	// Handle remove image
+	const handleRemoveImg = () => {
+		setImage('');
+		message.success('Image removed');
+	};
+
 	// For more images
 	const handleUploadMoreImagesChange = (info) => {
 		if (info.file.status === 'uploading') {
@@ -1497,6 +1515,9 @@ const ArticleForm = (props) => {
 										handleThumbnailImgUploadChange={handleThumbnailImgUploadChange}
 										handleFeaturedImgUploadChange={handleFeaturedImgUploadChange}
 										handleImageUploadChange={handleImageUploadChange}
+										handleRemoveThumbnailImg={handleRemoveThumbnailImg}
+										handleRemoveFeaturedImg={handleRemoveFeaturedImg}
+										handleRemoveImg={handleRemoveImg}
 										uploadedMoreImgs={uploadedMoreImgs}
 										uploadMoreImgLoading={uploadMoreImgLoading}
 										handleUploadMoreImagesChange={handleUploadMoreImagesChange}

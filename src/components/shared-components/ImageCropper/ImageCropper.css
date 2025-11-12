@@ -1,0 +1,53 @@
+.image-cropper-modal .crop-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.image-cropper-modal .controls-container {
+  padding: 20px 0;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 20px;
+}
+
+.image-cropper-modal .control-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}
+
+.image-cropper-modal .control-item label {
+  min-width: 60px;
+  font-weight: 500;
+  margin-bottom: 0;
+  display: inline-block;
+}
+
+.image-cropper-modal .ant-space {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.image-cropper-modal .ant-slider {
+  margin: 0 8px;
+}
+
+.image-cropper-modal .ant-modal-body {
+  padding-bottom: 0;
+}
+
+.image-cropper-modal .reactEasyCrop_Container {
+  border-radius: 8px;
+}
+
+.image-cropper-modal .reactEasyCrop_Image,
+.image-cropper-modal .reactEasyCrop_Video {
+  border-radius: 8px;
+}
