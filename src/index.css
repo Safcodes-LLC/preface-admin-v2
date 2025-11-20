@@ -387,43 +387,75 @@
 
   /* Indentation Levels - RTL (Right-to-Left) for Arabic, Hebrew, etc. */
   .indent-level-1-rtl {
-    padding-right: 40px !important;
+    margin-right: 40px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl;
+    text-align: right;
   }
   
   .indent-level-2-rtl {
-    padding-right: 80px !important;
+    margin-right: 80px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl;
+    text-align: right;
   }
   
   .indent-level-3-rtl {
-    padding-right: 120px !important;
+    margin-right: 120px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl;
+    text-align: right;
   }
   
   .indent-level-4-rtl {
-    padding-right: 160px !important;
+    margin-right: 160px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl;
+    text-align: right;
   }
   
   .indent-level-5-rtl {
-    padding-right: 200px !important;
+    margin-right: 200px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl;
+    text-align: right;
   }
   
   .indent-level-6-rtl {
-    padding-right: 240px !important;
+    margin-right: 240px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl;
+    text-align: right;
   }
   
   .indent-level-7-rtl {
-    padding-right: 280px !important;
+    margin-right: 280px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl;
+    text-align: right;
   }
   
   .indent-level-8-rtl {
-    padding-right: 320px !important;
+    margin-right: 320px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl;
+    text-align: right;
   }
 
   /* Direction classes */
@@ -498,65 +530,113 @@
   .demo-editor .indent-level-1-rtl,
   .demo-editor .public-DraftStyleDefault-block.indent-level-1-rtl,
   .DraftEditor-root .indent-level-1-rtl,
-  .public-DraftEditor-content .indent-level-1-rtl {
-    padding-right: 40px !important;
+  .public-DraftEditor-content .indent-level-1-rtl,
+  div.indent-level-1-rtl,
+  .public-DraftEditor-content div.indent-level-1-rtl {
+    margin-right: 40px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl !important;
+    text-align: right !important;
   }
   
   .demo-editor .indent-level-2-rtl,
   .demo-editor .public-DraftStyleDefault-block.indent-level-2-rtl,
   .DraftEditor-root .indent-level-2-rtl,
-  .public-DraftEditor-content .indent-level-2-rtl {
-    padding-right: 80px !important;
+  .public-DraftEditor-content .indent-level-2-rtl,
+  div.indent-level-2-rtl,
+  .public-DraftEditor-content div.indent-level-2-rtl {
+    margin-right: 80px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl !important;
+    text-align: right !important;
   }
   
   .demo-editor .indent-level-3-rtl,
   .demo-editor .public-DraftStyleDefault-block.indent-level-3-rtl,
   .DraftEditor-root .indent-level-3-rtl,
-  .public-DraftEditor-content .indent-level-3-rtl {
-    padding-right: 120px !important;
+  .public-DraftEditor-content .indent-level-3-rtl,
+  div.indent-level-3-rtl,
+  .public-DraftEditor-content div.indent-level-3-rtl {
+    margin-right: 120px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl !important;
+    text-align: right !important;
   }
   
   .demo-editor .indent-level-4-rtl,
   .demo-editor .public-DraftStyleDefault-block.indent-level-4-rtl,
   .DraftEditor-root .indent-level-4-rtl,
-  .public-DraftEditor-content .indent-level-4-rtl {
-    padding-right: 160px !important;
+  .public-DraftEditor-content .indent-level-4-rtl,
+  div.indent-level-4-rtl,
+  .public-DraftEditor-content div.indent-level-4-rtl {
+    margin-right: 160px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl !important;
+    text-align: right !important;
   }
   
   .demo-editor .indent-level-5-rtl,
   .demo-editor .public-DraftStyleDefault-block.indent-level-5-rtl,
   .DraftEditor-root .indent-level-5-rtl,
-  .public-DraftEditor-content .indent-level-5-rtl {
-    padding-right: 200px !important;
+  .public-DraftEditor-content .indent-level-5-rtl,
+  div.indent-level-5-rtl,
+  .public-DraftEditor-content div.indent-level-5-rtl {
+    margin-right: 200px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl !important;
+    text-align: right !important;
   }
   
   .demo-editor .indent-level-6-rtl,
   .demo-editor .public-DraftStyleDefault-block.indent-level-6-rtl,
   .DraftEditor-root .indent-level-6-rtl,
-  .public-DraftEditor-content .indent-level-6-rtl {
-    padding-right: 240px !important;
+  .public-DraftEditor-content .indent-level-6-rtl,
+  div.indent-level-6-rtl,
+  .public-DraftEditor-content div.indent-level-6-rtl {
+    margin-right: 240px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl !important;
+    text-align: right !important;
   }
   
   .demo-editor .indent-level-7-rtl,
   .demo-editor .public-DraftStyleDefault-block.indent-level-7-rtl,
   .DraftEditor-root .indent-level-7-rtl,
-  .public-DraftEditor-content .indent-level-7-rtl {
-    padding-right: 280px !important;
+  .public-DraftEditor-content .indent-level-7-rtl,
+  div.indent-level-7-rtl,
+  .public-DraftEditor-content div.indent-level-7-rtl {
+    margin-right: 280px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl !important;
+    text-align: right !important;
   }
   
   .demo-editor .indent-level-8-rtl,
   .demo-editor .public-DraftStyleDefault-block.indent-level-8-rtl,
   .DraftEditor-root .indent-level-8-rtl,
-  .public-DraftEditor-content .indent-level-8-rtl {
-    padding-right: 320px !important;
+  .public-DraftEditor-content .indent-level-8-rtl,
+  div.indent-level-8-rtl,
+  .public-DraftEditor-content div.indent-level-8-rtl {
+    margin-right: 320px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
     direction: rtl !important;
+    text-align: right !important;
   }
 
   /* Direction support in Draft.js editor */

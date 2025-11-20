@@ -200,7 +200,17 @@ const blockStyleFn = (contentBlock) => {
 		classNames.push(`line-spacing-${lineSpacing}`);
 	}
 	
-	return classNames.join(' ');
+	const finalClasses = classNames.join(' ');
+	
+	// Debug logging
+	if (indentLevel > 0 || textDirection) {
+		console.log('Block Style - Text:', contentBlock.getText().substring(0, 50));
+		console.log('Block Style - Direction:', textDirection);
+		console.log('Block Style - Indent Level:', indentLevel);
+		console.log('Block Style - Classes:', finalClasses);
+	}
+	
+	return finalClasses;
 };const ArticleForm = (props) => {
 	const dispatch = useDispatch();
 
@@ -290,14 +300,23 @@ const blockStyleFn = (contentBlock) => {
 		if (!text || text.trim().length === 0) return null; // Return null for empty text
 		
 		// Arabic, Hebrew, Persian, Urdu Unicode ranges
-		const rtlChars = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u0590-\u05FF]/;
+		const rtlChars = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u0590-\u05FF]/g;
 		
-		// Count RTL vs LTR characters
-		const rtlCount = (text.match(rtlChars) || []).length;
+		// Count RTL characters using global match
+		const matches = text.match(rtlChars);
+		const rtlCount = matches ? matches.length : 0;
 		const totalChars = text.replace(/\s/g, '').length; // Exclude spaces
 		
+		console.log('RTL Detection - Text:', text);
+		console.log('RTL Detection - RTL chars found:', rtlCount);
+		console.log('RTL Detection - Total chars:', totalChars);
+		console.log('RTL Detection - Percentage:', totalChars > 0 ? (rtlCount / totalChars * 100).toFixed(2) + '%' : '0%');
+		
 		// If more than 30% of text is RTL, consider it RTL
-		return totalChars > 0 && (rtlCount / totalChars) > 0.3;
+		const isRTL = totalChars > 0 && (rtlCount / totalChars) > 0.3;
+		console.log('RTL Detection - Result:', isRTL);
+		
+		return isRTL;
 	};
 
 
@@ -321,13 +340,21 @@ const blockStyleFn = (contentBlock) => {
 				const blockText = block.getText();
 				const detectedRTL = isRTLText(blockText);
 				
-				// Determine direction: use existing if available, otherwise detect from text
-				let textDirection = existingDirection;
+				// Determine direction: detect from text first, then use existing, default to LTR
+				let textDirection;
 				if (detectedRTL !== null) {
 					textDirection = detectedRTL ? 'rtl' : 'ltr';
-				} else if (!existingDirection) {
+				} else if (existingDirection) {
+					textDirection = existingDirection;
+				} else {
 					textDirection = 'ltr'; // Default to LTR for empty blocks
 				}
+				
+				// Debug logging
+				console.log('Indent - Block text:', blockText);
+				console.log('Indent - Detected RTL:', detectedRTL);
+				console.log('Indent - Text direction:', textDirection);
+				console.log('Indent - Current indent:', currentIndent);
 				
 				if (currentIndent < 8) {
 					// Max indent level of 8
@@ -337,6 +364,8 @@ const blockStyleFn = (contentBlock) => {
 					newContentState = newContentState.merge({
 						blockMap: newContentState.getBlockMap().set(key, newBlock),
 					});
+					
+					console.log('Indent - New block data:', newBlock.getData().toJS());
 				}
 			}
 
@@ -345,6 +374,12 @@ const blockStyleFn = (contentBlock) => {
 
 		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
 		setEditorState(EditorState.forceSelection(newEditorState, selection));
+		
+		// Show message based on direction
+		const firstBlock = newContentState.getBlockForKey(startKey);
+		const direction = firstBlock.getData().get('text-direction');
+		const indentLevel = firstBlock.getData().get('indent-level');
+		message.success(`Indent applied: Level ${indentLevel} (${direction?.toUpperCase() || 'LTR'})`);
 	};
 
 	// Custom outdent handler
@@ -367,13 +402,21 @@ const blockStyleFn = (contentBlock) => {
 				const blockText = block.getText();
 				const detectedRTL = isRTLText(blockText);
 				
-				// Determine direction: use existing if available, otherwise detect from text
-				let textDirection = existingDirection;
+				// Determine direction: detect from text first, then use existing, default to LTR
+				let textDirection;
 				if (detectedRTL !== null) {
 					textDirection = detectedRTL ? 'rtl' : 'ltr';
-				} else if (!existingDirection) {
+				} else if (existingDirection) {
+					textDirection = existingDirection;
+				} else {
 					textDirection = 'ltr'; // Default to LTR for empty blocks
 				}
+				
+				// Debug logging
+				console.log('Outdent - Block text:', blockText);
+				console.log('Outdent - Detected RTL:', detectedRTL);
+				console.log('Outdent - Text direction:', textDirection);
+				console.log('Outdent - Current indent:', currentIndent);
 				
 				if (currentIndent > 0) {
 					const newBlock = block.set('data', block.getData()
@@ -382,6 +425,8 @@ const blockStyleFn = (contentBlock) => {
 					newContentState = newContentState.merge({
 						blockMap: newContentState.getBlockMap().set(key, newBlock),
 					});
+					
+					console.log('Outdent - New block data:', newBlock.getData().toJS());
 				}
 			}
 
@@ -390,6 +435,12 @@ const blockStyleFn = (contentBlock) => {
 
 		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
 		setEditorState(EditorState.forceSelection(newEditorState, selection));
+		
+		// Show message based on direction
+		const firstBlock = newContentState.getBlockForKey(startKey);
+		const direction = firstBlock.getData().get('text-direction');
+		const indentLevel = firstBlock.getData().get('indent-level');
+		message.success(`Outdent applied: Level ${indentLevel} (${direction?.toUpperCase() || 'LTR'})`);
 	};
 
 	// Toggle subscript
