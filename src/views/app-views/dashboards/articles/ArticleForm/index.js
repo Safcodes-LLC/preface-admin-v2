@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PageHeaderAlt from 'components/layout-components/PageHeaderAlt';
 import { Tabs, Form, Button, message, Modal, Select, Table, Input, Upload, Radio } from 'antd';
-import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
+import { PlusOutlined, LoadingOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import Flex from 'components/shared-components/Flex';
 import GeneralField from './GeneralField';
 import SeoField from './SeoField';
@@ -9,7 +9,7 @@ import { createPost, editPost, fetchAllPostsByPostType, updatePost, updateStatus
 import { useDispatch, useSelector } from 'react-redux';
 // import FilesServices from "services/FilesServices";
 import { fetchUserData } from 'store/slices/userSlice';
-import { CompositeDecorator, convertFromRaw, convertToRaw, EditorState, Modifier } from 'draft-js';
+import { CompositeDecorator, convertFromRaw, convertToRaw, EditorState, Modifier, RichUtils } from 'draft-js';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { Editor } from 'react-draft-wysiwyg';
 import { useNavigate } from 'react-router-dom';
@@ -150,20 +150,58 @@ const customStyleMap = {
 		backgroundColor: '#dda0dd',
 		padding: '2px 0',
 	},
+	// Subscript and Superscript
+	SUBSCRIPT: {
+		fontSize: '0.75em',
+		verticalAlign: 'sub',
+	},
+	SUPERSCRIPT: {
+		fontSize: '0.75em',
+		verticalAlign: 'super',
+	},
+	// Text transformations
+	UPPERCASE: {
+		textTransform: 'uppercase',
+	},
+	LOWERCASE: {
+		textTransform: 'lowercase',
+	},
+	CAPITALIZE: {
+		textTransform: 'capitalize',
+	},
 };
 
-// Block style function to handle text alignment
+// Block style function to handle text alignment and indentationnd line spacing
 const blockStyleFn = (contentBlock) => {
 	const textAlign = contentBlock.getData().get('text-align');
+	const indentLevel = contentBlock.getData().get('indent-level') || 0;
+	const textDirection = contentBlock.getData().get('text-direction');
+	const lineSpacing = contentBlock.getData().get('line-spacing');
+	
+	let classNames = [];
+	
 	if (textAlign) {
-		// Debug log to verify alignment is being applied
-		console.log('Applying text alignment:', textAlign, 'to block');
-		return `text-align-${textAlign}`;
+		classNames.push(`text-align-${textAlign}`);
 	}
-	return '';
-};
-
-const ArticleForm = (props) => {
+	
+	if (indentLevel > 0) {
+		if (textDirection === 'rtl') {
+			classNames.push(`indent-level-${indentLevel}-rtl`);
+		} else {
+			classNames.push(`indent-level-${indentLevel}`);
+		}
+	}
+	
+	if (textDirection) {
+		classNames.push(`dir-${textDirection}`);
+	}
+	
+	if (lineSpacing) {
+		classNames.push(`line-spacing-${lineSpacing}`);
+	}
+	
+	return classNames.join(' ');
+};const ArticleForm = (props) => {
 	const dispatch = useDispatch();
 
 	const { Option } = Select;
@@ -247,6 +285,220 @@ const ArticleForm = (props) => {
 		setEditorState(EditorState.forceSelection(newEditorState, selection));
 	};
 
+	// Helper function to detect RTL (Right-to-Left) text
+	const isRTLText = (text) => {
+		if (!text || text.trim().length === 0) return null; // Return null for empty text
+		
+		// Arabic, Hebrew, Persian, Urdu Unicode ranges
+		const rtlChars = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u0590-\u05FF]/;
+		
+		// Count RTL vs LTR characters
+		const rtlCount = (text.match(rtlChars) || []).length;
+		const totalChars = text.replace(/\s/g, '').length; // Exclude spaces
+		
+		// If more than 30% of text is RTL, consider it RTL
+		return totalChars > 0 && (rtlCount / totalChars) > 0.3;
+	};
+
+
+	// Custom indent handler
+	const handleIndent = () => {
+		const selection = editorState.getSelection();
+		const currentContent = editorState.getCurrentContent();
+		const startKey = selection.getStartKey();
+		const endKey = selection.getEndKey();
+		const blockMap = currentContent.getBlockMap();
+
+		let newContentState = currentContent;
+		let inSelection = false;
+
+		blockMap.forEach((block, key) => {
+			if (key === startKey) inSelection = true;
+
+			if (inSelection) {
+				const currentIndent = block.getData().get('indent-level') || 0;
+				const existingDirection = block.getData().get('text-direction');
+				const blockText = block.getText();
+				const detectedRTL = isRTLText(blockText);
+				
+				// Determine direction: use existing if available, otherwise detect from text
+				let textDirection = existingDirection;
+				if (detectedRTL !== null) {
+					textDirection = detectedRTL ? 'rtl' : 'ltr';
+				} else if (!existingDirection) {
+					textDirection = 'ltr'; // Default to LTR for empty blocks
+				}
+				
+				if (currentIndent < 8) {
+					// Max indent level of 8
+					const newBlock = block.set('data', block.getData()
+						.set('indent-level', currentIndent + 1)
+						.set('text-direction', textDirection));
+					newContentState = newContentState.merge({
+						blockMap: newContentState.getBlockMap().set(key, newBlock),
+					});
+				}
+			}
+
+			if (key === endKey) inSelection = false;
+		});
+
+		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
+		setEditorState(EditorState.forceSelection(newEditorState, selection));
+	};
+
+	// Custom outdent handler
+	const handleOutdent = () => {
+		const selection = editorState.getSelection();
+		const currentContent = editorState.getCurrentContent();
+		const startKey = selection.getStartKey();
+		const endKey = selection.getEndKey();
+		const blockMap = currentContent.getBlockMap();
+
+		let newContentState = currentContent;
+		let inSelection = false;
+
+		blockMap.forEach((block, key) => {
+			if (key === startKey) inSelection = true;
+
+			if (inSelection) {
+				const currentIndent = block.getData().get('indent-level') || 0;
+				const existingDirection = block.getData().get('text-direction');
+				const blockText = block.getText();
+				const detectedRTL = isRTLText(blockText);
+				
+				// Determine direction: use existing if available, otherwise detect from text
+				let textDirection = existingDirection;
+				if (detectedRTL !== null) {
+					textDirection = detectedRTL ? 'rtl' : 'ltr';
+				} else if (!existingDirection) {
+					textDirection = 'ltr'; // Default to LTR for empty blocks
+				}
+				
+				if (currentIndent > 0) {
+					const newBlock = block.set('data', block.getData()
+						.set('indent-level', currentIndent - 1)
+						.set('text-direction', textDirection));
+					newContentState = newContentState.merge({
+						blockMap: newContentState.getBlockMap().set(key, newBlock),
+					});
+				}
+			}
+
+			if (key === endKey) inSelection = false;
+		});
+
+		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
+		setEditorState(EditorState.forceSelection(newEditorState, selection));
+	};
+
+	// Toggle subscript
+	const toggleSubscript = () => {
+		const selection = editorState.getSelection();
+		if (selection.isCollapsed()) {
+			message.warning('Please select text to apply subscript');
+			return;
+		}
+
+		const currentContent = editorState.getCurrentContent();
+		// Remove superscript if it exists
+		let contentState = Modifier.removeInlineStyle(currentContent, selection, 'SUPERSCRIPT');
+		// Toggle subscript
+		const newEditorState = RichUtils.toggleInlineStyle(
+			EditorState.push(editorState, contentState, 'change-inline-style'),
+			'SUBSCRIPT'
+		);
+		setEditorState(newEditorState);
+	};
+
+	// Toggle superscript
+	const toggleSuperscript = () => {
+		const selection = editorState.getSelection();
+		if (selection.isCollapsed()) {
+			message.warning('Please select text to apply superscript');
+			return;
+		}
+
+		const currentContent = editorState.getCurrentContent();
+		// Remove subscript if it exists
+		let contentState = Modifier.removeInlineStyle(currentContent, selection, 'SUBSCRIPT');
+		// Toggle superscript
+		const newEditorState = RichUtils.toggleInlineStyle(
+			EditorState.push(editorState, contentState, 'change-inline-style'),
+			'SUPERSCRIPT'
+		);
+		setEditorState(newEditorState);
+	};
+
+	// Toggle text transformation
+	const toggleTextTransform = (transform) => {
+		const selection = editorState.getSelection();
+		if (selection.isCollapsed()) {
+			message.warning('Please select text to apply text transformation');
+			return;
+		}
+
+		const currentContent = editorState.getCurrentContent();
+		const transforms = ['UPPERCASE', 'LOWERCASE', 'CAPITALIZE'];
+		
+		// Remove all text transform styles first
+		let contentState = currentContent;
+		transforms.forEach((style) => {
+			contentState = Modifier.removeInlineStyle(contentState, selection, style);
+		});
+
+		// Apply the new transform if not 'NONE'
+		if (transform !== 'NONE') {
+			contentState = Modifier.applyInlineStyle(contentState, selection, transform);
+		}
+
+		const newEditorState = EditorState.push(editorState, contentState, 'change-inline-style');
+		setEditorState(EditorState.forceSelection(newEditorState, selection));
+	};
+
+	// Set line spacing
+	const setLineSpacing = (spacing) => {
+		const selection = editorState.getSelection();
+		const currentContent = editorState.getCurrentContent();
+		const startKey = selection.getStartKey();
+		const endKey = selection.getEndKey();
+		const blockMap = currentContent.getBlockMap();
+
+		let newContentState = currentContent;
+		let inSelection = false;
+
+		blockMap.forEach((block, key) => {
+			if (key === startKey) inSelection = true;
+
+			if (inSelection) {
+				let newBlockData = block.getData();
+				
+				// If spacing is 'normal', remove the line-spacing data to use default
+				if (spacing === 'normal') {
+					newBlockData = newBlockData.delete('line-spacing');
+				} else {
+					newBlockData = newBlockData.set('line-spacing', spacing);
+				}
+				
+				const newBlock = block.set('data', newBlockData);
+				newContentState = newContentState.merge({
+					blockMap: newContentState.getBlockMap().set(key, newBlock),
+				});
+			}
+
+			if (key === endKey) inSelection = false;
+		});
+
+		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
+		setEditorState(EditorState.forceSelection(newEditorState, selection));
+		
+		if (spacing === 'normal') {
+			message.success('Line spacing reset to normal');
+		} else {
+			message.success(`Line spacing set to ${spacing}`);
+		}
+	};
+
 	// Remove all inline styles
 	const removeAllStyles = () => {
 		const selection = editorState.getSelection();
@@ -276,6 +528,11 @@ const ArticleForm = (props) => {
 			'HIGHLIGHT_PINK',
 			'HIGHLIGHT_ORANGE',
 			'HIGHLIGHT_PURPLE',
+			'SUBSCRIPT',
+			'SUPERSCRIPT',
+			'UPPERCASE',
+			'LOWERCASE',
+			'CAPITALIZE',
 		];
 
 		// Remove all inline styles from selection
@@ -1125,11 +1382,14 @@ const ArticleForm = (props) => {
 
 		// DEBUG: Log the raw content to verify alignment data is present
 		console.log('=== RAW EDITOR CONTENT ===');
-		console.log('Blocks:', rawEditorContent.blocks.map(block => ({
-			text: block.text,
-			type: block.type,
-			data: block.data
-		})));
+		console.log(
+			'Blocks:',
+			rawEditorContent.blocks.map((block) => ({
+				text: block.text,
+				type: block.type,
+				data: block.data,
+			}))
+		);
 
 		// Clean the content to prevent serialization issues
 		let cleanContent = JSON.stringify(rawEditorContent);
@@ -1150,14 +1410,16 @@ const ArticleForm = (props) => {
 				}
 			});
 			cleanContent = JSON.stringify(contentObj);
-			
+
 			// DEBUG: Log final content being saved
 			console.log('=== FINAL CONTENT TO BE SAVED ===');
-			console.log(JSON.parse(cleanContent).blocks.map(block => ({
-				text: block.text,
-				type: block.type,
-				data: block.data
-			})));
+			console.log(
+				JSON.parse(cleanContent).blocks.map((block) => ({
+					text: block.text,
+					type: block.type,
+					data: block.data,
+				}))
+			);
 		} catch (error) {
 			console.error('Error cleaning content:', error);
 			// Keep using the original JSON stringified content
@@ -1535,7 +1797,39 @@ const ArticleForm = (props) => {
 											blockStyleFn={blockStyleFn}
 											toolbarCustomButtons={[
 												<div key="custom-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', margin: '5px', paddingRight: '5px', alignItems: 'center' }}>
-													{/* Font Weight Dropdown */}
+													{/* Custom Indent/Outdent Buttons */}
+													<Button key="indent-btn" size="small" onClick={handleIndent} title="Increase indent" style={{ borderColor: '#d9d9d9' }}>
+														<MenuUnfoldOutlined /> Indent
+													</Button>
+													<Button key="outdent-btn" size="small" onClick={handleOutdent} title="Decrease indent" style={{ borderColor: '#d9d9d9' }}>
+														<MenuFoldOutlined /> Outdent
+													</Button>
+
+													{/* Subscript and Superscript Buttons */}
+													<Button key="subscript-btn" size="small" onClick={toggleSubscript} title="Subscript" style={{ borderColor: '#d9d9d9' }}>
+														X<sub>2</sub>
+													</Button>
+													<Button key="superscript-btn" size="small" onClick={toggleSuperscript} title="Superscript" style={{ borderColor: '#d9d9d9' }}>
+														X<sup>2</sup>
+													</Button>
+
+													{/* Text Transformation Dropdown */}
+													<Select placeholder="Capitalization" style={{ width: 140 }} size="small" onChange={(value) => toggleTextTransform(value)} allowClear onClear={() => toggleTextTransform('NONE')}>
+														<Option value="UPPERCASE">UPPERCASE</Option>
+														<Option value="LOWERCASE">lowercase</Option>
+														<Option value="CAPITALIZE">Capitalize</Option>
+													</Select>
+
+																	{/* Line Spacing Dropdown */}
+																	<Select placeholder="Line Spacing" style={{ width: 130 }} size="small" onChange={(value) => setLineSpacing(value)} allowClear onClear={() => setLineSpacing('normal')}>
+																		<Option value="normal">Normal</Option>
+																		<Option value="1">1.0</Option>
+																		<Option value="1-15">1.15</Option>
+																		<Option value="1-5">1.5</Option>
+																		<Option value="2">2.0</Option>
+																		<Option value="2-5">2.5</Option>
+																		<Option value="3">3.0</Option>
+																	</Select>													{/* Font Weight Dropdown */}
 													<Select placeholder="Font Weight" style={{ width: 150 }} size="small" onChange={(value) => toggleFontWeight(value)} allowClear onClear={() => toggleFontWeight('NONE')}>
 														{/* <Option value="FONTWEIGHT_SLIM" style={{ fontWeight: 300 }}>
 															Slim (300)
@@ -1593,7 +1887,7 @@ const ArticleForm = (props) => {
 													<Button key="edit-link" type="default" size="small" style={{ borderColor: '#52c41a', color: '#52c41a' }} onClick={handleEditLink}>
 														Edit Link
 													</Button>
-													 
+
 													{/* Remove Link Button */}
 													<Button key="remove-link" type="default" size="small" style={{ borderColor: '#ff6b72', color: '#ff6b72' }} onClick={handleRemoveLink}>
 														Remove Link
@@ -1623,7 +1917,15 @@ const ArticleForm = (props) => {
 												},
 												blockType: {
 													inDropdown: false,
-													options: ['Normal', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote'],
+													options: [
+														'Normal',
+														'H2',
+														'H3',
+														'H4',
+														'H5',
+														'H6',
+														// 'Blockquote'
+													],
 												},
 												list: {
 													inDropdown: false,

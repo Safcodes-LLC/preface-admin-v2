@@ -352,3 +352,306 @@
     text-align: inherit !important;
   }
 
+  /* Indentation Levels - LTR (Left-to-Right) for English, etc. */
+  .indent-level-1 {
+    padding-left: 40px !important;
+  }
+  
+  .indent-level-2 {
+    padding-left: 80px !important;
+  }
+  
+  .indent-level-3 {
+    padding-left: 120px !important;
+  }
+  
+  .indent-level-4 {
+    padding-left: 160px !important;
+  }
+  
+  .indent-level-5 {
+    padding-left: 200px !important;
+  }
+  
+  .indent-level-6 {
+    padding-left: 240px !important;
+  }
+  
+  .indent-level-7 {
+    padding-left: 280px !important;
+  }
+  
+  .indent-level-8 {
+    padding-left: 320px !important;
+  }
+
+  /* Indentation Levels - RTL (Right-to-Left) for Arabic, Hebrew, etc. */
+  .indent-level-1-rtl {
+    padding-right: 40px !important;
+    direction: rtl;
+  }
+  
+  .indent-level-2-rtl {
+    padding-right: 80px !important;
+    direction: rtl;
+  }
+  
+  .indent-level-3-rtl {
+    padding-right: 120px !important;
+    direction: rtl;
+  }
+  
+  .indent-level-4-rtl {
+    padding-right: 160px !important;
+    direction: rtl;
+  }
+  
+  .indent-level-5-rtl {
+    padding-right: 200px !important;
+    direction: rtl;
+  }
+  
+  .indent-level-6-rtl {
+    padding-right: 240px !important;
+    direction: rtl;
+  }
+  
+  .indent-level-7-rtl {
+    padding-right: 280px !important;
+    direction: rtl;
+  }
+  
+  .indent-level-8-rtl {
+    padding-right: 320px !important;
+    direction: rtl;
+  }
+
+  /* Direction classes */
+  .dir-rtl {
+    direction: rtl !important;
+    text-align: right !important;
+  }
+
+  .dir-ltr {
+    direction: ltr !important;
+    text-align: left !important;
+  }
+
+  /* Ensure LTR indent works in the Draft.js editor */
+  .demo-editor .indent-level-1,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-1,
+  .DraftEditor-root .indent-level-1,
+  .public-DraftEditor-content .indent-level-1 {
+    padding-left: 40px !important;
+  }
+  
+  .demo-editor .indent-level-2,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-2,
+  .DraftEditor-root .indent-level-2,
+  .public-DraftEditor-content .indent-level-2 {
+    padding-left: 80px !important;
+  }
+  
+  .demo-editor .indent-level-3,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-3,
+  .DraftEditor-root .indent-level-3,
+  .public-DraftEditor-content .indent-level-3 {
+    padding-left: 120px !important;
+  }
+  
+  .demo-editor .indent-level-4,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-4,
+  .DraftEditor-root .indent-level-4,
+  .public-DraftEditor-content .indent-level-4 {
+    padding-left: 160px !important;
+  }
+  
+  .demo-editor .indent-level-5,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-5,
+  .DraftEditor-root .indent-level-5,
+  .public-DraftEditor-content .indent-level-5 {
+    padding-left: 200px !important;
+  }
+  
+  .demo-editor .indent-level-6,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-6,
+  .DraftEditor-root .indent-level-6,
+  .public-DraftEditor-content .indent-level-6 {
+    padding-left: 240px !important;
+  }
+  
+  .demo-editor .indent-level-7,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-7,
+  .DraftEditor-root .indent-level-7,
+  .public-DraftEditor-content .indent-level-7 {
+    padding-left: 280px !important;
+  }
+  
+  .demo-editor .indent-level-8,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-8,
+  .DraftEditor-root .indent-level-8,
+  .public-DraftEditor-content .indent-level-8 {
+    padding-left: 320px !important;
+  }
+
+  /* Ensure RTL indent works in the Draft.js editor */
+  .demo-editor .indent-level-1-rtl,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-1-rtl,
+  .DraftEditor-root .indent-level-1-rtl,
+  .public-DraftEditor-content .indent-level-1-rtl {
+    padding-right: 40px !important;
+    direction: rtl !important;
+  }
+  
+  .demo-editor .indent-level-2-rtl,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-2-rtl,
+  .DraftEditor-root .indent-level-2-rtl,
+  .public-DraftEditor-content .indent-level-2-rtl {
+    padding-right: 80px !important;
+    direction: rtl !important;
+  }
+  
+  .demo-editor .indent-level-3-rtl,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-3-rtl,
+  .DraftEditor-root .indent-level-3-rtl,
+  .public-DraftEditor-content .indent-level-3-rtl {
+    padding-right: 120px !important;
+    direction: rtl !important;
+  }
+  
+  .demo-editor .indent-level-4-rtl,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-4-rtl,
+  .DraftEditor-root .indent-level-4-rtl,
+  .public-DraftEditor-content .indent-level-4-rtl {
+    padding-right: 160px !important;
+    direction: rtl !important;
+  }
+  
+  .demo-editor .indent-level-5-rtl,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-5-rtl,
+  .DraftEditor-root .indent-level-5-rtl,
+  .public-DraftEditor-content .indent-level-5-rtl {
+    padding-right: 200px !important;
+    direction: rtl !important;
+  }
+  
+  .demo-editor .indent-level-6-rtl,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-6-rtl,
+  .DraftEditor-root .indent-level-6-rtl,
+  .public-DraftEditor-content .indent-level-6-rtl {
+    padding-right: 240px !important;
+    direction: rtl !important;
+  }
+  
+  .demo-editor .indent-level-7-rtl,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-7-rtl,
+  .DraftEditor-root .indent-level-7-rtl,
+  .public-DraftEditor-content .indent-level-7-rtl {
+    padding-right: 280px !important;
+    direction: rtl !important;
+  }
+  
+  .demo-editor .indent-level-8-rtl,
+  .demo-editor .public-DraftStyleDefault-block.indent-level-8-rtl,
+  .DraftEditor-root .indent-level-8-rtl,
+  .public-DraftEditor-content .indent-level-8-rtl {
+    padding-right: 320px !important;
+    direction: rtl !important;
+  }
+
+  /* Direction support in Draft.js editor */
+  .demo-editor .dir-rtl,
+  .demo-editor .public-DraftStyleDefault-block.dir-rtl,
+  .DraftEditor-root .dir-rtl,
+  .public-DraftEditor-content .dir-rtl {
+    direction: rtl !important;
+    text-align: right !important;
+  }
+
+  .demo-editor .dir-ltr,
+  .demo-editor .public-DraftStyleDefault-block.dir-ltr,
+  .DraftEditor-root .dir-ltr,
+  .public-DraftEditor-content .dir-ltr {
+    direction: ltr !important;
+    text-align: left !important;
+  }
+
+  /* Line Spacing Classes */
+  .line-spacing-normal {
+    line-height: normal !important;
+  }
+
+  .line-spacing-1 {
+    line-height: 1.0 !important;
+  }
+
+  .line-spacing-1-15 {
+    line-height: 1.15 !important;
+  }
+
+  .line-spacing-1-5 {
+    line-height: 1.5 !important;
+  }
+
+  .line-spacing-2 {
+    line-height: 2.0 !important;
+  }
+
+  .line-spacing-2-5 {
+    line-height: 2.5 !important;
+  }
+
+  .line-spacing-3 {
+    line-height: 3.0 !important;
+  }
+
+  /* Ensure line spacing works in Draft.js editor */
+  .demo-editor .line-spacing-normal,
+  .demo-editor .public-DraftStyleDefault-block.line-spacing-normal,
+  .DraftEditor-root .line-spacing-normal,
+  .public-DraftEditor-content .line-spacing-normal {
+    line-height: normal !important;
+  }
+
+  .demo-editor .line-spacing-1,
+  .demo-editor .public-DraftStyleDefault-block.line-spacing-1,
+  .DraftEditor-root .line-spacing-1,
+  .public-DraftEditor-content .line-spacing-1 {
+    line-height: 1.0 !important;
+  }
+
+  .demo-editor .line-spacing-1-15,
+  .demo-editor .public-DraftStyleDefault-block.line-spacing-1-15,
+  .DraftEditor-root .line-spacing-1-15,
+  .public-DraftEditor-content .line-spacing-1-15 {
+    line-height: 1.15 !important;
+  }
+
+  .demo-editor .line-spacing-1-5,
+  .demo-editor .public-DraftStyleDefault-block.line-spacing-1-5,
+  .DraftEditor-root .line-spacing-1-5,
+  .public-DraftEditor-content .line-spacing-1-5 {
+    line-height: 1.5 !important;
+  }
+
+  .demo-editor .line-spacing-2,
+  .demo-editor .public-DraftStyleDefault-block.line-spacing-2,
+  .DraftEditor-root .line-spacing-2,
+  .public-DraftEditor-content .line-spacing-2 {
+    line-height: 2.0 !important;
+  }
+
+  .demo-editor .line-spacing-2-5,
+  .demo-editor .public-DraftStyleDefault-block.line-spacing-2-5,
+  .DraftEditor-root .line-spacing-2-5,
+  .public-DraftEditor-content .line-spacing-2-5 {
+    line-height: 2.5 !important;
+  }
+
+  .demo-editor .line-spacing-3,
+  .demo-editor .public-DraftStyleDefault-block.line-spacing-3,
+  .DraftEditor-root .line-spacing-3,
+  .public-DraftEditor-content .line-spacing-3 {
+    line-height: 3.0 !important;
+  }
+
