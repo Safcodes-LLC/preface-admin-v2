@@ -891,11 +891,49 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/app-views/dashboards/cms")),
     authority: ["Administrator"],
   },
+  //
   {
     key: "pages",
     path: `${APP_PREFIX_PATH}/dashboards/cms/pages`,
     component: React.lazy(() => import("views/app-views/dashboards/cms/pages")),
     authority: ["Administrator"],
+  },
+
+  {
+    key: "pages-edit-page",
+    path: `${APP_PREFIX_PATH}/dashboards/cms/pages/edit-page/:id`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/cms/pages/edit-page")
+    ),
+    authority: [
+      "Content Editor Level 1",
+      "Content Editor Level 2",
+      "Content Editor Level 3",
+      "Content Writer",
+      "Language Editor",
+      "Chief Editor",
+      "Post Admin",
+      "Administrator",
+      "Author",
+    ],
+  },
+  {
+    key: "pages-view-page",
+    path: `${APP_PREFIX_PATH}/dashboards/cms/pages/view-page/:id`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/cms/pages/view-page")
+    ),
+    authority: [
+      "Content Editor Level 1",
+      "Content Editor Level 2",
+      "Content Editor Level 3",
+      "Content Writer",
+      "Language Editor",
+      "Chief Editor",
+      "Post Admin",
+      "Administrator",
+      "Author",
+    ],
   },
   {
     key: "banner",

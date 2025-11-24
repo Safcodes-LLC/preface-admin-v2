@@ -388,7 +388,7 @@ useEffect(() => {
           <span className="ml-2">View Details</span>
         </Flex>
       </Menu.Item>
-      <Menu.Item onClick={() => manageDetails(row)}>
+      <Menu.Item onClick={() => editDetails(row)}>
         <Flex alignItems="center">
           <UploadOutlined />
           <span className="ml-2">Edit Details</span>
@@ -574,67 +574,10 @@ useEffect(() => {
   };
 
   const viewDetails = (row) => {
-    navigate(`/admin/dashboards/articles/view-article/${row._id}`);
+    navigate(`/admin/dashboards/cms/pages/view-page/${row._id}`);
   };
-
-  const removeFromBanner = async (row) => {
-    try {
-      await axios.put(`${API_BASE_URL}/banner/posts/${row._id}/toggle-banner-selection`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: localStorage.getItem("auth_token"),
-        },
-        body: JSON.stringify({ selectedForBanner: false }),
-      });
-      message.success("Post removed from banner successfully");
-      // Refresh data
-      await refreshBannerData();
-      if (selectedLanguageForHighlights) {
-        await refreshHighlightedPosts(selectedLanguageForHighlights);
-      }
-    } catch (error) {
-      message.error("Failed to remove post from banner");
-    }
-  };
-
-  const manageDetails = async (row) => {
-    try {
-      setCustomRow(row);
-      setIsCustomModalVisible(true);
-      setCustomLoading(true);
-      const token = localStorage.getItem("auth_token");
-      const res = await axios.get(`${API_BASE_URL}/banner/posts/custom-banner/${row._id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-      });
-      const data = res?.data?.data || {};
-      const rawStatus = (data.customBannerStatus !== undefined && data.customBannerStatus !== null)
-        ? data.customBannerStatus
-        : data.status;
-      const normalizedStatus = typeof rawStatus === 'boolean'
-        ? rawStatus
-        : (String(rawStatus).toLowerCase() === 'active' || String(rawStatus).toLowerCase() === 'true'
-            ? true
-            : (String(rawStatus).toLowerCase() === 'deactivated' || String(rawStatus).toLowerCase() === 'false'
-                ? false
-                : null));
-      setCustomAssets({
-        customVideo: data.customVideo || null,
-        customVideoImage: data.customVideoImage || null,
-        customImage: data.customImage || null,
-        customHorizontalImage: data.customHorizontalImage || null,
-        customVerticalImage: data.customVerticalImage || null,
-        customBannerStatus: normalizedStatus,
-        customVideoLink: data.customVideoLink || data.videoLink || null,
-      });
-    } catch (e) {
-      console.error("Failed to load custom banner:", e);
-      message.error(e?.response?.data?.message || "Failed to load custom banner");
-    } finally {
-      setCustomLoading(false);
-    }
+  const editDetails = (row) => {
+    navigate(`/admin/dashboards/cms/pages/edit-page/${row._id}`);
   };
 
   const handleCustomCancel = () => {
