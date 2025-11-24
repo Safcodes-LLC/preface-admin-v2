@@ -723,48 +723,14 @@ const Pages = () => {
       title: "Title", 
       dataIndex: "title" 
     },
-    {
-      title: "Image",
-      dataIndex: "author",
-      render: (_, record) => (
-        <div className="d-flex">
-          <AvatarStatus
-            size={60}
-            type="square"
-            src={record?.thumbnail || "/img/avatars/default-avatar.jpg"}
-          />
-        </div>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
-    },
+   
     {
       title: "Language",
       dataIndex: "language",
       render: (_, record) => record?.language?.name || "No Language",
     },
-    {
-      title: "Categories",
-      dataIndex: "categories",
-      render: (_, record) =>
-        record?.categories?.map((item) => item?.name).join(", ") ||
-        "Uncategorized",
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (_, record) => {
-        return (
-          <>
-            <Tag color={record?.status?.includes("sendback") ? "red" : "green"}>
-              {record?.status}
-            </Tag>
-            {record?.editingSession?.id && (
-              <Tag color={"grey"}>Edit in progress</Tag>
-            )}
-          </>
-        );
-      },
-    },
+    
+    
     {
       title: "",
       dataIndex: "actions",
