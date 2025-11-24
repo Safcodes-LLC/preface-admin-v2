@@ -57,7 +57,6 @@ const Pages = () => {
   const dispatch = useDispatch();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
-  const [activeTab, setActiveTab] = useState("video");
   const [isCustomModalVisible, setIsCustomModalVisible] = useState(false);
   const [customLoading, setCustomLoading] = useState(false);
   const [customRow, setCustomRow] = useState(null);
@@ -105,27 +104,17 @@ const Pages = () => {
   
   const [list, setList] = useState([]); // Banner selected posts (filtered)
   const [originalBannerData, setOriginalBannerData] = useState([]); // Original banner data (unfiltered)
-  // const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [highlightedPosts, setHighlightedPosts] = useState([]); // Array for multiple highlights
-  // const [contentData, setContentData] = useState({
-  //   video: [],
-  //   article: [],
-  //   topics: []
-  // });
   
   // New state for language-specific highlighting
   const [selectedLanguageForHighlights, setSelectedLanguageForHighlights] = useState(null);
-  // const [highlightStats, setHighlightStats] = useState({});
   
   // Categories list from Redux
   const [categoriesList, setCategoriesList] = useState([]);
   
   // Filter states for modal (only keep non-form related states)
   const [filteredData, setFilteredData] = useState([]);
-  // const [originalData, setOriginalData] = useState([]);
-  const [bannerStatusChanges, setBannerStatusChanges] = useState({});
-  // const [allPosts, setAllPosts] = useState([]);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalPagination, setModalPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [modalFilters, setModalFilters] = useState({ language: undefined, parentCategory: undefined, categories: [], title: "" });
@@ -138,33 +127,15 @@ const Pages = () => {
     labelContent = <span style={{ display: "none" }}>Filter</span>;
   }
 
-  // Tab configuration with correct post type IDs
-  const tabConfig = React.useMemo(() => ({
-    video: {
-      title: "Video",
-      icon: <VideoCameraOutlined />,
-      addButtonText: "Manage Video Banner",
-      modalTitle: "Manage Video Banner Selection",
-      endpoint: "video",
-      postTypeId: "66d9d564987787d3e3ff1314"
-    },
-    article: {
-      title: "Article",
-      icon: <FileTextOutlined />,
-      addButtonText: "Manage Article Banner",
-      modalTitle: "Manage Article Banner Selection",
-      endpoint: "article",
-      postTypeId: "66d9d564987787d3e3ff1312"
-    },
-    // topics: {
-    //   title: "Topics",
-    //   icon: <TagsOutlined />,
-    //   addButtonText: "Manage Topic Banner",
-    //   modalTitle: "Manage Topic Banner Selection",
-    //   endpoint: "topics",
-    //   postTypeId: "66d9d564987787d3e3ff1313"
-    // }
-  }), []);
+  // Article configuration
+  const articleConfig = {
+    title: "Article",
+    icon: <FileTextOutlined />,
+    addButtonText: "Manage Article Banner",
+    modalTitle: "Manage Article Banner Selection",
+    endpoint: "article",
+    postTypeId: "66d9d564987787d3e3ff1312"
+  };
 
   // Reset parent category when language changes
   useEffect(() => {
@@ -209,11 +180,6 @@ const Pages = () => {
 
   // Update categories list when Redux state changes
   useEffect(() => {
-    // console.log('Categories from Redux:', categories);
-    // console.log('Categories from Redux length:', categories?.length || 0);
-    // console.log('Categories from Redux type:', typeof categories);
-    // console.log('Is array?', Array.isArray(categories));
-    
     if (categories && Array.isArray(categories) && categories.length > 0) {
       setCategoriesList(categories);
     } else {
@@ -224,65 +190,30 @@ const Pages = () => {
 
   // Filter parent categories by language (same as GeneralField)
   const filteredParentCategories = categoriesList.filter((category) => {
-    // console.log(category,'cat test - category item');
-    
     const hasNoParent = !category.parentCategory;
     const matchesLanguage = selectedLanguage ? 
       (category.language?._id === selectedLanguage || category.language === selectedLanguage) : 
       true;
-    
-    // console.log('Parent Category Filter:', {
-    //   categoryName: category.name,
-    //   hasNoParent,
-    //   categoryLanguage: category.language,
-    //   selectedLanguage,
-    //   matchesLanguage,
-    //   willShow: hasNoParent && matchesLanguage
-    // });
     
     return hasNoParent && matchesLanguage;
   });
 
   // Filter subcategories by parent category and language (same as GeneralField concept)
   const filteredSubCategories = categoriesList.filter((category) => {
-    // console.log(selectedParentCategory,'selectedParentCategory');
-    
     const hasParent = category.parentCategory && (category.parentCategory._id === selectedParentCategory || category.parentCategory.id === selectedParentCategory);
     const matchesLanguage = selectedLanguage ? 
       (category.language?._id === selectedLanguage || category.language === selectedLanguage) : 
       true;
     
-    // console.log(category,'sub test coming');
-    
-    // console.log('Sub Category Filter:', {
-    //   categoryName: category.name,
-    //   hasParent,
-    //   parentCategoryId: category.parentCategory?._id,
-    //   selectedParentCategory,
-    //   matchesLanguage,
-    //   willShow: hasParent && matchesLanguage
-    // });
-    
     return hasParent && matchesLanguage;
   });
 
-  // console.log('FILTERING DEBUG:', {
-  //   categoriesListLength: categoriesList.length,
-  //   selectedLanguage,
-  //   selectedParentCategory,
-  //   filteredParentCategoriesLength: filteredParentCategories.length,
-  //   filteredSubCategoriesLength: filteredSubCategories.length,
-  //   activeTab
-  // });
-
-  // Fetch banner data when tab changes
+  // Fetch banner data on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("auth_token");
-        const postTypeId = tabConfig[activeTab].postTypeId;
-        
-        const response = await axios.get(`${API_BASE_URL}/banner/posts/banner-selected/${postTypeId}`, {
+        const response = await axios.get(`${API_BASE_URL}/banner/posts/banner-selected/${articleConfig.postTypeId}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: token,
@@ -291,7 +222,7 @@ const Pages = () => {
 
         if (response?.data?.status === "success") {
           const data = response.data.data || [];
-          setOriginalBannerData(data); // Store original data
+          setOriginalBannerData(data);
         }
       } catch (error) {
         console.error("Error fetching banner data:", error);
@@ -300,7 +231,7 @@ const Pages = () => {
     };
 
     fetchData();
-  }, [activeTab, tabConfig]);
+  }, []);
 
   // New function to apply language filter to banner data
   const applyLanguageFilterToBannerData = React.useCallback((data, languageId) => {
@@ -322,15 +253,13 @@ const Pages = () => {
     }
   }, [selectedLanguageForHighlights, originalBannerData, applyLanguageFilterToBannerData]);
 
-  // Fetch highlighted posts when language changes (separate effect)
+  // Fetch highlighted posts when language changes
   useEffect(() => {
-    if (selectedLanguageForHighlights && activeTab) {
+    if (selectedLanguageForHighlights) {
       const fetchHighlights = async () => {
         try {
           const token = localStorage.getItem("auth_token");
-          const postTypeId = tabConfig[activeTab].postTypeId;
-          
-          let url = `${API_BASE_URL}/banner/posts/highlighted/${postTypeId}?languageId=${selectedLanguageForHighlights}`;
+          let url = `${API_BASE_URL}/banner/posts/highlighted/${articleConfig.postTypeId}?languageId=${selectedLanguageForHighlights}`;
           
           const response = await axios.get(url, {
             headers: {
@@ -341,8 +270,6 @@ const Pages = () => {
 
           if (response?.data?.status === "success") {
             const posts = response.data.data;
-            // const stats = response.data.details || {};
-            // const languageBreakdown = response.data.languageBreakdown || [];
             
             if (Array.isArray(posts)) {
               setHighlightedPosts(posts);
@@ -351,37 +278,26 @@ const Pages = () => {
             } else {
               setHighlightedPosts([]);
             }
-
-            // setHighlightStats({
-            //   ...stats,
-            //   languageBreakdown
-            // });
           } else {
             setHighlightedPosts([]);
-            // setHighlightStats({});
           }
         } catch (error) {
           console.error("Error fetching highlighted posts:", error);
           setHighlightedPosts([]);
-          // setHighlightStats({});
         }
       };
       
       fetchHighlights();
     } else {
-      // Clear highlighted posts if no language selected
       setHighlightedPosts([]);
-      // setHighlightStats({});
     }
-  }, [selectedLanguageForHighlights, activeTab, tabConfig]);
+  }, [selectedLanguageForHighlights]);
 
   // Helper function to refresh banner data
   const refreshBannerData = async () => {
     try {
       const token = localStorage.getItem("auth_token");
-      const postTypeId = tabConfig[activeTab].postTypeId;
-      
-      const response = await axios.get(`${API_BASE_URL}/banner/posts/banner-selected/${postTypeId}`, {
+      const response = await axios.get(`${API_BASE_URL}/banner/posts/banner-selected/${articleConfig.postTypeId}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: token,
@@ -390,16 +306,11 @@ const Pages = () => {
 
       if (response?.data?.status === "success") {
         const data = response.data.data || [];
-        // setContentData(prev => ({
-        //   ...prev,
-        //   [activeTab]: data
-        // }));
         setOriginalBannerData(data);
         applyLanguageFilterToBannerData(data, selectedLanguageForHighlights);
       }
     } catch (error) {
       console.error("Error fetching banner data:", error);
-      message.error("Failed to fetch banner data");
     }
   };
 
@@ -409,9 +320,7 @@ const Pages = () => {
     
     try {
       const token = localStorage.getItem("auth_token");
-      const postTypeId = tabConfig[activeTab].postTypeId;
-      
-      let url = `${API_BASE_URL}/banner/posts/highlighted/${postTypeId}?languageId=${languageId}`;
+      let url = `${API_BASE_URL}/banner/posts/highlighted/${articleConfig.postTypeId}?languageId=${languageId}`;
       
       const response = await axios.get(url, {
         headers: {
@@ -422,8 +331,6 @@ const Pages = () => {
 
       if (response?.data?.status === "success") {
         const posts = response.data.data;
-        // const stats = response.data.details || {};
-        // const languageBreakdown = response.data.languageBreakdown || [];
         
         if (Array.isArray(posts)) {
           setHighlightedPosts(posts);
@@ -432,19 +339,12 @@ const Pages = () => {
         } else {
           setHighlightedPosts([]);
         }
-
-        // setHighlightStats({
-        //   ...stats,
-        //   languageBreakdown
-        // });
       } else {
         setHighlightedPosts([]);
-        // setHighlightStats({});
       }
     } catch (error) {
       console.error("Error fetching highlighted posts:", error);
       setHighlightedPosts([]);
-      // setHighlightStats({});
     }
   };
 
@@ -455,7 +355,7 @@ const Pages = () => {
       setModalPagination({ current: 1, pageSize: 10, total: 0 });
       setModalFilters({ language: undefined, parentCategory: undefined, categories: [], title: "" });
     }
-  }, [isModalVisible, activeTab]);
+  }, [isModalVisible]);
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -483,24 +383,11 @@ const Pages = () => {
   const AddContent = () => {
     setIsModalVisible(true);
     form.resetFields();
-    setBannerStatusChanges({});
-    setSelectedRowKeys([]);
     setFilteredData([]); // Ensure no data is shown initially
-    
-    // Don't auto-set the modal language dropdown to avoid infinite loops
-    // Let user select language manually in the modal
   };
 
   const handleOk = async () => {
-    const updates = [];
-
-    // Process banner status changes
-    for (const [postId, newStatus] of Object.entries(bannerStatusChanges)) {
-      updates.push(toggleBannerSelectionAPI(postId, newStatus));
-    }
-
     try {
-      await Promise.all(updates);
       message.success("Banner selections updated successfully");
       
       // Refresh data
@@ -513,54 +400,13 @@ const Pages = () => {
       message.error("Failed to update banner selections");
     } finally {
       setIsModalVisible(false);
-      setBannerStatusChanges({});
-      setSelectedRowKeys([]);
     }
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
     form.resetFields();
-    setBannerStatusChanges({});
-    setSelectedRowKeys([]);
     setFilteredData([]); // Clear filtered data when closing modal
-  };
-
-  // API call to toggle banner selection
-  const toggleBannerSelectionAPI = async (postId, selectedForBanner) => {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      message.error("Authorization token is missing");
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/banner/posts/${postId}/toggle-banner-selection`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-        body: JSON.stringify({ selectedForBanner }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update banner selection");
-      }
-
-      return await response.json();
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const toggleBannerSelection = (postId, currentStatus) => {
-    const newStatus = !currentStatus;
-    setBannerStatusChanges((prev) => ({
-      ...prev,
-      [postId]: newStatus,
-    }));
   };
 
   const handleCheckboxChange = (record) => {
@@ -568,11 +414,6 @@ const Pages = () => {
       ? selectedRowKeys.filter((key) => key !== record._id)
       : [...selectedRowKeys, record._id];
     setSelectedRowKeys(selected);
-
-    toggleBannerSelection(
-      record._id,
-      bannerStatusChanges[record._id] ?? record.selectedForBanner
-    );
   };
 
   // Clear all filters and show no data (user must select language and filter)
@@ -604,14 +445,9 @@ const Pages = () => {
 
     try {
       const token = localStorage.getItem("auth_token");
-      const postTypeId = tabConfig[activeTab].postTypeId;
-      const page = 1;
-      const limit = modalPagination.pageSize;
-console.log("languageValue===",languageValue);
-
       const params = {
-        page,
-        limit,
+        page: 1,
+        limit: modalPagination.pageSize,
         sortBy: 'priority',
         languageId: languageValue,
         language: languageValue,
@@ -623,8 +459,7 @@ console.log("languageValue===",languageValue);
         search: titleValue,
       };
 
-      console.log('Banner manage filter params:', params);
-      const response = await axios.get(`${API_BASE_URL}/banner/posts/manage/${postTypeId}`, {
+      const response = await axios.get(`${API_BASE_URL}/banner/posts/manage/${articleConfig.postTypeId}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: token,
@@ -649,10 +484,10 @@ console.log("languageValue===",languageValue);
         const items = Array.isArray(payload.data) ? payload.data : Array.isArray(payload.docs) ? payload.docs : [];
         const p = payload.pagination || {};
         setFilteredData(items);
-        setModalPagination({ current: p.page || page, pageSize: p.limit || limit, total: p.total || 0 });
+        setModalPagination({ current: p.page || 1, pageSize: p.limit || modalPagination.pageSize, total: p.total || 0 });
       } else {
         setFilteredData([]);
-        setModalPagination({ current: 1, pageSize: limit, total: 0 });
+        setModalPagination({ current: 1, pageSize: modalPagination.pageSize, total: 0 });
       }
     } catch (err) {
       console.error('Error filtering posts:', err?.response || err);
@@ -671,7 +506,6 @@ console.log("languageValue===",languageValue);
     setModalLoading(true);
     try {
       const token = localStorage.getItem("auth_token");
-      const postTypeId = tabConfig[activeTab].postTypeId;
       const params = {
         page,
         limit: pageSize,
@@ -686,7 +520,7 @@ console.log("languageValue===",languageValue);
         search: title,
       };
 
-      const response = await axios.get(`${API_BASE_URL}/banner/posts/manage/${postTypeId}`, {
+      const response = await axios.get(`${API_BASE_URL}/banner/posts/manage/${articleConfig.postTypeId}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: token,
@@ -722,26 +556,19 @@ console.log("languageValue===",languageValue);
     }
   };
 
-
-
   const viewDetails = (row) => {
-    let path = '';
-    
-    if (activeTab === "article") {
-      path = 'view-article';
-      navigate(`/admin/dashboards/articles/${path}/${row._id}`);
-    } else if (activeTab === "topics") {
-      path = 'view-podcast';
-      navigate(`/admin/dashboards/podcasts/${path}/${row._id}`);
-    } else if (activeTab === "video") {
-      path = 'view-video';
-      navigate(`/admin/dashboards/videos/${path}/${row._id}`);
-    }
+    navigate(`/admin/dashboards/articles/view-article/${row._id}`);
   };
 
   const removeFromBanner = async (row) => {
     try {
-      await toggleBannerSelectionAPI(row._id, false);
+      await axios.put(`${API_BASE_URL}/banner/posts/${row._id}/toggle-banner-selection`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.getItem("auth_token"),
+        },
+        body: JSON.stringify({ selectedForBanner: false }),
+      });
       message.success("Post removed from banner successfully");
       // Refresh data
       await refreshBannerData();
@@ -824,38 +651,9 @@ console.log("languageValue===",languageValue);
       return;
     }
     // Validate per tab
-    if (activeTab === 'video') {
-      const hasVideoFile = !!customFiles.customVideo || !!customAssets.customVideo;
-      const hasVideoLink = !!customAssets.customVideoLink && customAssets.customVideoLink.trim() !== '';
-      const hasVideoImage = !!customFiles.customVideoImage || !!customAssets.customVideoImage;
-
-      // Require at least one of video file or link
-      if (!hasVideoFile && !hasVideoLink) {
-        message.warning("Provide either a YouTube link or upload a Custom Video");
-        return;
-      }
-      // Require video image
-      if (!hasVideoImage) {
-        message.warning("Custom Video Image is required");
-        return;
-      }
-    } else if (activeTab === 'article') {
-      const hasMain = !!customFiles.customImage || !!customAssets.customImage;
-      const hasHorizontal = !!customFiles.customHorizontalImage || !!customAssets.customHorizontalImage;
-      const hasVertical = !!customFiles.customVerticalImage || !!customAssets.customVerticalImage;
-
-      if (!hasMain) {
-        message.warning("Custom Image is required");
-        return;
-      }
-      if (!hasHorizontal) {
-        message.warning("Custom Horizontal Image is required");
-        return;
-      }
-      if (!hasVertical) {
-        message.warning("Custom Vertical Image is required");
-        return;
-      }
+    if (customAssets.customBannerStatus === null || customAssets.customBannerStatus === undefined) {
+      message.warning("Please select a status before saving");
+      return;
     }
     try {
       setCustomLoading(true);
@@ -869,7 +667,7 @@ console.log("languageValue===",languageValue);
       if (customAssets.customBannerStatus !== null && customAssets.customBannerStatus !== undefined) {
         fd.append("customBannerStatus", customAssets.customBannerStatus);
       }
-      if (activeTab === 'video') {
+      if (customAssets.customVideoLink) {
         fd.append("customVideoLink", (customAssets.customVideoLink ?? ""));
       }
 
@@ -901,19 +699,6 @@ console.log("languageValue===",languageValue);
     } finally {
       setCustomLoading(false);
     }
-  };
-
-  const handleTabChange = (key) => {
-    setActiveTab(key);
-    setSelectedRowKeys([]);
-    // setSelectedRows([]);
-    setHighlightedPosts([]);
-    // setHighlightStats({});
-    
-    // Keep the current language selection instead of resetting
-    // The useEffect will handle fetching data for the new tab
-    
-    form.resetFields();
   };
 
   const onSearch = (e) => {
@@ -980,38 +765,6 @@ console.log("languageValue===",languageValue);
         );
       },
     },
-    // {
-    //   title: "Highlight",
-    //   dataIndex: "highlight",
-    //   render: (_, record) => {
-    //     // Check if this post is highlighted
-    //     const isHighlighted = Array.isArray(highlightedPosts) && 
-    //       highlightedPosts.some(post => post._id === record._id);
-        
-    //     return (
-    //       <div>
-    //         <Tooltip 
-    //           title={
-    //             !record.selectedForBanner 
-    //               ? "Post must be selected for banner first" 
-    //               : !record.language 
-    //               ? "Post must have a language assigned"
-    //               : isHighlighted 
-    //               ? "Click to remove highlight"
-    //               : "Click to highlight this post"
-    //           }
-    //         >
-    //           <Switch
-    //             checked={isHighlighted}
-    //             onChange={(checked) => toggleHighlight(record._id, checked)}
-    //             disabled={!record.selectedForBanner || !record.language}
-    //             size="small"
-    //           />
-    //         </Tooltip>
-    //       </div>
-    //     );
-    //   },
-    // },
     {
       title: "",
       dataIndex: "actions",
@@ -1074,11 +827,7 @@ console.log("languageValue===",languageValue);
       dataIndex: "select",
       render: (_, record) => (
         <Checkbox
-          checked={
-            bannerStatusChanges[record._id] !== undefined
-              ? bannerStatusChanges[record._id]
-              : record?.selectedForBanner || false
-          }
+          checked={selectedRowKeys.includes(record._id)}
           onChange={() => handleCheckboxChange(record)}
         />
       ),
@@ -1087,80 +836,70 @@ console.log("languageValue===",languageValue);
 
   return (
     <Card>
-      <Tabs activeKey={activeTab} onChange={handleTabChange}>
-        {Object.entries(tabConfig).map(([key, config]) => (
-          <TabPane 
-            tab={
-              <span>
-                {config.icon}
-                {config.title}
-              </span>
-            } 
-            key={key}
-          >
-            <Flex
-              alignItems="center"
-              justifyContent="space-between"
-              mobileFlex={false}
+      <Flex
+        alignItems="center"
+        justifyContent="space-between"
+        mobileFlex={false}
+      >
+        <Flex className="mb-1" mobileFlex={false}>
+          <div className="mr-md-3 mb-3">
+            <Input
+              placeholder="Search banner posts"
+              prefix={<SearchOutlined />}
+              onChange={(e) => onSearch(e)}
+            />
+          </div>
+          {/* Language filter for highlights - inline with search */}
+          <div className="mr-md-3 mb-3">
+            <Select
+              style={{ width: 200 }}
+              placeholder="Select language"
+              allowClear
+              value={selectedLanguageForHighlights}
+              onChange={(value) => {
+                setSelectedLanguageForHighlights(value);
+                if (!value) {
+                  setHighlightedPosts([]);
+                  setList(originalBannerData);
+                }
+              }}
             >
-              <Flex className="mb-1" mobileFlex={false}>
-                <div className="mr-md-3 mb-3">
-                  <Input
-                    placeholder="Search banner posts"
-                    prefix={<SearchOutlined />}
-                    onChange={(e) => onSearch(e)}
-                  />
-                </div>
-                {/* Language filter for highlights - inline with search */}
-                <div className="mr-md-3 mb-3">
-                  <Select
-                    style={{ width: 200 }}
-                    placeholder="Select language"
-                    allowClear
-                    value={selectedLanguageForHighlights}
-                    onChange={(value) => {
-                      setSelectedLanguageForHighlights(value);
-                      if (!value) {
-                        setHighlightedPosts([]);
-                        // setHighlightStats({});
-                        setList(originalBannerData);
-                      }
-                    }}
-                    options={languages.map(l => ({ label: l.name, value: l._id }))}
-                  />
-                </div>
-              </Flex>
-              <div>
-                <Button
-                  onClick={AddContent}
-                  type="primary"
-                  icon={<PlusCircleOutlined />}
-                  block
-                >
-                  {config.addButtonText}
-                </Button>
-              </div>
-            </Flex>
+              {languages.map((lang) => (
+                <Select.Option key={lang._id} value={lang._id}>
+                  {lang.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+        </Flex>
+        <div>
+          <Button
+            onClick={AddContent}
+            type="primary"
+            icon={<PlusCircleOutlined />}
+            block
+          >
+            {articleConfig.addButtonText}
+          </Button>
+        </div>
+      </Flex>
 
-            <div className="table-responsive">
-              <Table
-                columns={getMainTableColumns()}
-                dataSource={list}
-                rowKey="_id"
-                pagination={{
-                  showSizeChanger: true,
-                  showQuickJumper: true,
-                  showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} banner posts`,
-                }}
-              />
-            </div>
-          </TabPane>
-        ))}
-      </Tabs>
+      <div className="table-responsive">
+        <Table
+          columns={getMainTableColumns()}
+          dataSource={list}
+          rowKey="_id"
+          pagination={{
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} banner posts`,
+          }}
+        />
+      </div>
 
       {/* Modal for Managing Banner Content */}
       <Modal
-        title={tabConfig[activeTab].modalTitle}
+        title={articleConfig.modalTitle}
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
@@ -1322,71 +1061,8 @@ console.log("languageValue===",languageValue);
                 />
               </Form.Item>
             </Col>
-            {activeTab === 'video' && (
-              <>
-                <Col xs={24}>
-                  <Form.Item label="YouTube Video Link">
-                    <AntInput
-                      placeholder="https://youtube.com/watch?v=..."
-                      value={customAssets.customVideoLink || ''}
-                      onChange={(e) =>
-                        setCustomAssets((p) => ({ ...p, customVideoLink: e.target.value }))
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Custom Video (600x600)">
-                    <Dragger
-                      multiple={false}
-                      beforeUpload={() => false}
-                      accept="video/*"
-                      onChange={(info) => {
-                        const f = info?.file?.originFileObj || info?.file;
-                        setCustomFiles((p) => ({ ...p, customVideo: f }));
-                        if (f) {
-                          setCustomPreviews((p) => ({ ...p, customVideo: URL.createObjectURL(f) }));
-                        }
-                      }}
-                    >
-                      {customPreviews.customVideo ? (
-                        <video src={customPreviews.customVideo} controls style={{ maxWidth: '100%' }} />
-                      ) : customAssets.customVideo ? (
-                        <video src={customAssets.customVideo} controls style={{ maxWidth: '100%' }} />
-                      ) : (
-                        <div>Click or drag video file</div>
-                      )}
-                    </Dragger>
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Custom Video Image (600x600)">
-                    <Dragger
-                      multiple={false}
-                      beforeUpload={() => false}
-                      accept="image/*"
-                      onChange={(info) => {
-                        const f = info?.file?.originFileObj || info?.file;
-                        setCustomFiles((p) => ({ ...p, customVideoImage: f }));
-                        if (f) {
-                          setCustomPreviews((p) => ({ ...p, customVideoImage: URL.createObjectURL(f) }));
-                        }
-                      }}
-                    >
-                      {customPreviews.customVideoImage ? (
-                        <img src={customPreviews.customVideoImage} alt="preview" style={{ maxWidth: '100%' }} />
-                      ) : customAssets.customVideoImage ? (
-                        <img src={customAssets.customVideoImage} alt="preview" style={{ maxWidth: '100%' }} />
-                      ) : (
-                        <div>Click or drag image</div>
-                      )}
-                    </Dragger>
-                  </Form.Item>
-                </Col>
-              </>
-            )}
-
-            {activeTab === 'article' && (
+            
+            {(
               <>
                 <Col xs={24} md={12}>
                   <Form.Item label="Custom Image (600x600)">
