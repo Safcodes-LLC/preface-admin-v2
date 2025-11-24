@@ -118,6 +118,8 @@ const Pages = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [modalPagination, setModalPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [modalFilters, setModalFilters] = useState({ language: undefined, parentCategory: undefined, categories: [], title: "" });
+const [pages, setPages] = useState([]);
+const [loading, setLoading] = useState(false);
 
   // Define label logic for responsive design
   let labelContent;
@@ -136,6 +138,27 @@ const Pages = () => {
     endpoint: "article",
     postTypeId: "66d9d564987787d3e3ff1312"
   };
+
+  // Add this function to fetch pages
+const fetchPages = async (lang) => {
+  try {
+    setLoading(true);
+    const response = await axios.get(`${API_BASE_URL}/pages?lang=${lang}`);
+    setPages(response.data);
+  } catch (error) {
+    console.error('Error fetching pages:', error);
+    message.error('Failed to fetch pages');
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Add this useEffect to fetch pages when selected language changes
+useEffect(() => {
+  if (selectedLanguageForHighlights) {
+    fetchPages(languages.find(lang => lang._id === selectedLanguageForHighlights)?.code || 'en');
+  }
+}, [selectedLanguageForHighlights, languages]);
 
   // Reset parent category when language changes
   useEffect(() => {
@@ -719,16 +742,22 @@ const Pages = () => {
       dataIndex: "_id",
       render: (_, record, index) => <span>{index + 1}</span>,
     },
-    { 
-      title: "Title", 
-      dataIndex: "title" 
-    },
-   
     {
-      title: "Language",
-      dataIndex: "language",
-      render: (_, record) => record?.language?.name || "No Language",
-    },
+        title: 'Title',
+        dataIndex: 'title',
+        key: 'title',
+      },
+      {
+        title: 'Slug',
+        dataIndex: 'slug',
+        key: 'slug',
+      },
+      {
+        title: 'Language',
+        dataIndex: 'lang',
+        key: 'lang',
+        render: (lang) => languages.find(l => l.code === lang)?.name || lang,
+      },
     
     
     {
@@ -853,7 +882,7 @@ const Pages = () => {
       <div className="table-responsive">
         <Table
           columns={getMainTableColumns()}
-          dataSource={list}
+          dataSource={pages}
           rowKey="_id"
           pagination={{
             showSizeChanger: true,
