@@ -10,7 +10,7 @@ export const unrestrictedRoutes = [
     component: React.lazy(() =>
       import("views/auth-views/authentication/email-verification")
     ),
-  }
+  },
 ];
 
 export const publicRoutes = [
@@ -884,12 +884,17 @@ export const protectedRoutes = [
     authority: ["Administrator"],
   },
 
-  
   //CMS start
   {
     key: "dashboard.cms",
     path: `${APP_PREFIX_PATH}/dashboards/cms`,
     component: React.lazy(() => import("views/app-views/dashboards/cms")),
+    authority: ["Administrator"],
+  },
+  {
+    key: "pages",
+    path: `${APP_PREFIX_PATH}/dashboards/cms/pages`,
+    component: React.lazy(() => import("views/app-views/dashboards/cms/pages")),
     authority: ["Administrator"],
   },
   {
@@ -909,7 +914,7 @@ export const protectedRoutes = [
     authority: ["Administrator"],
   },
 
-   // administrator user-roles edit role
+  // administrator user-roles edit role
   //  {
   //   key: "user-roles-edit-role",
   //   path: `${APP_PREFIX_PATH}/dashboards/administrator/user-roles/edit-role/:id`,
@@ -978,7 +983,7 @@ export const protectedRoutes = [
   },
   {
     key: "preface-to-islam",
-    path: `${APP_PREFIX_PATH}/dashboards/cms/preface-to-islam`,  
+    path: `${APP_PREFIX_PATH}/dashboards/cms/preface-to-islam`,
     component: React.lazy(() =>
       import("views/app-views/dashboards/cms/preface-to-islam")
     ),
@@ -992,9 +997,9 @@ export const protectedRoutes = [
     ),
     authority: ["Administrator"],
   },
-   //CMS end
+  //CMS end
 
-   //ask the scholar start
+  //ask the scholar start
   {
     key: "guest",
     path: `${APP_PREFIX_PATH}/dashboards/ask-the-scholar/guest`,
@@ -1019,7 +1024,7 @@ export const protectedRoutes = [
     ),
     authority: ["Administrator"],
   },
-   //ask the scholar end
+  //ask the scholar end
 
   // administrator
   {

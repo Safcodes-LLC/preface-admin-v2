@@ -69,6 +69,7 @@
 
 
 	"sidenav.dashboards.cms": "Cms",
+	"sidenav.dashboards.cms.pages": "Pages",
 	"sidenav.dashboards.cms.banner": "Home Page Banner",
 	"sidenav.dashboards.cms.featured-articles": "Featured Articles",
 	"sidenav.dashboards.cms.elite-author": "Elite Author",
