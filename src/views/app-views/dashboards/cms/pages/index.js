@@ -394,12 +394,6 @@ useEffect(() => {
           <span className="ml-2">Edit Details</span>
         </Flex>
       </Menu.Item>
-      <Menu.Item onClick={() => removeFromBanner(row)}>
-        <Flex alignItems="center">
-          <DeleteOutlined />
-          <span className="ml-2">Remove from Banner</span>
-        </Flex>
-      </Menu.Item>
     </Menu>
   );
 
@@ -867,7 +861,7 @@ useEffect(() => {
             </Select>
           </div>
         </Flex>
-        <div>
+        {/* <div>
           <Button
             onClick={AddContent}
             type="primary"
@@ -876,7 +870,7 @@ useEffect(() => {
           >
             {articleConfig.addButtonText}
           </Button>
-        </div>
+        </div> */}
       </Flex>
 
       <div className="table-responsive">
