@@ -14,6 +14,8 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { Editor } from 'react-draft-wysiwyg';
 import { useNavigate } from 'react-router-dom';
 import { AUTH_TOKEN } from 'constants/AuthConstant';
+import { API_BASE_URL } from 'configs/AppConfig';
+import axios from 'axios';
 
 const ADD = 'ADD';
 const EDIT = 'EDIT';
@@ -211,7 +213,9 @@ const blockStyleFn = (contentBlock) => {
 	}
 	
 	return finalClasses;
-};const PageForm = (props) => {
+};
+
+const PageForm = (props) => {
 	const dispatch = useDispatch();
 
 	const { Option } = Select;
@@ -1230,21 +1234,43 @@ const blockStyleFn = (contentBlock) => {
 	const [rejectLoading, setRejectLoading] = useState(false);
 	const [editOn, setEditOn] = useState(false);
 
+	const [pageData, setPageData] = useState(null);
+	// const [loading, setLoading] = useState(false);
 	// to track is form submitted
 	// const [isFormSubmitted, setIsFormSubmitted] = useState(false);
 	const [isPostsFetched, setIsPostsFetched] = useState(false);
 
-	// check it is in global state
-	const articles_list = useSelector((state) => state.post.posts);
-	useEffect(() => {
-		if (!articles_list.length && mode === EDIT && !isPostsFetched) {
-			dispatch(fetchAllPostsByPostType({ postTypeId: '66d9d564987787d3e3ff1315' }));
-		} else {
-			setList(articles_list);
-			setLoading(false);
-		}
-		setIsPostsFetched(true);
-	}, [articles_list, dispatch, mode, isPostsFetched]);
+	// Add this effect to fetch page data when in view mode
+useEffect(() => {
+  const fetchPageData = async () => {
+    if (mode === 'EDIT' && param?.id) {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_BASE_URL}/pages/${param.id}`);
+        setPageData(response.data);
+        
+        // Set form fields with the fetched data
+        form.setFieldsValue({
+          title: response.data.title,
+          // Add other fields as needed
+        });
+        
+        // If you have a rich text editor, set its content
+        if (response.data.content) {
+          const contentState = convertFromRaw(JSON.parse(response.data.content));
+          setEditorState(EditorState.createWithContent(contentState));
+        }
+      } catch (error) {
+        console.error('Error fetching page data:', error);
+        message.error('Failed to load page data');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  fetchPageData();
+}, [mode, param?.id, form]);
 
 	const columns = [
 		{
