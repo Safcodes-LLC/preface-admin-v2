@@ -168,19 +168,27 @@ const VideosForm = (props) => {
     if (!videos_list.length && mode === EDIT && !isPostsFetched) {
       dispatch(
         fetchAllPostsByPostType({ postTypeId: "66d9d564987787d3e3ff1314" })
-      );
-    } else {
+      ).then(() => {
+        setIsPostsFetched(true);
+      });
+    } else if (videos_list.length > 0) {
       setList(videos_list);
       setLoading(false);
+      setIsPostsFetched(true);
     }
-    setIsPostsFetched(true);
-  }, [dispatch]);
+  }, [dispatch, videos_list, mode, isPostsFetched]);
 
   useEffect(() => {
-    if (mode === EDIT && !loading) {
+    if (mode === EDIT && !loading && list.length > 0) {
       const { id } = param;
       const videoId = id;
       const videoData = list.find((video) => video._id === videoId);
+      
+      if (!videoData) {
+        console.log("Video not found in list, data may still be loading");
+        return;
+      }
+      
       setCurrentStatus(videoData.status);
       const mainContent =
       videoData?.editingSession?.draftContent &&
