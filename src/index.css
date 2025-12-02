@@ -669,6 +669,10 @@
     line-height: 1.15 !important;
   }
 
+  .line-spacing-1-25 {
+    line-height: 1.25 !important;
+  }
+
   .line-spacing-1-5 {
     line-height: 1.5 !important;
   }
@@ -705,6 +709,13 @@
   .DraftEditor-root .line-spacing-1-15,
   .public-DraftEditor-content .line-spacing-1-15 {
     line-height: 1.15 !important;
+  }
+
+  .demo-editor .line-spacing-1-25,
+  .demo-editor .public-DraftStyleDefault-block.line-spacing-1-25,
+  .DraftEditor-root .line-spacing-1-25,
+  .public-DraftEditor-content .line-spacing-1-25 {
+    line-height: 1.25 !important;
   }
 
   .demo-editor .line-spacing-1-5,

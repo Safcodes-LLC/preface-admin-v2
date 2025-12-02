@@ -1876,6 +1876,7 @@ const blockStyleFn = (contentBlock) => {
 																		<Option value="normal">Normal</Option>
 																		<Option value="1">1.0</Option>
 																		<Option value="1-15">1.15</Option>
+																		<Option value="1-25">1.25</Option>
 																		<Option value="1-5">1.5</Option>
 																		<Option value="2">2.0</Option>
 																		<Option value="2-5">2.5</Option>
