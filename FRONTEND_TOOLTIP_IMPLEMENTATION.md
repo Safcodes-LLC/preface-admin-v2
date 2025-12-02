@@ -216,50 +216,50 @@ const renderedHtml = useMemo(() => {
 
 ### 2. Add Tooltip & Image CSS Styles
 
-Create or update your CSS file (`article-content-styles.css` or in your globals.css):
+Create or update your CSS file (`richtext-content-styles.css` or in your globals.css):
 
 ```css
 /* Link styles with tooltips */
-.article-content a {
+.richtext-content a {
   color: #1890ff;
   text-decoration: underline;
   transition: color 0.2s ease;
 }
 
-.article-content a:hover {
+.richtext-content a:hover {
   color: #40a9ff;
 }
 
-.article-content a:visited {
+.richtext-content a:visited {
   color: #722ed1;
 }
 
 /* Links with tooltips - dotted underline */
-.article-content a.has-tooltip {
+.richtext-content a.has-tooltip {
   border-bottom: 1px dotted #1890ff;
   text-decoration: none;
   cursor: help;
   position: relative;
 }
 
-.article-content a.has-tooltip:hover {
+.richtext-content a.has-tooltip:hover {
   border-bottom-color: #40a9ff;
 }
 
 /* Links with images */
-.article-content a.has-image {
+.richtext-content a.has-image {
   display: inline-block;
   text-decoration: none;
   border: none;
 }
 
-.article-content a.has-image:hover {
+.richtext-content a.has-image:hover {
   opacity: 0.8;
   transition: opacity 0.2s ease;
 }
 
 /* Images inside links */
-.article-content a img {
+.richtext-content a img {
   max-width: 100%;
   height: auto;
   display: block;
@@ -267,17 +267,17 @@ Create or update your CSS file (`article-content-styles.css` or in your globals.
   transition: transform 0.2s ease;
 }
 
-.article-content a:hover img {
+.richtext-content a:hover img {
   transform: scale(1.02);
 }
 
 /* Links with both image and tooltip */
-.article-content a.has-image.has-tooltip {
+.richtext-content a.has-image.has-tooltip {
   border-bottom: 1px dotted #1890ff;
   cursor: help;
 }
 
-.article-content a.has-image.has-tooltip:hover {
+.richtext-content a.has-image.has-tooltip:hover {
   border-bottom-color: #40a9ff;
 }
 
@@ -337,7 +337,7 @@ const entityStyleFn = (entity: any) => {
 
 // In your JSX
 return (
-  <div className="article-content">
+  <div className="richtext-content">
     <div dangerouslySetInnerHTML={{ __html: renderedHtml }} />
     {/* Add the tooltip component */}
     <Tooltip id="link-tooltip" />

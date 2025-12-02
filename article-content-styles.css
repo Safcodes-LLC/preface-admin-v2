@@ -26,103 +26,103 @@
 }
 
 /* Ensure alignment works in article content display */
-.article-content .text-align-left {
+.richtext-content .text-align-left {
   text-align: left !important;
 }
 
-.article-content .text-align-center {
+.richtext-content .text-align-center {
   text-align: center !important;
 }
 
-.article-content .text-align-right {
+.richtext-content .text-align-right {
   text-align: right !important;
 }
 
-.article-content .text-align-justify {
+.richtext-content .text-align-justify {
   text-align: justify !important;
 }
 
 /* Ensure inline styles from Draft.js are displayed properly */
-.article-content span[style*="font-weight"],
-.article-content span[style*="background-color"] {
+.richtext-content span[style*="font-weight"],
+.richtext-content span[style*="background-color"] {
   display: inline !important;
 }
 
 /* Highlight styles - ensure proper display */
-.article-content span[style*="background-color"] {
+.richtext-content span[style*="background-color"] {
   padding: 2px 0 !important;
   border-radius: 2px;
   display: inline !important;
 }
 
 /* Force font-weight styles to apply */
-.article-content span[style*="font-weight"] {
+.richtext-content span[style*="font-weight"] {
   display: inline !important;
 }
 
 /* Override any default styling that might interfere */
-.article-content span[style] {
+.richtext-content span[style] {
   display: inline !important;
 }
 
 /* Ensure proper spacing for highlighted text */
-.article-content span[style*="background-color"] {
+.richtext-content span[style*="background-color"] {
   line-height: 1.6;
 }
 
 /* Dark mode adjustments for highlights */
-.dark .article-content span[style*="background-color"] {
+.dark .richtext-content span[style*="background-color"] {
   opacity: 0.9;
 }
 
 /* Ensure font weights work in dark mode */
-.dark .article-content span[style*="font-weight"] {
+.dark .richtext-content span[style*="font-weight"] {
   color: inherit;
 }
 
 /* Indentation Levels - LTR (Left-to-Right) */
-.article-content .indent-level-1,
+.richtext-content .indent-level-1,
 .indent-level-1 {
   padding-left: 40px !important;
 }
 
-.article-content .indent-level-2,
+.richtext-content .indent-level-2,
 .indent-level-2 {
   padding-left: 80px !important;
 }
 
-.article-content .indent-level-3,
+.richtext-content .indent-level-3,
 .indent-level-3 {
   padding-left: 120px !important;
 }
 
-.article-content .indent-level-4,
+.richtext-content .indent-level-4,
 .indent-level-4 {
   padding-left: 160px !important;
 }
 
-.article-content .indent-level-5,
+.richtext-content .indent-level-5,
 .indent-level-5 {
   padding-left: 200px !important;
 }
 
-.article-content .indent-level-6,
+.richtext-content .indent-level-6,
 .indent-level-6 {
   padding-left: 240px !important;
 }
 
-.article-content .indent-level-7,
+.richtext-content .indent-level-7,
 .indent-level-7 {
   padding-left: 280px !important;
 }
 
-.article-content .indent-level-8,
+.richtext-content .indent-level-8,
 .indent-level-8 {
   padding-left: 320px !important;
 }
 
 /* Indentation Levels - RTL (Right-to-Left) for Arabic, Hebrew, etc. */
-.article-content .indent-level-1-rtl,
+.richtext-content .indent-level-1-rtl,
 .indent-level-1-rtl {
   margin-right: 40px !important;
   margin-left: 0 !important;
@@ -132,7 +132,7 @@
   text-align: right;
 }
 
-.article-content .indent-level-2-rtl,
+.richtext-content .indent-level-2-rtl,
 .indent-level-2-rtl {
   margin-right: 80px !important;
   margin-left: 0 !important;
@@ -142,7 +142,7 @@
   text-align: right;
 }
 
-.article-content .indent-level-3-rtl,
+.richtext-content .indent-level-3-rtl,
 .indent-level-3-rtl {
   margin-right: 120px !important;
   margin-left: 0 !important;
@@ -152,7 +152,7 @@
   text-align: right;
 }
 
-.article-content .indent-level-4-rtl,
+.richtext-content .indent-level-4-rtl,
 .indent-level-4-rtl {
   margin-right: 160px !important;
   margin-left: 0 !important;
@@ -162,7 +162,7 @@
   text-align: right;
 }
 
-.article-content .indent-level-5-rtl,
+.richtext-content .indent-level-5-rtl,
 .indent-level-5-rtl {
   margin-right: 200px !important;
   margin-left: 0 !important;
@@ -172,7 +172,7 @@
   text-align: right;
 }
 
-.article-content .indent-level-6-rtl,
+.richtext-content .indent-level-6-rtl,
 .indent-level-6-rtl {
   margin-right: 240px !important;
   margin-left: 0 !important;
@@ -182,7 +182,7 @@
   text-align: right;
 }
 
-.article-content .indent-level-7-rtl,
+.richtext-content .indent-level-7-rtl,
 .indent-level-7-rtl {
   margin-right: 280px !important;
   margin-left: 0 !important;
@@ -192,7 +192,7 @@
   text-align: right;
 }
 
-.article-content .indent-level-8-rtl,
+.richtext-content .indent-level-8-rtl,
 .indent-level-8-rtl {
   margin-right: 320px !important;
   margin-left: 0 !important;
@@ -203,13 +203,13 @@
 }
 
 /* Direction classes */
-.article-content .dir-rtl,
+.richtext-content .dir-rtl,
 .dir-rtl {
   direction: rtl !important;
   text-align: right !important;
 }
 
-.article-content .dir-ltr,
+.richtext-content .dir-ltr,
 .dir-ltr {
   direction: ltr !important;
   text-align: left !important;

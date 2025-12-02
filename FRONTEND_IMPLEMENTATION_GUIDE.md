@@ -120,7 +120,7 @@ const ArticleContent = ({ content }) => {
   
   return (
     <div 
-      className="article-content"
+      className="richtext-content"
       dangerouslySetInnerHTML={{ __html: htmlContent }}
     />
   );
@@ -135,73 +135,73 @@ Create a file: `components/ArticleContent.css` or add to your main CSS:
 
 ```css
 /* Article content container */
-.article-content {
+.richtext-content {
   font-size: 16px;
   line-height: 1.6;
   color: #333;
 }
 
 /* Ensure inline styles are properly displayed */
-.article-content span[style*="font-weight"],
-.article-content span[style*="background-color"] {
+.richtext-content span[style*="font-weight"],
+.richtext-content span[style*="background-color"] {
   display: inline !important;
 }
 
 /* Highlight styles */
-.article-content span[style*="background-color"] {
+.richtext-content span[style*="background-color"] {
   padding: 2px 0 !important;
   border-radius: 2px;
 }
 
 /* Headers */
-.article-content h2 {
+.richtext-content h2 {
   font-size: 28px;
   margin: 24px 0 16px;
   font-weight: 600;
 }
 
-.article-content h3 {
+.richtext-content h3 {
   font-size: 24px;
   margin: 20px 0 14px;
   font-weight: 600;
 }
 
-.article-content h4 {
+.richtext-content h4 {
   font-size: 20px;
   margin: 18px 0 12px;
   font-weight: 600;
 }
 
-.article-content h5 {
+.richtext-content h5 {
   font-size: 18px;
   margin: 16px 0 10px;
   font-weight: 600;
 }
 
-.article-content h6 {
+.richtext-content h6 {
   font-size: 16px;
   margin: 14px 0 8px;
   font-weight: 600;
 }
 
 /* Paragraphs */
-.article-content p {
+.richtext-content p {
   margin: 12px 0;
 }
 
 /* Lists */
-.article-content ul,
-.article-content ol {
+.richtext-content ul,
+.richtext-content ol {
   margin: 16px 0;
   padding-left: 32px;
 }
 
-.article-content li {
+.richtext-content li {
   margin: 8px 0;
 }
 
 /* Blockquotes */
-.article-content blockquote {
+.richtext-content blockquote {
   border-left: 4px solid #e0e0e0;
   padding-left: 16px;
   margin: 16px 0;
@@ -210,40 +210,40 @@ Create a file: `components/ArticleContent.css` or add to your main CSS:
 }
 
 /* Images */
-.article-content img {
+.richtext-content img {
   max-width: 100%;
   height: auto;
   margin: 16px 0;
 }
 
 /* Links */
-.article-content a {
+.richtext-content a {
   color: #1890ff;
   text-decoration: none;
   transition: color 0.3s;
 }
 
-.article-content a:hover {
+.richtext-content a:hover {
   color: #40a9ff;
   text-decoration: underline;
 }
 
 /* Code blocks */
-.article-content code {
+.richtext-content code {
   background-color: #f5f5f5;
   padding: 2px 6px;
   border-radius: 3px;
   font-family: monospace;
 }
 
-.article-content pre {
+.richtext-content pre {
   background-color: #f5f5f5;
   padding: 16px;
   border-radius: 4px;
   overflow-x: auto;
 }
 
-.article-content pre code {
+.richtext-content pre code {
   background-color: transparent;
   padding: 0;
 }
@@ -334,7 +334,7 @@ const ArticleContentReadOnly = ({ content }) => {
     const editorState = EditorState.createWithContent(contentState);
     
     return (
-      <div className="article-content-readonly">
+      <div className="richtext-content-readonly">
         <Editor
           editorState={editorState}
           readOnly={true}

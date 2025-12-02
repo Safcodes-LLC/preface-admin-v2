@@ -27,7 +27,7 @@ pnpm add draft-js draft-js-export-html
 - Added `customStyleMap` matching your admin panel configuration
 - Properly converts Draft.js content to HTML with custom font weights and highlights
 
-### 2. Created `article-content-styles.css`
+### 2. Created `richtext-content-styles.css`
 - CSS to ensure custom styles display properly
 - Dark mode support for highlights and font weights
 - Import this file in your main CSS or layout file
@@ -37,13 +37,13 @@ pnpm add draft-js draft-js-export-html
 Add this import to your main CSS file or global styles:
 
 ```css
-@import './article-content-styles.css';
+@import './richtext-content-styles.css';
 ```
 
 Or import it directly in your component:
 
 ```typescript
-import './article-content-styles.css'
+import './richtext-content-styles.css'
 ```
 
 Or add the styles to your `globals.css` or `tailwind.css` file.
