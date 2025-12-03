@@ -177,13 +177,13 @@ const blockStyleFn = (contentBlock) => {
 	const indentLevel = contentBlock.getData().get('indent-level') || 0;
 	const textDirection = contentBlock.getData().get('text-direction');
 	const lineSpacing = contentBlock.getData().get('line-spacing');
-	
+
 	let classNames = [];
-	
+
 	if (textAlign) {
 		classNames.push(`text-align-${textAlign}`);
 	}
-	
+
 	if (indentLevel > 0) {
 		if (textDirection === 'rtl') {
 			classNames.push(`indent-level-${indentLevel}-rtl`);
@@ -191,17 +191,17 @@ const blockStyleFn = (contentBlock) => {
 			classNames.push(`indent-level-${indentLevel}`);
 		}
 	}
-	
+
 	if (textDirection) {
 		classNames.push(`dir-${textDirection}`);
 	}
-	
+
 	if (lineSpacing) {
 		classNames.push(`line-spacing-${lineSpacing}`);
 	}
-	
+
 	const finalClasses = classNames.join(' ');
-	
+
 	// Debug logging
 	if (indentLevel > 0 || textDirection) {
 		console.log('Block Style - Text:', contentBlock.getText().substring(0, 50));
@@ -209,9 +209,11 @@ const blockStyleFn = (contentBlock) => {
 		console.log('Block Style - Indent Level:', indentLevel);
 		console.log('Block Style - Classes:', finalClasses);
 	}
-	
+
 	return finalClasses;
-};const ArticleForm = (props) => {
+};
+
+const ArticleForm = (props) => {
 	const dispatch = useDispatch();
 
 	const { Option } = Select;
@@ -298,27 +300,26 @@ const blockStyleFn = (contentBlock) => {
 	// Helper function to detect RTL (Right-to-Left) text
 	const isRTLText = (text) => {
 		if (!text || text.trim().length === 0) return null; // Return null for empty text
-		
+
 		// Arabic, Hebrew, Persian, Urdu Unicode ranges
 		const rtlChars = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u0590-\u05FF]/g;
-		
+
 		// Count RTL characters using global match
 		const matches = text.match(rtlChars);
 		const rtlCount = matches ? matches.length : 0;
 		const totalChars = text.replace(/\s/g, '').length; // Exclude spaces
-		
+
 		console.log('RTL Detection - Text:', text);
 		console.log('RTL Detection - RTL chars found:', rtlCount);
 		console.log('RTL Detection - Total chars:', totalChars);
-		console.log('RTL Detection - Percentage:', totalChars > 0 ? (rtlCount / totalChars * 100).toFixed(2) + '%' : '0%');
-		
+		console.log('RTL Detection - Percentage:', totalChars > 0 ? ((rtlCount / totalChars) * 100).toFixed(2) + '%' : '0%');
+
 		// If more than 30% of text is RTL, consider it RTL
-		const isRTL = totalChars > 0 && (rtlCount / totalChars) > 0.3;
+		const isRTL = totalChars > 0 && rtlCount / totalChars > 0.3;
 		console.log('RTL Detection - Result:', isRTL);
-		
+
 		return isRTL;
 	};
-
 
 	// Custom indent handler
 	const handleIndent = () => {
@@ -339,7 +340,7 @@ const blockStyleFn = (contentBlock) => {
 				const existingDirection = block.getData().get('text-direction');
 				const blockText = block.getText();
 				const detectedRTL = isRTLText(blockText);
-				
+
 				// Determine direction: detect from text first, then use existing, default to LTR
 				let textDirection;
 				if (detectedRTL !== null) {
@@ -349,22 +350,26 @@ const blockStyleFn = (contentBlock) => {
 				} else {
 					textDirection = 'ltr'; // Default to LTR for empty blocks
 				}
-				
+
 				// Debug logging
 				console.log('Indent - Block text:', blockText);
 				console.log('Indent - Detected RTL:', detectedRTL);
 				console.log('Indent - Text direction:', textDirection);
 				console.log('Indent - Current indent:', currentIndent);
-				
+
 				if (currentIndent < 8) {
 					// Max indent level of 8
-					const newBlock = block.set('data', block.getData()
-						.set('indent-level', currentIndent + 1)
-						.set('text-direction', textDirection));
+					const newBlock = block.set(
+						'data',
+						block
+							.getData()
+							.set('indent-level', currentIndent + 1)
+							.set('text-direction', textDirection)
+					);
 					newContentState = newContentState.merge({
 						blockMap: newContentState.getBlockMap().set(key, newBlock),
 					});
-					
+
 					console.log('Indent - New block data:', newBlock.getData().toJS());
 				}
 			}
@@ -374,7 +379,7 @@ const blockStyleFn = (contentBlock) => {
 
 		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
 		setEditorState(EditorState.forceSelection(newEditorState, selection));
-		
+
 		// Show message based on direction
 		const firstBlock = newContentState.getBlockForKey(startKey);
 		const direction = firstBlock.getData().get('text-direction');
@@ -401,7 +406,7 @@ const blockStyleFn = (contentBlock) => {
 				const existingDirection = block.getData().get('text-direction');
 				const blockText = block.getText();
 				const detectedRTL = isRTLText(blockText);
-				
+
 				// Determine direction: detect from text first, then use existing, default to LTR
 				let textDirection;
 				if (detectedRTL !== null) {
@@ -411,21 +416,25 @@ const blockStyleFn = (contentBlock) => {
 				} else {
 					textDirection = 'ltr'; // Default to LTR for empty blocks
 				}
-				
+
 				// Debug logging
 				console.log('Outdent - Block text:', blockText);
 				console.log('Outdent - Detected RTL:', detectedRTL);
 				console.log('Outdent - Text direction:', textDirection);
 				console.log('Outdent - Current indent:', currentIndent);
-				
+
 				if (currentIndent > 0) {
-					const newBlock = block.set('data', block.getData()
-						.set('indent-level', currentIndent - 1)
-						.set('text-direction', textDirection));
+					const newBlock = block.set(
+						'data',
+						block
+							.getData()
+							.set('indent-level', currentIndent - 1)
+							.set('text-direction', textDirection)
+					);
 					newContentState = newContentState.merge({
 						blockMap: newContentState.getBlockMap().set(key, newBlock),
 					});
-					
+
 					console.log('Outdent - New block data:', newBlock.getData().toJS());
 				}
 			}
@@ -435,7 +444,7 @@ const blockStyleFn = (contentBlock) => {
 
 		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
 		setEditorState(EditorState.forceSelection(newEditorState, selection));
-		
+
 		// Show message based on direction
 		const firstBlock = newContentState.getBlockForKey(startKey);
 		const direction = firstBlock.getData().get('text-direction');
@@ -455,10 +464,7 @@ const blockStyleFn = (contentBlock) => {
 		// Remove superscript if it exists
 		let contentState = Modifier.removeInlineStyle(currentContent, selection, 'SUPERSCRIPT');
 		// Toggle subscript
-		const newEditorState = RichUtils.toggleInlineStyle(
-			EditorState.push(editorState, contentState, 'change-inline-style'),
-			'SUBSCRIPT'
-		);
+		const newEditorState = RichUtils.toggleInlineStyle(EditorState.push(editorState, contentState, 'change-inline-style'), 'SUBSCRIPT');
 		setEditorState(newEditorState);
 	};
 
@@ -474,10 +480,7 @@ const blockStyleFn = (contentBlock) => {
 		// Remove subscript if it exists
 		let contentState = Modifier.removeInlineStyle(currentContent, selection, 'SUBSCRIPT');
 		// Toggle superscript
-		const newEditorState = RichUtils.toggleInlineStyle(
-			EditorState.push(editorState, contentState, 'change-inline-style'),
-			'SUPERSCRIPT'
-		);
+		const newEditorState = RichUtils.toggleInlineStyle(EditorState.push(editorState, contentState, 'change-inline-style'), 'SUPERSCRIPT');
 		setEditorState(newEditorState);
 	};
 
@@ -491,7 +494,7 @@ const blockStyleFn = (contentBlock) => {
 
 		const currentContent = editorState.getCurrentContent();
 		const transforms = ['UPPERCASE', 'LOWERCASE', 'CAPITALIZE'];
-		
+
 		// Remove all text transform styles first
 		let contentState = currentContent;
 		transforms.forEach((style) => {
@@ -523,14 +526,14 @@ const blockStyleFn = (contentBlock) => {
 
 			if (inSelection) {
 				let newBlockData = block.getData();
-				
+
 				// If spacing is 'normal', remove the line-spacing data to use default
 				if (spacing === 'normal') {
 					newBlockData = newBlockData.delete('line-spacing');
 				} else {
 					newBlockData = newBlockData.set('line-spacing', spacing);
 				}
-				
+
 				const newBlock = block.set('data', newBlockData);
 				newContentState = newContentState.merge({
 					blockMap: newContentState.getBlockMap().set(key, newBlock),
@@ -542,7 +545,7 @@ const blockStyleFn = (contentBlock) => {
 
 		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
 		setEditorState(EditorState.forceSelection(newEditorState, selection));
-		
+
 		if (spacing === 'normal') {
 			message.success('Line spacing reset to normal');
 		} else {
@@ -1855,7 +1858,6 @@ const blockStyleFn = (contentBlock) => {
 													<Button key="outdent-btn" size="small" onClick={handleOutdent} title="Decrease indent" style={{ borderColor: '#d9d9d9' }}>
 														<MenuFoldOutlined /> Outdent
 													</Button>
-
 													{/* Subscript and Superscript Buttons */}
 													<Button key="subscript-btn" size="small" onClick={toggleSubscript} title="Subscript" style={{ borderColor: '#d9d9d9' }}>
 														X<sub>2</sub>
@@ -1863,25 +1865,30 @@ const blockStyleFn = (contentBlock) => {
 													<Button key="superscript-btn" size="small" onClick={toggleSuperscript} title="Superscript" style={{ borderColor: '#d9d9d9' }}>
 														X<sup>2</sup>
 													</Button>
-
 													{/* Text Transformation Dropdown */}
-													<Select placeholder="Capitalization" style={{ width: 140 }} size="small" onChange={(value) => toggleTextTransform(value)} allowClear onClear={() => toggleTextTransform('NONE')}>
+													<Select
+														placeholder="Capitalization"
+														style={{ width: 140 }}
+														size="small"
+														onChange={(value) => toggleTextTransform(value)}
+														allowClear
+														onClear={() => toggleTextTransform('NONE')}>
 														<Option value="UPPERCASE">UPPERCASE</Option>
 														<Option value="LOWERCASE">lowercase</Option>
 														<Option value="CAPITALIZE">Capitalize</Option>
 													</Select>
-
-																	{/* Line Spacing Dropdown */}
-																	<Select placeholder="Line Spacing" style={{ width: 130 }} size="small" onChange={(value) => setLineSpacing(value)} allowClear onClear={() => setLineSpacing('normal')}>
-																		<Option value="normal">Normal</Option>
-																		<Option value="1">1.0</Option>
-																		<Option value="1-15">1.15</Option>
-																		<Option value="1-25">1.25</Option>
-																		<Option value="1-5">1.5</Option>
-																		<Option value="2">2.0</Option>
-																		<Option value="2-5">2.5</Option>
-																		<Option value="3">3.0</Option>
-																	</Select>													{/* Font Weight Dropdown */}
+													{/* Line Spacing Dropdown */}
+													<Select placeholder="Line Spacing" style={{ width: 130 }} size="small" onChange={(value) => setLineSpacing(value)} allowClear onClear={() => setLineSpacing('normal')}>
+														<Option value="normal">Normal</Option>
+														<Option value="1">1.0</Option>
+														<Option value="1-15">1.15</Option>
+														<Option value="1-25">1.25</Option>
+														<Option value="1-5">1.5</Option>
+														<Option value="2">2.0</Option>
+														<Option value="2-5">2.5</Option>
+														<Option value="3">3.0</Option>
+													</Select>{' '}
+													{/* Font Weight Dropdown */}
 													<Select placeholder="Font Weight" style={{ width: 150 }} size="small" onChange={(value) => toggleFontWeight(value)} allowClear onClear={() => toggleFontWeight('NONE')}>
 														{/* <Option value="FONTWEIGHT_SLIM" style={{ fontWeight: 300 }}>
 															Slim (300)
@@ -1902,7 +1909,6 @@ const blockStyleFn = (contentBlock) => {
 															Extra Bold (800)
 														</Option>
 													</Select>
-
 													{/* Highlight Color Dropdown */}
 													<Select placeholder="Highlight" style={{ width: 130 }} size="small" onChange={(value) => toggleHighlight(value)} allowClear onClear={() => toggleHighlight('NONE')}>
 														<Option value="HIGHLIGHT_YELLOW">
@@ -1924,37 +1930,30 @@ const blockStyleFn = (contentBlock) => {
 															<span style={{ backgroundColor: '#dda0dd', padding: '2px 8px', borderRadius: '2px' }}>Purple</span>
 														</Option>
 													</Select>
-
 													{/* Simple Hyperlink Button */}
 													<Button key="add-link" type="default" size="small" style={{ borderColor: '#3e79f7', color: '#3e79f7' }} onClick={handleSimpleLinkClick}>
 														Add Link
 													</Button>
-
 													{/* Advanced Custom Link Button */}
 													<Button key="add-link-tooltip" type="primary" size="small" onClick={handleCustomLinkClick}>
 														Tooltip Link
 													</Button>
-
 													{/* Edit Link Button */}
 													<Button key="edit-link" type="default" size="small" style={{ borderColor: '#52c41a', color: '#52c41a' }} onClick={handleEditLink}>
 														Edit Link
 													</Button>
-
 													{/* Remove Link Button */}
 													<Button key="remove-link" type="default" size="small" style={{ borderColor: '#ff6b72', color: '#ff6b72' }} onClick={handleRemoveLink}>
 														Remove Link
 													</Button>
-
 													{/* Undo Button */}
 													<Button key="undo-btn" size="small" onClick={handleUndo} disabled={editorState.getUndoStack().size === 0}>
 														Undo
 													</Button>
-
 													{/* Redo Button */}
 													<Button key="redo-btn" size="small" onClick={handleRedo} disabled={editorState.getRedoStack().size === 0}>
 														Redo
 													</Button>
-
 													{/* Remove All Styles Button */}
 													<Button key="remove-styles" danger size="small" onClick={removeAllStyles}>
 														Remove Styles
