@@ -459,12 +459,12 @@ const Banner = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item onClick={() => viewDetails(row)}>
+      {/* <Menu.Item onClick={() => viewDetails(row)}>
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item> */}
       <Menu.Item onClick={() => manageDetails(row)}>
         <Flex alignItems="center">
           <UploadOutlined />
