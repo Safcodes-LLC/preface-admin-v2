@@ -527,8 +527,8 @@ const ArticleForm = (props) => {
 			if (inSelection) {
 				let newBlockData = block.getData();
 
-				// If spacing is 'normal', remove the line-spacing data to use default
-				if (spacing === 'normal') {
+				// If spacing is 'NORMAL_SPACING', remove the line-spacing data to use default
+				if (spacing === 'NORMAL_SPACING') {
 					newBlockData = newBlockData.delete('line-spacing');
 				} else {
 					newBlockData = newBlockData.set('line-spacing', spacing);
@@ -546,25 +546,36 @@ const ArticleForm = (props) => {
 		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
 		setEditorState(EditorState.forceSelection(newEditorState, selection));
 
-		if (spacing === 'normal') {
+		if (spacing === 'NORMAL_SPACING') {
 			message.success('Line spacing reset to normal');
 		} else {
 			message.success(`Line spacing set to ${spacing}`);
 		}
 	};
 
-	// Remove all inline styles
-	const removeAllStyles = () => {
-		const selection = editorState.getSelection();
+	// Undo handler
+	const handleUndo = () => {
+		const newEditorState = EditorState.undo(editorState);
+		setEditorState(newEditorState);
+	};
+
+	// Redo handler
+	const handleRedo = () => {
+		const newEditorState = EditorState.redo(editorState);
+		setEditorState(newEditorState);
+	};
+
+	// Reset editor: remove all styles, links, tooltips, indentation, line height, highlight, font size, etc., but keep content
+	const resetEditor = () => {
+		// const emptyContentState = EditorState.createEmpty(createDecorator());
+		// setEditorState(emptyContentState);
+		// message.success('Editor has been fully reset.');
+
 		const currentContent = editorState.getCurrentContent();
+		let contentState = currentContent;
+		const selection = editorState.getSelection();
 
-		// Check if there's a selection
-		if (selection.isCollapsed()) {
-			message.warning('Please select some text first');
-			return;
-		}
-
-		// Get all possible inline styles
+		// Remove all inline styles from the entire content
 		const inlineStyles = [
 			'BOLD',
 			'ITALIC',
@@ -588,58 +599,45 @@ const ArticleForm = (props) => {
 			'LOWERCASE',
 			'CAPITALIZE',
 		];
-
-		// Remove all inline styles from selection
-		let contentState = currentContent;
-		inlineStyles.forEach((style) => {
-			contentState = Modifier.removeInlineStyle(contentState, selection, style);
-		});
-
-		// Get the selected blocks
-		const startKey = selection.getStartKey();
-		const endKey = selection.getEndKey();
-		const blockMap = contentState.getBlockMap();
-
-		// Convert all block types to 'unstyled' (normal paragraph)
-		const blocks = [];
-		let inSelection = false;
-		blockMap.forEach((block, key) => {
-			if (key === startKey) inSelection = true;
-
-			if (inSelection) {
-				// Change block type to 'unstyled' and remove alignment
-				const newBlock = block.merge({
-					type: 'unstyled',
-					data: block.getData().delete('text-align'),
-				});
-				blocks.push([key, newBlock]);
-			}
-
-			if (key === endKey) inSelection = false;
-		});
-
-		// Apply block type changes
-		blocks.forEach(([key, block]) => {
-			contentState = contentState.merge({
-				blockMap: contentState.getBlockMap().set(key, block),
+		// Remove all inline styles from all blocks
+		currentContent.getBlockMap().forEach((block) => {
+			let blockSelection = selection.merge({
+				anchorKey: block.getKey(),
+				anchorOffset: 0,
+				focusKey: block.getKey(),
+				focusOffset: block.getLength(),
+				isBackward: false,
+			});
+			inlineStyles.forEach((style) => {
+				contentState = Modifier.removeInlineStyle(contentState, blockSelection, style);
 			});
 		});
 
-		const newEditorState = EditorState.push(editorState, contentState, 'change-block-type');
-		setEditorState(EditorState.forceSelection(newEditorState, selection));
-		message.success('All styles and formatting removed');
-	};
+		// Remove all entities (links, tooltips) from all blocks
+		contentState.getBlockMap().forEach((block) => {
+			let blockSelection = selection.merge({
+				anchorKey: block.getKey(),
+				anchorOffset: 0,
+				focusKey: block.getKey(),
+				focusOffset: block.getLength(),
+				isBackward: false,
+			});
+			contentState = Modifier.applyEntity(contentState, blockSelection, null);
+		});
 
-	// Undo handler
-	const handleUndo = () => {
-		const newEditorState = EditorState.undo(editorState);
-		setEditorState(newEditorState);
-	};
+		// Remove block data (indent, alignment, line-spacing, etc.) and set type to 'unstyled'
+		let newBlockMap = contentState.getBlockMap().map((block) => {
+			return block.merge({
+				type: 'unstyled',
+				data: block.getData().clear(),
+			});
+		});
+		contentState = contentState.merge({ blockMap: newBlockMap });
 
-	// Redo handler
-	const handleRedo = () => {
-		const newEditorState = EditorState.redo(editorState);
-		setEditorState(newEditorState);
+		// Push the cleaned content state to the editor
+		const newEditorState = EditorState.push(editorState, contentState, 'change-block-data');
+		setEditorState(EditorState.forceSelection(newEditorState, newEditorState.getSelection()));
+		message.success('All formatting and styles have been reset, content preserved.');
 	};
 
 	// Highlight toggle handler
@@ -1181,7 +1179,106 @@ const ArticleForm = (props) => {
 		},
 		[userRoles]
 	);
+	const removeAllStyles = () => {
+		const selection = editorState.getSelection();
+		const currentContent = editorState.getCurrentContent();
 
+		// Check if there's a selection
+		if (selection.isCollapsed()) {
+			message.warning('Please select some text first');
+			return;
+		}
+
+		// Get all possible inline styles
+		const inlineStyles = [
+			'BOLD',
+			'ITALIC',
+			'UNDERLINE',
+			'STRIKETHROUGH',
+			'FONTWEIGHT_NORMAL',
+			'FONTWEIGHT_SLIM',
+			'FONTWEIGHT_MEDIUM',
+			'FONTWEIGHT_SEMIBOLD',
+			'FONTWEIGHT_BOLD',
+			'FONTWEIGHT_EXTRABOLD',
+			'HIGHLIGHT_YELLOW',
+			'HIGHLIGHT_GREEN',
+			'HIGHLIGHT_BLUE',
+			'HIGHLIGHT_PINK',
+			'HIGHLIGHT_ORANGE',
+			'HIGHLIGHT_PURPLE',
+			'SUBSCRIPT',
+			'SUPERSCRIPT',
+			'UPPERCASE',
+			'LOWERCASE',
+			'CAPITALIZE',
+		];
+
+		// Remove all inline styles from selection
+		let contentState = currentContent;
+		inlineStyles.forEach((style) => {
+			contentState = Modifier.removeInlineStyle(contentState, selection, style);
+		});
+
+		// Get the selected blocks
+		const startKey = selection.getStartKey();
+		const endKey = selection.getEndKey();
+		const blockMap = contentState.getBlockMap();
+
+		// Convert all block types to 'unstyled' (NORMAL_SPACING paragraph)
+		const blocks = [];
+		let inSelection = false;
+		blockMap.forEach((block, key) => {
+			if (key === startKey) inSelection = true;
+
+			if (inSelection) {
+				// Change block type to 'unstyled' and remove alignment
+				const newBlock = block.merge({
+					type: 'unstyled',
+					data: block.getData().delete('text-align'),
+				});
+				blocks.push([key, newBlock]);
+			}
+
+			if (key === endKey) inSelection = false;
+		});
+
+		// Apply block type changes
+		blocks.forEach(([key, block]) => {
+			contentState = contentState.merge({
+				blockMap: contentState.getBlockMap().set(key, block),
+			});
+		});
+
+		// Remove line-spacing data from all selected blocks
+		let clearedBlockMap = contentState.getBlockMap();
+		let clearedBlocks = [];
+		inSelection = false;
+		clearedBlockMap.forEach((block, key) => {
+			if (key === startKey) inSelection = true;
+			if (inSelection) {
+				// Remove line-spacing and alignment
+				const newBlock = block.merge({
+					type: 'unstyled',
+					data: block.getData().delete('text-align').delete('line-spacing'),
+				});
+				clearedBlocks.push([key, newBlock]);
+			}
+			if (key === endKey) inSelection = false;
+		});
+		// Apply block type and data changes
+		clearedBlocks.forEach(([key, block]) => {
+			contentState = contentState.merge({
+				blockMap: contentState.getBlockMap().set(key, block),
+			});
+		});
+
+		// Remove link entity from the selection in the updated contentState
+		const newContentState = Modifier.applyEntity(contentState, selection, null);
+		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-type');
+		setEditorState(EditorState.forceSelection(newEditorState, selection));
+		message.success('All styles, formatting, and line spacing removed');
+	};
 	useEffect(() => {
 		// Check if userData is not null in auth
 		if (auth.roles) {
@@ -1850,26 +1947,26 @@ const ArticleForm = (props) => {
 											customStyleMap={customStyleMap}
 											blockStyleFn={blockStyleFn}
 											toolbarCustomButtons={[
-												<div key="custom-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', margin: '5px', paddingRight: '5px', alignItems: 'center' }}>
+												<div key="custom-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', margin: '5px', paddingRight: '5px', alignItems: 'center' }}>
 													{/* Custom Indent/Outdent Buttons */}
-													<Button key="indent-btn" size="small" onClick={handleIndent} title="Increase indent" style={{ borderColor: '#d9d9d9' }}>
+													<Button key="indent-btn"  onClick={handleIndent} title="Increase indent" style={{ borderColor: '#d9d9d9' }}>
 														<MenuUnfoldOutlined /> Indent
 													</Button>
-													<Button key="outdent-btn" size="small" onClick={handleOutdent} title="Decrease indent" style={{ borderColor: '#d9d9d9' }}>
+													<Button key="outdent-btn"  onClick={handleOutdent} title="Decrease indent" style={{ borderColor: '#d9d9d9' }}>
 														<MenuFoldOutlined /> Outdent
 													</Button>
 													{/* Subscript and Superscript Buttons */}
-													<Button key="subscript-btn" size="small" onClick={toggleSubscript} title="Subscript" style={{ borderColor: '#d9d9d9' }}>
+													<Button key="subscript-btn"  onClick={toggleSubscript} title="Subscript" style={{ borderColor: '#d9d9d9' }}>
 														X<sub>2</sub>
 													</Button>
-													<Button key="superscript-btn" size="small" onClick={toggleSuperscript} title="Superscript" style={{ borderColor: '#d9d9d9' }}>
+													<Button key="superscript-btn"  onClick={toggleSuperscript} title="Superscript" style={{ borderColor: '#d9d9d9' }}>
 														X<sup>2</sup>
 													</Button>
 													{/* Text Transformation Dropdown */}
 													<Select
 														placeholder="Capitalization"
-														style={{ width: 140 }}
-														size="small"
+														style={{ width: 140, padding: '0px', borderRadius: '0px !important' }}
+														// size="small"
 														onChange={(value) => toggleTextTransform(value)}
 														allowClear
 														onClear={() => toggleTextTransform('NONE')}>
@@ -1878,8 +1975,14 @@ const ArticleForm = (props) => {
 														<Option value="CAPITALIZE">Capitalize</Option>
 													</Select>
 													{/* Line Spacing Dropdown */}
-													<Select placeholder="Line Spacing" style={{ width: 130 }} size="small" onChange={(value) => setLineSpacing(value)} allowClear onClear={() => setLineSpacing('normal')}>
-														<Option value="normal">Normal</Option>
+													<Select
+														placeholder="Line Spacing"
+														style={{ width: 130 }}
+														// size="small"
+														onChange={(value) => setLineSpacing(value)}
+														allowClear
+														onClear={() => setLineSpacing('NORMAL_SPACING')}>
+														<Option value="NORMAL_SPACING">Normal</Option>
 														<Option value="1">1.0</Option>
 														<Option value="1-15">1.15</Option>
 														<Option value="1-25">1.25</Option>
@@ -1889,7 +1992,13 @@ const ArticleForm = (props) => {
 														<Option value="3">3.0</Option>
 													</Select>{' '}
 													{/* Font Weight Dropdown */}
-													<Select placeholder="Font Weight" style={{ width: 150 }} size="small" onChange={(value) => toggleFontWeight(value)} allowClear onClear={() => toggleFontWeight('NONE')}>
+													<Select
+														placeholder="Font Weight"
+														style={{ width: 150 }}
+														// size="small"
+														onChange={(value) => toggleFontWeight(value)}
+														allowClear
+														onClear={() => toggleFontWeight('NONE')}>
 														{/* <Option value="FONTWEIGHT_SLIM" style={{ fontWeight: 300 }}>
 															Slim (300)
 														</Option> */}
@@ -1910,7 +2019,13 @@ const ArticleForm = (props) => {
 														</Option>
 													</Select>
 													{/* Highlight Color Dropdown */}
-													<Select placeholder="Highlight" style={{ width: 130 }} size="small" onChange={(value) => toggleHighlight(value)} allowClear onClear={() => toggleHighlight('NONE')}>
+													<Select
+														placeholder="Highlight"
+														style={{ width: 130 }}
+														// size="small"
+														onChange={(value) => toggleHighlight(value)}
+														allowClear
+														onClear={() => toggleHighlight('NONE')}>
 														<Option value="HIGHLIGHT_YELLOW">
 															<span style={{ backgroundColor: '#ffff00', padding: '2px 8px', borderRadius: '2px' }}>Yellow</span>
 														</Option>
@@ -1931,32 +2046,36 @@ const ArticleForm = (props) => {
 														</Option>
 													</Select>
 													{/* Simple Hyperlink Button */}
-													<Button key="add-link" type="default" size="small" style={{ borderColor: '#3e79f7', color: '#3e79f7' }} onClick={handleSimpleLinkClick}>
+													<Button key="add-link" type="default" style={{ borderColor: '#3e79f7', color: '#3e79f7' }} onClick={handleSimpleLinkClick}>
 														Add Link
 													</Button>
 													{/* Advanced Custom Link Button */}
-													<Button key="add-link-tooltip" type="primary" size="small" onClick={handleCustomLinkClick}>
+													<Button key="add-link-tooltip" type="primary" onClick={handleCustomLinkClick}>
 														Tooltip Link
 													</Button>
 													{/* Edit Link Button */}
-													<Button key="edit-link" type="default" size="small" style={{ borderColor: '#52c41a', color: '#52c41a' }} onClick={handleEditLink}>
+													<Button key="edit-link" type="default" style={{ borderColor: '#52c41a', color: '#52c41a' }} onClick={handleEditLink}>
 														Edit Link
 													</Button>
 													{/* Remove Link Button */}
-													<Button key="remove-link" type="default" size="small" style={{ borderColor: '#ff6b72', color: '#ff6b72' }} onClick={handleRemoveLink}>
+													<Button key="remove-link"  danger onClick={handleRemoveLink}>
 														Remove Link
 													</Button>
 													{/* Undo Button */}
-													<Button key="undo-btn" size="small" onClick={handleUndo} disabled={editorState.getUndoStack().size === 0}>
+													<Button key="undo-btn" onClick={handleUndo} disabled={editorState.getUndoStack().size === 0}>
 														Undo
 													</Button>
 													{/* Redo Button */}
-													<Button key="redo-btn" size="small" onClick={handleRedo} disabled={editorState.getRedoStack().size === 0}>
+													<Button key="redo-btn" onClick={handleRedo} disabled={editorState.getRedoStack().size === 0}>
 														Redo
 													</Button>
 													{/* Remove All Styles Button */}
-													<Button key="remove-styles" danger size="small" onClick={removeAllStyles}>
+													<Button key="remove-styles" danger onClick={removeAllStyles}>
 														Remove Styles
+													</Button>
+													{/* Reset Editor Styles Button */}
+													<Button key="reset-editor"  onClick={resetEditor} style={{backgroundColor:"gray", color:"white", borderColor:"gray"}}>
+														Reset
 													</Button>
 												</div>,
 											]}
@@ -1980,7 +2099,8 @@ const ArticleForm = (props) => {
 												},
 												list: {
 													inDropdown: false,
-													options: ['unordered', 'ordered', 'indent', 'outdent'],
+													options: ['unordered', 'ordered'],
+													// options: ['unordered', 'ordered', 'indent', 'outdent'],
 												},
 												textAlign: {
 													inDropdown: false,
