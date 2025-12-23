@@ -1959,6 +1959,8 @@ const ArticleForm = (props) => {
 										<Editor
 											editorState={editorState}
 											onEditorStateChange={setEditorState}
+											readOnly={view}
+											toolbarHidden={view}
 											wrapperClassName="demo-wrapper"
 											editorClassName="demo-editor"
 											toolbarClassName="demo-toolbar"
