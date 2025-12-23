@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Card, Table, Input, Button, Menu, Tag } from "antd";
+import React, { useEffect, useMemo, useState } from "react";
+import { Card, Table, Input, Button, Menu, Tag, Select, message } from "antd";
 import {
   EyeOutlined,
   DeleteOutlined,
@@ -10,31 +10,196 @@ import {
 import AvatarStatus from "components/shared-components/AvatarStatus";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
-import { useNavigate } from "react-router-dom";
-import utils from "utils";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { deletePost, fetchAllPostsByPostType } from "store/slices/postSlice";
+import { fetchAllLanguages } from "store/slices/languagesSlice";
+import { fetchAllCategories } from "store/slices/categoriesSlice";
+
+const { Option } = Select;
 
 const VideoList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const STORAGE_KEY = "videoListFilters";
+
+  // Query param helpers using URLSearchParams
+  const parseQuery = () => {
+    const params = new URLSearchParams(location.search);
+    return {
+      searchValue: params.get("search") || "",
+      selectedLanguage: params.get("lang") || "all",
+      selectedCategory: params.get("cat") || "all",
+      currentPage: params.get("page") ? parseInt(params.get("page"), 10) : 1,
+    };
+  };
+
+  // Set initial state from query params
+  const [searchValue, setSearchValue] = useState(parseQuery().searchValue);
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    parseQuery().selectedLanguage
+  );
+  const [selectedCategory, setSelectedCategory] = useState(
+    parseQuery().selectedCategory
+  );
+  const [currentPage, setCurrentPage] = useState(parseQuery().currentPage);
+  const [pageSize] = useState(10);
+
+  const updateQueryParams = (updates) => {
+    const prev = parseQuery();
+    const newParams = {
+      ...prev,
+      ...updates,
+    };
+    const paramMap = {
+      search: newParams.searchValue,
+      lang: newParams.selectedLanguage,
+      cat: newParams.selectedCategory,
+      page: newParams.currentPage,
+    };
+    const urlParams = new URLSearchParams();
+    if (paramMap.search) urlParams.set("search", paramMap.search);
+    if (paramMap.lang && paramMap.lang !== "all") urlParams.set("lang", paramMap.lang);
+    if (paramMap.cat && paramMap.cat !== "all") urlParams.set("cat", paramMap.cat);
+    if (paramMap.page && paramMap.page !== 1) urlParams.set("page", paramMap.page);
+    navigate({ search: urlParams.toString() }, { replace: true });
+
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(newParams));
+    } catch (e) {
+      // ignore storage errors
+    }
+  };
 
   useEffect(() => {
-    // Dispatch the action to fetch Video posts
-    dispatch(
-      fetchAllPostsByPostType({ postTypeId: "66d9d564987787d3e3ff1314" })
-    );
-  }, [dispatch]);
+    if (!location.search) {
+      try {
+        const saved = sessionStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsedSaved = JSON.parse(saved);
+          updateQueryParams(parsedSaved);
+        }
+      } catch (e) {
+        // ignore storage errors
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const navigate = useNavigate();
-  const allVideoPosts = useSelector((state) => state.post.posts);
+  useEffect(() => {
+    try {
+      const parsed = parseQuery();
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    } catch (e) {
+      // ignore storage errors
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
+
+  // redux states
+  const { posts, totalCount, loading } = useSelector((state) => state.post);
+  const { languages, loading: languagesLoading } = useSelector(
+    (state) => state.languages
+  );
+  const { categories, loading: categoriesLoading } = useSelector(
+    (state) => state.categories
+  );
+
+  // helper states for loaded
+  const [langsLoaded, setLangsLoaded] = useState(false);
+  const [catsLoaded, setCatsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!languagesLoading && languages && languages.length > 0) setLangsLoaded(true);
+  }, [languagesLoading, languages]);
+  useEffect(() => {
+    if (!categoriesLoading && categories && categories.length > 0) setCatsLoaded(true);
+  }, [categoriesLoading, categories]);
+
   const [list, setList] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
+  // available filters
+  const availableLanguages = useMemo(
+    () => [{ _id: "all", name: "All Languages" }, ...(languages || [])],
+    [languages]
+  );
+
+  const availableCategories = useMemo(() => {
+    if (selectedLanguage === "all") {
+      return [
+        { _id: "all", name: "All Categories" },
+        ...(categories?.filter((cat) => cat.parentCategory) || []),
+      ];
+    }
+    return [
+      { _id: "all", name: "All Categories" },
+      ...(categories?.filter((cat) => {
+        const langId = cat.language?._id || cat.language;
+        return langId === selectedLanguage && cat.parentCategory;
+      }) || []),
+    ];
+  }, [categories, selectedLanguage]);
+
+  // helper: fetch posts with current filters
+  const fetchPosts = (
+    page = currentPage,
+    search = searchValue,
+    lang = selectedLanguage,
+    cat = selectedCategory
+  ) => {
+    const languageFilter =
+      lang === "all"
+        ? ""
+        : availableLanguages.find((l) => l._id === lang)?.name || "";
+
+    const categoryFilter =
+      cat === "all"
+        ? ""
+        : availableCategories.find((c) => c._id === cat)?._id || "";
+
+    dispatch(
+      fetchAllPostsByPostType({
+        postTypeId: "66d9d564987787d3e3ff1314",
+        page,
+        limit: pageSize,
+        search,
+        language: languageFilter,
+        category: categoryFilter,
+      })
+    );
+  };
+
+  // initial load (fetch lang/cat lists only)
   useEffect(() => {
-    setList(allVideoPosts);
-    console.log("list", list);
-  }, [allVideoPosts]);
+    dispatch(fetchAllLanguages());
+    dispatch(fetchAllCategories({ page: 1, limit: 100 }));
+  }, [dispatch]);
+
+  // Only fetch posts when both languages & categories are loaded and location/search changes
+  useEffect(() => {
+    if (!langsLoaded || !catsLoaded) return;
+    const parsed = parseQuery();
+    setSearchValue(parsed.searchValue);
+    setSelectedLanguage(parsed.selectedLanguage);
+    setSelectedCategory(parsed.selectedCategory);
+    setCurrentPage(parsed.currentPage);
+    fetchPosts(
+      parsed.currentPage,
+      parsed.searchValue,
+      parsed.selectedLanguage,
+      parsed.selectedCategory
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, langsLoaded, catsLoaded]);
+
+  // update list whenever posts change
+  useEffect(() => {
+    if (posts) setList(posts);
+  }, [posts]);
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -75,21 +240,20 @@ const VideoList = () => {
     navigate(`/admin/dashboards/videos/edit-video/${row._id}`);
   };
 
-  const deleteRow = (row) => {
-    const objKey = "_id";
-    let data = list;
-    if (selectedRows.length > 1) {
-      selectedRows.forEach((elm) => {
-        data = utils.deleteArrayRow(data, objKey, elm._id);
-        setList(data);
-        setSelectedRows([]);
-        // Need to dispatch the delete category
-        dispatch(deletePost({ postId: elm._id }));
-      });
-    } else {
-      data = utils.deleteArrayRow(data, objKey, row._id);
-      setList(data);
-      dispatch(deletePost({ postId: row._id }));
+  const deleteRow = async (row) => {
+    const idsToDelete =
+      selectedRows.length > 0 ? selectedRows.map((r) => r._id) : [row._id];
+
+    try {
+      await Promise.all(
+        idsToDelete.map((id) => dispatch(deletePost({ postId: id })))
+      );
+      message.success("Deleted Successfully");
+      setList((prev) => prev.filter((item) => !idsToDelete.includes(item._id)));
+      setSelectedRows([]);
+      setSelectedRowKeys([]);
+    } catch (error) {
+      message.error("Failed to delete");
     }
   };
 
@@ -102,6 +266,16 @@ const VideoList = () => {
     {
       title: "Title",
       dataIndex: "title",
+      ellipsis: false,
+    },
+    {
+      title: "Image",
+      dataIndex: "featuredImage",
+      render: (_, record) => (
+        <div className="d-flex">
+          <AvatarStatus size={60} type="square" src={record.thumbnail} />
+        </div>
+      ),
     },
     // {
     //   title: "Author",
@@ -121,7 +295,16 @@ const VideoList = () => {
     {
       title: "Language",
       dataIndex: "language",
-      render: (_, record) => record.language.name,
+      render: (_, record) => record?.language?.name,
+    },
+    {
+      title: "Category",
+      dataIndex: "category",
+      render: (_, record) =>
+        record?.categories?.[0]?.parentCategory?.name &&
+        record?.categories?.[0]?.name
+          ? `${record.categories[0].parentCategory.name} / ${record.categories[0].name}`
+          : "",
     },
     {
       title: "Status",
@@ -157,12 +340,42 @@ const VideoList = () => {
     },
   };
 
+  // handlers: update state AND URL, triggering effect above
   const onSearch = (e) => {
-    const value = e.currentTarget.value;
-    const searchArray = e.currentTarget.value ? list : [];
-    const data = utils.wildCardSearch(searchArray, value);
-    setList(data);
-    setSelectedRowKeys([]);
+    const val = e.target.value;
+    setSearchValue(val);
+    setCurrentPage(1);
+    updateQueryParams({
+      searchValue: val,
+      currentPage: 1,
+    });
+  };
+
+  const onLanguageChange = (val) => {
+    setSelectedLanguage(val);
+    setSelectedCategory("all");
+    setCurrentPage(1);
+    updateQueryParams({
+      selectedLanguage: val,
+      selectedCategory: "all",
+      currentPage: 1,
+    });
+  };
+
+  const onCategoryChange = (val) => {
+    setSelectedCategory(val);
+    setCurrentPage(1);
+    updateQueryParams({
+      selectedCategory: val,
+      currentPage: 1,
+    });
+  };
+
+  const onPageChange = (page) => {
+    setCurrentPage(page);
+    updateQueryParams({
+      currentPage: page,
+    });
   };
 
   return (
@@ -177,11 +390,43 @@ const VideoList = () => {
             <Input
               placeholder="Search"
               prefix={<SearchOutlined />}
-              onChange={(e) => onSearch(e)}
+              onChange={onSearch}
+              value={searchValue}
             />
           </div>
         </Flex>
-        <div>
+        <div className="d-flex gap-2">
+          <Select
+            placeholder="Filter by language"
+            value={selectedLanguage}
+            onChange={onLanguageChange}
+            loading={languagesLoading}
+            style={{ width: 180, marginRight: 12 }}
+          >
+            {availableLanguages.map((language) => (
+              <Option key={language._id} value={language._id}>
+                {language.name}
+              </Option>
+            ))}
+          </Select>
+          <Select
+            placeholder="Filter by category"
+            value={selectedCategory}
+            onChange={onCategoryChange}
+            loading={categoriesLoading}
+            style={{ width: 180, marginRight: 12 }}
+            dropdownMatchSelectWidth={false}
+            dropdownStyle={{ width: "auto", minWidth: "180px" }}
+            dropdownRender={(menu) => (
+              <div style={{ width: "max-content" }}>{menu}</div>
+            )}
+          >
+            {availableCategories.map((category) => (
+              <Option key={category._id} value={category._id}>
+                {category.name}
+              </Option>
+            ))}
+          </Select>
           <Button
             onClick={AddVideo}
             type="primary"
@@ -194,14 +439,23 @@ const VideoList = () => {
       </Flex>
       <div className="table-responsive">
         <Table
+          loading={loading}
           columns={tableColumns}
           dataSource={list}
-          rowKey="id"
+          rowKey="_id"
           rowSelection={{
-            selectedRowKeys: selectedRowKeys,
+            selectedRowKeys,
             type: "checkbox",
             preserveSelectedRowKeys: false,
             ...rowSelection,
+          }}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: totalCount,
+            onChange: onPageChange,
+            showSizeChanger: false,
+            showTotal: (total) => `Total ${total} videos`,
           }}
         />
       </div>

@@ -5,7 +5,7 @@ import { PlusOutlined, LoadingOutlined, MenuFoldOutlined, MenuUnfoldOutlined } f
 import Flex from 'components/shared-components/Flex';
 import GeneralField from './GeneralField';
 import SeoField from './SeoField';
-import { createPost, editPost, fetchAllPostsByPostType, updatePost, updateStatus, updateStatusByAdmin } from 'store/slices/postSlice';
+import { createPost, editPost, fetchAllPostsByPostType, fetchPostById, updatePost, updateStatus, updateStatusByAdmin } from 'store/slices/postSlice';
 import { useDispatch, useSelector } from 'react-redux';
 // import FilesServices from "services/FilesServices";
 import { fetchUserData } from 'store/slices/userSlice';
@@ -1323,6 +1323,7 @@ const ArticleForm = (props) => {
 	const [submitLoading, setSubmitLoading] = useState(false);
 	const [list, setList] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [singleFetchAttempted, setSingleFetchAttempted] = useState(false);
 
 	const [approval, setApproval] = useState(false);
 	const [approveLoading, setApproveLoading] = useState(false);
@@ -1336,6 +1337,7 @@ const ArticleForm = (props) => {
 
 	// check it is in global state
 	const articles_list = useSelector((state) => state.post.posts);
+	const selectedPost = useSelector((state) => state.post.selectedPost);
 	useEffect(() => {
 		if (!articles_list.length && mode === EDIT && !isPostsFetched) {
 			dispatch(fetchAllPostsByPostType({ postTypeId: '66d9d564987787d3e3ff1315' }));
@@ -1345,6 +1347,18 @@ const ArticleForm = (props) => {
 		}
 		setIsPostsFetched(true);
 	}, [articles_list, dispatch, mode, isPostsFetched]);
+
+	// Fallback: fetch single article by id if list doesn't contain it (e.g., on hard refresh with pagination)
+	useEffect(() => {
+		if (mode === EDIT && !loading) {
+			const { id } = param || {};
+			const existsInList = list.find((article) => article._id === id);
+			if (!existsInList && !selectedPost && !singleFetchAttempted && id) {
+				setSingleFetchAttempted(true);
+				dispatch(fetchPostById({ postId: id }));
+			}
+		}
+	}, [mode, loading, list, selectedPost, singleFetchAttempted, param, dispatch]);
 
 	const columns = [
 		{
@@ -1373,13 +1387,17 @@ const ArticleForm = (props) => {
 	}
 
 	useEffect(() => {
+		// When in edit/view mode, hydrate form once data is available (from list or single fetch).
 		if (mode === EDIT && !loading) {
-			const { id } = param;
+			const { id } = param || {};
 			const articleId = id;
-			const articleData = list.find((article) => article._id === articleId);
+			const articleData = list.find((article) => article._id === articleId) || (selectedPost && selectedPost._id === articleId ? selectedPost : null);
 			if (articleData) {
 				setCurrentStatus(articleData.status);
-				const mainContent = articleData?.editingSession?.draftContent && user.userData._id === articleData.editingSession.id ? articleData?.editingSession?.draftContent : articleData.content;
+				const mainContent =
+					articleData?.editingSession?.draftContent && user?.userData?._id === articleData.editingSession.id
+						? articleData?.editingSession?.draftContent
+						: articleData.content;
 
 				setEditorState(EditorState.createWithContent(convertFromRaw(JSON.parse(mainContent)), createDecorator()));
 				form.setFieldsValue({
@@ -1432,7 +1450,7 @@ const ArticleForm = (props) => {
 				setSelectedStatus(articleData.status);
 			}
 		}
-	}, [form, mode, param, props, list, loading, ApproveTextFun, user.userData._id]);
+	}, [form, mode, param, props, list, selectedPost, loading, ApproveTextFun, user]);
 
 	const handleThumbnailImgUploadChange = (info) => {
 		if (info.file.status === 'uploading') {
