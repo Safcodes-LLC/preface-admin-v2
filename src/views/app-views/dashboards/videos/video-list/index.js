@@ -297,15 +297,15 @@ const VideoList = () => {
       dataIndex: "language",
       render: (_, record) => record?.language?.name,
     },
-    {
-      title: "Category",
-      dataIndex: "category",
-      render: (_, record) =>
-        record?.categories?.[0]?.parentCategory?.name &&
-        record?.categories?.[0]?.name
-          ? `${record.categories[0].parentCategory.name} / ${record.categories[0].name}`
-          : "",
-    },
+    // {
+    //   title: "Category",
+    //   dataIndex: "category",
+    //   render: (_, record) =>
+    //     record?.categories?.[0]?.parentCategory?.name &&
+    //     record?.categories?.[0]?.name
+    //       ? `${record.categories[0].parentCategory.name} / ${record.categories[0].name}`
+    //       : "",
+    // },
     {
       title: "Status",
       dataIndex: "status",
@@ -409,7 +409,7 @@ const VideoList = () => {
               </Option>
             ))}
           </Select>
-          <Select
+          {/* <Select
             placeholder="Filter by category"
             value={selectedCategory}
             onChange={onCategoryChange}
@@ -426,7 +426,7 @@ const VideoList = () => {
                 {category.name}
               </Option>
             ))}
-          </Select>
+          </Select> */}
           <Button
             onClick={AddVideo}
             type="primary"
