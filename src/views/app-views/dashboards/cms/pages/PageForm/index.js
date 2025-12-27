@@ -528,8 +528,8 @@ const PageForm = (props) => {
 			if (inSelection) {
 				let newBlockData = block.getData();
 
-				// If spacing is 'normal', remove the line-spacing data to use default
-				if (spacing === 'normal') {
+				// If spacing is 'NORMAL_SPACING', remove the line-spacing data to use default
+				if (spacing === 'NORMAL_SPACING') {
 					newBlockData = newBlockData.delete('line-spacing');
 				} else {
 					newBlockData = newBlockData.set('line-spacing', spacing);
@@ -547,7 +547,7 @@ const PageForm = (props) => {
 		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
 		setEditorState(EditorState.forceSelection(newEditorState, selection));
 
-		if (spacing === 'normal') {
+		if (spacing === 'NORMAL_SPACING') {
 			message.success('Line spacing reset to normal');
 		} else {
 			message.success(`Line spacing set to ${spacing}`);
@@ -601,7 +601,7 @@ const PageForm = (props) => {
 		const endKey = selection.getEndKey();
 		const blockMap = contentState.getBlockMap();
 
-		// Convert all block types to 'unstyled' (normal paragraph)
+		// Convert all block types to 'unstyled' (NORMAL_SPACING paragraph)
 		const blocks = [];
 		let inSelection = false;
 		blockMap.forEach((block, key) => {
@@ -626,9 +626,105 @@ const PageForm = (props) => {
 			});
 		});
 
-		const newEditorState = EditorState.push(editorState, contentState, 'change-block-type');
+		// Remove line-spacing data from all selected blocks
+		let clearedBlockMap = contentState.getBlockMap();
+		let clearedBlocks = [];
+		inSelection = false;
+		clearedBlockMap.forEach((block, key) => {
+			if (key === startKey) inSelection = true;
+			if (inSelection) {
+				// Remove line-spacing and alignment
+				const newBlock = block.merge({
+					type: 'unstyled',
+					data: block.getData().delete('text-align').delete('line-spacing'),
+				});
+				clearedBlocks.push([key, newBlock]);
+			}
+			if (key === endKey) inSelection = false;
+		});
+		// Apply block type and data changes
+		clearedBlocks.forEach(([key, block]) => {
+			contentState = contentState.merge({
+				blockMap: contentState.getBlockMap().set(key, block),
+			});
+		});
+
+		// Remove link entity from the selection in the updated contentState
+		const newContentState = Modifier.applyEntity(contentState, selection, null);
+		const newEditorState = EditorState.push(editorState, newContentState, 'change-block-type');
 		setEditorState(EditorState.forceSelection(newEditorState, selection));
-		message.success('All styles and formatting removed');
+		message.success('All styles, formatting, and line spacing removed');
+	};
+
+	// Reset editor: remove all styles, links, tooltips, indentation, line height, highlight, font size, etc., but keep content
+	const resetEditor = () => {
+		const currentContent = editorState.getCurrentContent();
+		let contentState = currentContent;
+		const selection = editorState.getSelection();
+
+		// Remove all inline styles from the entire content
+		const inlineStyles = [
+			'BOLD',
+			'ITALIC',
+			'UNDERLINE',
+			'STRIKETHROUGH',
+			'FONTWEIGHT_NORMAL',
+			'FONTWEIGHT_SLIM',
+			'FONTWEIGHT_MEDIUM',
+			'FONTWEIGHT_SEMIBOLD',
+			'FONTWEIGHT_BOLD',
+			'FONTWEIGHT_EXTRABOLD',
+			'HIGHLIGHT_YELLOW',
+			'HIGHLIGHT_GREEN',
+			'HIGHLIGHT_BLUE',
+			'HIGHLIGHT_PINK',
+			'HIGHLIGHT_ORANGE',
+			'HIGHLIGHT_PURPLE',
+			'SUBSCRIPT',
+			'SUPERSCRIPT',
+			'UPPERCASE',
+			'LOWERCASE',
+			'CAPITALIZE',
+		];
+		// Remove all inline styles from all blocks
+		currentContent.getBlockMap().forEach((block) => {
+			let blockSelection = selection.merge({
+				anchorKey: block.getKey(),
+				anchorOffset: 0,
+				focusKey: block.getKey(),
+				focusOffset: block.getLength(),
+				isBackward: false,
+			});
+			inlineStyles.forEach((style) => {
+				contentState = Modifier.removeInlineStyle(contentState, blockSelection, style);
+			});
+		});
+
+		// Remove all entities (links, tooltips) from all blocks
+		contentState.getBlockMap().forEach((block) => {
+			let blockSelection = selection.merge({
+				anchorKey: block.getKey(),
+				anchorOffset: 0,
+				focusKey: block.getKey(),
+				focusOffset: block.getLength(),
+				isBackward: false,
+			});
+			contentState = Modifier.applyEntity(contentState, blockSelection, null);
+		});
+
+		// Remove block data (indent, alignment, line-spacing, etc.) and set type to 'unstyled'
+		let newBlockMap = contentState.getBlockMap().map((block) => {
+			return block.merge({
+				type: 'unstyled',
+				data: block.getData().clear(),
+			});
+		});
+		contentState = contentState.merge({ blockMap: newBlockMap });
+
+		// Push the cleaned content state to the editor
+		const newEditorState = EditorState.push(editorState, contentState, 'change-block-data');
+		setEditorState(EditorState.forceSelection(newEditorState, newEditorState.getSelection()));
+		message.success('All formatting and styles have been reset, content preserved.');
 	};
 
 	// Undo handler
@@ -1240,7 +1336,7 @@ const PageForm = (props) => {
 							// First try to parse as JSON
 							const contentJson = JSON.parse(response.data.content);
 							const contentState = convertFromRaw(contentJson);
-							setEditorState(EditorState.createWithContent(contentState));
+							setEditorState(EditorState.createWithContent(contentState, createDecorator()));
 						} catch (e) {
 							// If parsing as JSON fails, treat it as HTML
 							const contentState = convertFromRaw({
@@ -1257,7 +1353,7 @@ const PageForm = (props) => {
 									},
 								],
 							});
-							setEditorState(EditorState.createWithContent(contentState));
+							setEditorState(EditorState.createWithContent(contentState, createDecorator()));
 						}
 					}
 				} catch (error) {
@@ -1617,193 +1713,225 @@ const PageForm = (props) => {
 										mode={mode}
 										currentparentcategory={articleDataforgeneral?.categories?.map((category) => category.parentCategory?.id)}>
 										<Editor
-											editorState={editorState}
-											onEditorStateChange={setEditorState}
-											wrapperClassName="demo-wrapper"
-											editorClassName="demo-editor"
-											toolbarClassName="demo-toolbar"
-											customStyleMap={customStyleMap}
-											blockStyleFn={blockStyleFn}
-											toolbarCustomButtons={[
-												<div
-													key="custom-toolbar"
-													style={{
-														display: 'flex',
-														flexWrap: 'wrap',
-														gap: '5px',
-														margin: '5px',
-														paddingRight: '5px',
-														alignItems: 'center',
-													}}>
-													{/* Custom Indent/Outdent Buttons */}
-													<Button key="indent-btn" size="small" onClick={handleIndent} title="Increase indent" style={{ borderColor: '#d9d9d9' }}>
-														<MenuUnfoldOutlined /> Indent
-													</Button>
-													<Button key="outdent-btn" size="small" onClick={handleOutdent} title="Decrease indent" style={{ borderColor: '#d9d9d9' }}>
-														<MenuFoldOutlined /> Outdent
-													</Button>
-													{/* Subscript and Superscript Buttons */}
-													<Button key="subscript-btn" size="small" onClick={toggleSubscript} title="Subscript" style={{ borderColor: '#d9d9d9' }}>
-														X<sub>2</sub>
-													</Button>
-													<Button key="superscript-btn" size="small" onClick={toggleSuperscript} title="Superscript" style={{ borderColor: '#d9d9d9' }}>
-														X<sup>2</sup>
-													</Button>
-													{/* Text Transformation Dropdown */}
-													<Select
-														placeholder="Capitalization"
-														style={{ width: 140 }}
-														size="small"
-														onChange={(value) => toggleTextTransform(value)}
-														allowClear
-														onClear={() => toggleTextTransform('NONE')}>
-														<Option value="UPPERCASE">UPPERCASE</Option>
-														<Option value="LOWERCASE">lowercase</Option>
-														<Option value="CAPITALIZE">Capitalize</Option>
-													</Select>
-													{/* Line Spacing Dropdown */}
-													<Select placeholder="Line Spacing" style={{ width: 130 }} size="small" onChange={(value) => setLineSpacing(value)} allowClear onClear={() => setLineSpacing('normal')}>
-														<Option value="normal">Normal</Option>
-														<Option value="1">1.0</Option>
-														<Option value="1-15">1.15</Option>
-														<Option value="1-25">1.25</Option>
-														<Option value="1-5">1.5</Option>
-														<Option value="2">2.0</Option>
-														<Option value="2-5">2.5</Option>
-														<Option value="3">3.0</Option>
-													</Select>
+                      editorState={editorState}
+                      onEditorStateChange={setEditorState}
+                      readOnly={view}
+                      toolbarHidden={view}
+                      wrapperClassName="demo-wrapper"
+                      editorClassName="demo-editor"
+                      toolbarClassName="demo-toolbar"
+                      customStyleMap={customStyleMap}
+                      blockStyleFn={blockStyleFn}
+                      toolbarCustomButtons={[
+                        <div key="custom-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', margin: '5px', paddingRight: '5px', alignItems: 'center' }}>
+                          {/* Custom Indent/Outdent Buttons */}
+                          <Button key="indent-btn" onClick={handleIndent} title="Increase indent" style={{ borderColor: '#d9d9d9' }}>
+                            <MenuUnfoldOutlined /> Indent
+                          </Button>
+                          <Button key="outdent-btn" onClick={handleOutdent} title="Decrease indent" style={{ borderColor: '#d9d9d9' }}>
+                            <MenuFoldOutlined /> Outdent
+                          </Button>
+                          {/* Subscript and Superscript Buttons */}
+                          <Button key="subscript-btn" onClick={toggleSubscript} title="Subscript" style={{ borderColor: '#d9d9d9' }}>
+                            X<sub>2</sub>
+                          </Button>
+                          <Button key="superscript-btn" onClick={toggleSuperscript} title="Superscript" style={{ borderColor: '#d9d9d9' }}>
+                            X<sup>2</sup>
+                          </Button>
+                          {/* Text Transformation Dropdown */}
+                          <Select
+                            placeholder="Capitalization"
+                            style={{ width: 140, padding: '0px', borderRadius: '0px !important' }}
+                            // size="small"
+                            onChange={(value) => toggleTextTransform(value)}
+                            allowClear
+                            onClear={() => toggleTextTransform('NONE')}>
+                            <Option value="UPPERCASE">UPPERCASE</Option>
+                            <Option value="LOWERCASE">lowercase</Option>
+                            <Option value="CAPITALIZE">Capitalize</Option>
+                          </Select>
+                          {/* Line Spacing Dropdown */}
+                          <Select
+                            placeholder="Line Spacing"
+                            style={{ width: 130 }}
+                            // size="small"
+                            onChange={(value) => setLineSpacing(value)}
+                            allowClear
+                            onClear={() => setLineSpacing('NORMAL_SPACING')}>
+                            <Option value="NORMAL_SPACING">Normal</Option>
+                            <Option value="1">1.0</Option>
+                            <Option value="1-15">1.15</Option>
+                            <Option value="1-25">1.25</Option>
+                            <Option value="1-5">1.5</Option>
+                            <Option value="2">2.0</Option>
+                            <Option value="2-5">2.5</Option>
+                            <Option value="3">3.0</Option>
+                          </Select>{' '}
+                          {/* Font Weight Dropdown */}
+                          <Select
+                            placeholder="Font Weight"
+                            style={{ width: 150 }}
+                            // size="small"
+                            onChange={(value) => toggleFontWeight(value)}
+                            allowClear
+                            onClear={() => toggleFontWeight('NONE')}>
+                            {/* <Option value="FONTWEIGHT_SLIM" style={{ fontWeight: 300 }}>
+															Slim (300)
+														</Option> */}
+                            <Option value="FONTWEIGHT_NORMAL" style={{ fontWeight: 400 }}>
+                              Normal (400)
+                            </Option>
+                            <Option value="FONTWEIGHT_MEDIUM" style={{ fontWeight: 500 }}>
+                              Medium (500)
+                            </Option>
+                            <Option value="FONTWEIGHT_SEMIBOLD" style={{ fontWeight: 600 }}>
+                              Semibold (600)
+                            </Option>
+                            <Option value="FONTWEIGHT_BOLD" style={{ fontWeight: 700 }}>
+                              Bold (700)
+                            </Option>
+                            <Option value="FONTWEIGHT_EXTRABOLD" style={{ fontWeight: 800 }}>
+                              Extra Bold (800)
+                            </Option>
+                          </Select>
+                          {/* Highlight Color Dropdown */}
+                          <Select
+                            placeholder="Highlight"
+                            style={{ width: 130 }}
+                            // size="small"
+                            onChange={(value) => toggleHighlight(value)}
+                            allowClear
+                            onClear={() => toggleHighlight('NONE')}>
+                            <Option value="HIGHLIGHT_YELLOW">
+                              <span style={{ backgroundColor: '#ffff00', padding: '2px 8px', borderRadius: '2px' }}>Yellow</span>
+                            </Option>
+                            <Option value="HIGHLIGHT_GREEN">
+                              <span style={{ backgroundColor: '#90ee90', padding: '2px 8px', borderRadius: '2px' }}>Green</span>
+                            </Option>
+                            <Option value="HIGHLIGHT_BLUE">
+                              <span style={{ backgroundColor: '#add8e6', padding: '2px 8px', borderRadius: '2px' }}>Blue</span>
+                            </Option>
+                            <Option value="HIGHLIGHT_PINK">
+                              <span style={{ backgroundColor: '#ffb6c1', padding: '2px 8px', borderRadius: '2px' }}>Pink</span>
+                            </Option>
+                            <Option value="HIGHLIGHT_ORANGE">
+                              <span style={{ backgroundColor: '#ffa500', padding: '2px 8px', borderRadius: '2px' }}>Orange</span>
+                            </Option>
+                            <Option value="HIGHLIGHT_PURPLE">
+                              <span style={{ backgroundColor: '#dda0dd', padding: '2px 8px', borderRadius: '2px' }}>Purple</span>
+                            </Option>
+                          </Select>
+                          {/* Simple Hyperlink Button */}
+                          <Button key="add-link" type="default" style={{ borderColor: '#3e79f7', color: '#3e79f7' }} onClick={handleSimpleLinkClick}>
+                            Add Link
+                          </Button>
+                          {/* Advanced Custom Link Button */}
+                          <Button key="add-link-tooltip" type="primary" onClick={handleCustomLinkClick}>
+                            Tooltip Link
+                          </Button>
+                          {/* Edit Link Button */}
+                          <Button key="edit-link" type="default" style={{ borderColor: '#52c41a', color: '#52c41a' }} onClick={handleEditLink}>
+                            Edit Link
+                          </Button>
+                          {/* Remove Link Button */}
+                          <Button key="remove-link" danger onClick={handleRemoveLink}>
+                            Remove Link
+                          </Button>
+                          {/* Undo Button */}
+                          <Button key="undo-btn" onClick={handleUndo} disabled={editorState.getUndoStack().size === 0}>
+                            Undo
+                          </Button>
+                          {/* Redo Button */}
+                          <Button key="redo-btn" onClick={handleRedo} disabled={editorState.getRedoStack().size === 0}>
+                            Redo
+                          </Button>
+                          {/* Remove All Styles Button */}
+                          <Button key="remove-styles" danger onClick={removeAllStyles}>
+                            Remove Styles
+                          </Button>
+                          {/* Reset Editor Styles Button */}
+                          <Button key="reset-editor" onClick={resetEditor} style={{ backgroundColor: "gray", color: "white", borderColor: "gray" }}>
+                            Reset
+                          </Button>
+                        </div>,
+                      ]}
+                      toolbar={{
+                        options: ['inline', 'blockType', 'list', 'textAlign'],
+                        inline: {
+                          inDropdown: false,
+                          options: ['bold', 'italic', 'underline', 'strikethrough'],
+                        },
+                        blockType: {
+                          inDropdown: false,
+                          options: [
+                            'Normal',
+                            'H2',
+                            'H3',
+                            'H4',
+                            'H5',
+                            'H6',
+                            // 'Blockquote'
+                          ],
+                        },
+                        list: {
+                          inDropdown: false,
+                          options: ['unordered', 'ordered'],
+                          // options: ['unordered', 'ordered', 'indent', 'outdent'],
+                        },
+                        textAlign: {
+                          inDropdown: false,
+                          options: ['left', 'center', 'right', 'justify'],
+                        },
+                        // embedded: {
+                        // 	defaultSize: {
+                        // 		height: 'auto',
+                        // 		width: 'auto',
+                        // 	},
+                        // },
+                        // image: {
+                        // 	urlEnabled: true,
+                        // 	uploadEnabled: true,
+                        // 	alignmentEnabled: true,
+                        // 	uploadCallback: async (file) => {
+                        // 		try {
+                        // 			const formData = new FormData();
+                        // 			formData.append('file', file);
 
-													{/* Font Weight Dropdown */}
-													<Select placeholder="Font Weight" style={{ width: 150 }} size="small" onChange={(value) => toggleFontWeight(value)} allowClear onClear={() => toggleFontWeight('NONE')}>
-														<Option value="FONTWEIGHT_NORMAL" style={{ fontWeight: 400 }}>
-															Normal (400)
-														</Option>
-														<Option value="FONTWEIGHT_MEDIUM" style={{ fontWeight: 500 }}>
-															Medium (500)
-														</Option>
-														<Option value="FONTWEIGHT_SEMIBOLD" style={{ fontWeight: 600 }}>
-															Semibold (600)
-														</Option>
-														<Option value="FONTWEIGHT_BOLD" style={{ fontWeight: 700 }}>
-															Bold (700)
-														</Option>
-														<Option value="FONTWEIGHT_EXTRABOLD" style={{ fontWeight: 800 }}>
-															Extra Bold (800)
-														</Option>
-													</Select>
-													{/* Highlight Color Dropdown */}
-													<Select placeholder="Highlight" style={{ width: 130 }} size="small" onChange={(value) => toggleHighlight(value)} allowClear onClear={() => toggleHighlight('NONE')}>
-														<Option value="HIGHLIGHT_YELLOW">
-															<span
-																style={{
-																	backgroundColor: '#ffff00',
-																	padding: '2px 8px',
-																	borderRadius: '2px',
-																}}>
-																Yellow
-															</span>
-														</Option>
-														<Option value="HIGHLIGHT_GREEN">
-															<span
-																style={{
-																	backgroundColor: '#90ee90',
-																	padding: '2px 8px',
-																	borderRadius: '2px',
-																}}>
-																Green
-															</span>
-														</Option>
-														<Option value="HIGHLIGHT_BLUE">
-															<span
-																style={{
-																	backgroundColor: '#add8e6',
-																	padding: '2px 8px',
-																	borderRadius: '2px',
-																}}>
-																Blue
-															</span>
-														</Option>
-														<Option value="HIGHLIGHT_PINK">
-															<span
-																style={{
-																	backgroundColor: '#ffb6c1',
-																	padding: '2px 8px',
-																	borderRadius: '2px',
-																}}>
-																Pink
-															</span>
-														</Option>
-														<Option value="HIGHLIGHT_ORANGE">
-															<span
-																style={{
-																	backgroundColor: '#ffa500',
-																	padding: '2px 8px',
-																	borderRadius: '2px',
-																}}>
-																Orange
-															</span>
-														</Option>
-														<Option value="HIGHLIGHT_PURPLE">
-															<span
-																style={{
-																	backgroundColor: '#dda0dd',
-																	padding: '2px 8px',
-																	borderRadius: '2px',
-																}}>
-																Purple
-															</span>
-														</Option>
-													</Select>
-													{/* Simple Hyperlink Button */}
-													<Button key="add-link" type="default" size="small" style={{ borderColor: '#3e79f7', color: '#3e79f7' }} onClick={handleSimpleLinkClick}>
-														Add Link
-													</Button>
-													{/* Advanced Custom Link Button */}
-													<Button key="add-link-tooltip" type="primary" size="small" onClick={handleCustomLinkClick}>
-														Tooltip Link
-													</Button>
-													{/* Edit Link Button */}
-													<Button key="edit-link" type="default" size="small" style={{ borderColor: '#52c41a', color: '#52c41a' }} onClick={handleEditLink}>
-														Edit Link
-													</Button>
-													{/* Remove Link Button */}
-													<Button key="remove-link" type="default" size="small" style={{ borderColor: '#ff6b72', color: '#ff6b72' }} onClick={handleRemoveLink}>
-														Remove Link
-													</Button>
-													{/* Undo Button */}
-													<Button key="undo-btn" size="small" onClick={handleUndo} disabled={editorState.getUndoStack().size === 0}>
-														Undo
-													</Button>
-													{/* Redo Button */}
-													<Button key="redo-btn" size="small" onClick={handleRedo} disabled={editorState.getRedoStack().size === 0}>
-														Redo
-													</Button>
-													{/* Remove All Styles Button */}
-													<Button key="remove-styles" danger size="small" onClick={removeAllStyles}>
-														Remove Styles
-													</Button>
-												</div>,
-											]}
-											toolbar={{
-												options: ['inline', 'blockType', 'list', 'textAlign'],
-												inline: {
-													inDropdown: false,
-													options: ['bold', 'italic', 'underline', 'strikethrough'],
-												},
-												blockType: {
-													inDropdown: false,
-													options: ['Normal', 'H2', 'H3', 'H4', 'H5', 'H6'],
-												},
-												list: {
-													inDropdown: false,
-													options: ['unordered', 'ordered', 'indent', 'outdent'],
-												},
-												textAlign: {
-													inDropdown: false,
-													options: ['left', 'center', 'right', 'justify'],
-												},
-											}}
-										/>
+                        // 			const response = await fetch('https://king-prawn-app-x9z27.ondigitalocean.app/api/fileupload/savefile/articles/content', {
+                        // 				method: 'POST',
+                        // 				headers: {
+                        // 					Authorization: localStorage.getItem(AUTH_TOKEN) || '',
+                        // 				},
+                        // 				body: formData,
+                        // 			});
+
+                        // 			if (!response.ok) {
+                        // 				throw new Error('Upload failed');
+                        // 			}
+
+                        // 			const data = await response.json();
+                        // 			return { data: { link: data.fileUrl } };
+                        // 		} catch (error) {
+                        // 			console.error('Error uploading image:', error);
+                        // 			message.error('Failed to upload image');
+                        // 			return { data: { link: '' } };
+                        // 		}
+                        // 	},
+                        // 	previewImage: true,
+                        // 	inputAccept: 'image/gif,image/jpeg,image/jpg,image/png,image/svg',
+                        // 	alt: { present: true, mandatory: false },
+                        // 	defaultSize: {
+                        // 		height: 'auto',
+                        // 		width: 'auto',
+                        // 	},
+                        // },
+                        // remove: {},
+                        // history: {
+                        // 	inDropdown: false,
+                        // 	options: ['undo', 'redo'],
+                        // },
+                      }}
+                    />
 									</GeneralField>
 								),
 							},
