@@ -142,6 +142,11 @@ const ViewAyah = () => {
                 <Tag>Page: {ayahData.pageNumber}</Tag>
                 <Tag>Juz: {ayahData.juzNumber}</Tag>
                 <Tag>Hizb: {ayahData.hizbNumber}</Tag>
+                {ayahData.ayahGroupStart === null && ayahData.ayahGroupEnd === null && (
+                  <Tag color="orange">
+                    Group: {ayahData.ayahGroupStart} - {ayahData.ayahGroupEnd}
+                  </Tag>
+                )}
               </Space>
             </div>
             <Space>
@@ -233,12 +238,12 @@ const ViewAyah = () => {
 
           {/* Translation */}
           <Form layout="vertical">
-            <Form.Item label={`Translation (${selectedLanguage.toUpperCase()})`} required>
+            <Form.Item label={`Translation (${selectedLanguage.toUpperCase()})${ayahData.ayahGroupStart === null && ayahData.ayahGroupEnd === null ? ` - Group ${ayahData.ayahGroupStart}:${ayahData.ayahGroupEnd}` : ""}`} required>
               <textarea
                 value={translationText}
                 onChange={(e) => setTranslationText(e.target.value)}
                 rows={6}
-                placeholder={`Enter translation for ${selectedLanguage}`}
+                placeholder={`Enter translation for ${selectedLanguage}${ayahData.ayahGroupStart === null && ayahData.ayahGroupEnd === null ? ` (unified translation for ayahs ${ayahData.ayahGroupStart}-${ayahData.ayahGroupEnd})` : ""}`}
                 style={{
                   width: "100%",
                   padding: "8px",
@@ -253,12 +258,12 @@ const ViewAyah = () => {
 
           {/* Tafsir */}
           <Form layout="vertical">
-            <Form.Item label={`Tafsir (${selectedLanguage.toUpperCase()})`} required>
+            <Form.Item label={`Tafsir (${selectedLanguage.toUpperCase()})${ayahData.ayahGroupStart === null && ayahData.ayahGroupEnd === null ? ` - Group ${ayahData.ayahGroupStart}:${ayahData.ayahGroupEnd}` : ""}`} required>
               <textarea
                 value={tafsirText}
                 onChange={(e) => setTafsirText(e.target.value)}
                 rows={6}
-                placeholder={`Enter tafsir for ${selectedLanguage}`}
+                placeholder={`Enter tafsir for ${selectedLanguage}${ayahData.ayahGroupStart === null && ayahData.ayahGroupEnd === null ? ` (unified tafsir for ayahs ${ayahData.ayahGroupStart}-${ayahData.ayahGroupEnd})` : ""}`}
                 style={{
                   width: "100%",
                   padding: "8px",
