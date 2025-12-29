@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Table, Input, Button, Tag, message, Space, Tooltip } from 'antd';
+// eslint-disable-next-line no-unused-vars
 import { EyeOutlined, SearchOutlined, BookOutlined } from '@ant-design/icons';
 import Flex from 'components/shared-components/Flex';
 import QuranService from 'services/quranService';
