@@ -100,6 +100,81 @@ export const protectedRoutes = [
     ],
   },
 
+  // Quran
+  {
+    key: "dashboard.quran",
+    path: `${APP_PREFIX_PATH}/dashboards/quran`,
+    component: React.lazy(() => import("views/app-views/dashboards/quran")),
+    authority: [
+      "Content Editor Level 1",
+      "Content Editor Level 2",
+      "Content Editor Level 3",
+      "Content Writer",
+      "Language Editor",
+      "Chief Editor",
+      "Post Admin",
+      "Administrator",
+      "Author",
+    ],
+  },
+
+  {
+    key: "quran-listing",
+    path: `${APP_PREFIX_PATH}/dashboards/quran/listing`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/quran/quran-list")
+    ),
+    authority: [
+      "Content Editor Level 1",
+      "Content Editor Level 2",
+      "Content Editor Level 3",
+      "Content Writer",
+      "Language Editor",
+      "Chief Editor",
+      "Post Admin",
+      "Administrator",
+      "Author",
+    ],
+  },
+
+  {
+    key: "quran-view-surah",
+    path: `${APP_PREFIX_PATH}/dashboards/quran/view-surah/:surahId`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/quran/view-surah")
+    ),
+    authority: [
+      "Content Editor Level 1",
+      "Content Editor Level 2",
+      "Content Editor Level 3",
+      "Content Writer",
+      "Language Editor",
+      "Chief Editor",
+      "Post Admin",
+      "Administrator",
+      "Author",
+    ],
+  },
+
+  {
+    key: "quran-view-ayah",
+    path: `${APP_PREFIX_PATH}/dashboards/quran/view-surah/:surahId/ayah/:ayahNumber`,
+    component: React.lazy(() =>
+      import("views/app-views/dashboards/quran/view-ayah")
+    ),
+    authority: [
+      "Content Editor Level 1",
+      "Content Editor Level 2",
+      "Content Editor Level 3",
+      "Content Writer",
+      "Language Editor",
+      "Chief Editor",
+      "Post Admin",
+      "Administrator",
+      "Author",
+    ],
+  },
+
   // Authors
   {
     key: "dashboard.authors",

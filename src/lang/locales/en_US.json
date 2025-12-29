@@ -1,29 +1,27 @@
 {
 	"home": "Home",
-	
+
 	"sidenav.dashboard": "Dashboard",
 	"sidenav.dashboards.default": "Dashboard",
+	"sidenav.quran": "Quran",
+	"sidenav.quran.listing": "Surah List",
 	"sidenav.dashboards.analytic": "Analytic",
 	"sidenav.dashboards.sales": "Sales",
-
-
 
 	"sidenav.dashboards.authors": "Authors",
 	"sidenav.dashboards.authors.listing": "Authors",
 	"sidenav.dashboards.authors.create": "Create New Author",
 
-	
 	"sidenav.dashboards.articles": "Articles",
 	"sidenav.dashboards.articles.listing": "Articles",
 	"sidenav.dashboards.articles.my-approved-listing": "My Articles",
 	"sidenav.dashboards.articles.create": "Create New Article",
 
-		
 	"sidenav.dashboards.podcasts": "Podcasts",
 	"sidenav.dashboards.podcasts.listing": "Podcasts",
 	"sidenav.dashboards.podcasts.my-approved-listing": "My Podcasts",
 	"sidenav.dashboards.podcasts.create": "Create New Podcast",
-	
+
 	"sidenav.dashboards.videos": "Videos",
 	"sidenav.dashboards.videos.listing": "Videos",
 	"sidenav.dashboards.videos.my-approved-listing": "My Videos",
@@ -33,12 +31,12 @@
 	"sidenav.dashboards.ebooks.listing": "E-books",
 	"sidenav.dashboards.ebooks.my-approved-listing": "My E-books",
 	"sidenav.dashboards.ebooks.create": "Create New E-book",
-		
+
 	"sidenav.dashboards.blogs": "Blogs",
 	"sidenav.dashboards.blogs.listing": "Blogs",
 	"sidenav.dashboards.blogs.my-approved-listing": "My Blogs",
 	"sidenav.dashboards.blogs.create": "Create New Blog",
-		
+
 	"sidenav.dashboards.categories": "Categories",
 
 	"sidenav.dashboards.categories.categories": "Categories",
@@ -46,13 +44,10 @@
 
 	"sidenav.dashboards.categories.add-category": "Add New Category",
 
-
-			
 	"sidenav.dashboards.attributes": "Attributes",
 	"sidenav.dashboards.attributes.attributes-set": "Attribute set",
 	"sidenav.dashboards.attributes.attributes-all": "Attributes",
 
-			
 	"sidenav.dashboards.e-books": "E-Books",
 	"sidenav.dashboards.blog": "Blog",
 	"sidenav.dashboards.settings": "Settings",
@@ -64,9 +59,7 @@
 	"sidenav.dashboards.newsletter-subscribers": "Newsletter subscribers",
 	"sidenav.dashboards.contacts": "Contacts",
 
-				
 	"sidenav.dashboards.administrator": "Administrator",
-
 
 	"sidenav.dashboards.cms": "Cms",
 	"sidenav.dashboards.cms.pages": "Pages",
@@ -84,11 +77,11 @@
 	"sidenav.dashboards.ask-the-scholar.user": "Registered User",
 
 	"sidenav.dashboards.administrator.user-roles": "User Roles",
-	"sidenav.dashboards.administrator.user-roles.listing" : "All Roles",
-	"sidenav.dashboards.administrator.user-roles.create" : "Create Role",
-	
-	"sidenav.dashboards.user-roles.listing" : "List Roles",
-	"sidenav.dashboards.user-roles.create" : "Create Role",
+	"sidenav.dashboards.administrator.user-roles.listing": "All Roles",
+	"sidenav.dashboards.administrator.user-roles.create": "Create Role",
+
+	"sidenav.dashboards.user-roles.listing": "List Roles",
+	"sidenav.dashboards.user-roles.create": "Create Role",
 
 	"sidenav.dashboards.administrator.users": "Users",
 
@@ -174,13 +167,13 @@
 	"sidenav.components.feedback.result": "Result",
 	"sidenav.components.feedback.spin": "Spin",
 	"sidenav.components.feedback.skeleton": "Skeleton",
-	
+
 	"sidenav.components.other": "Other",
 	"sidenav.components.other.anchor": "Anchor",
 	"sidenav.components.other.backtop": "BackTop",
 	"sidenav.components.other.configProvider": "Config Provider",
 	"sidenav.components.other.divider": "Divider",
-	
+
 	"sidenav.charts": "Charts",
 	"sidenav.charts.apex": "Apex Charts",
 	"sidenav.charts.chartjs": "ChartJs",
@@ -188,7 +181,7 @@
 	"sidenav.maps": "Maps",
 	"sidenav.maps.google": "Google Maps",
 	"sidenav.maps.simple": "Simple Maps",
-	
+
 	"sidenav.pages": "Pages",
 	"sidenav.pages.profile": "Profile",
 	"sidenav.pages.invoice": "Invoice",
@@ -211,5 +204,4 @@
 	"sidenav.docs": "Docs",
 	"sidenav.docs.documentation": "Documentation",
 	"sidenav.docs.changelog": "Changelog"
-
 }

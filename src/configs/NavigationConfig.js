@@ -51,6 +51,7 @@ import {
   UserOutlined,
   // QuestionCircleOutlined,
   CommentOutlined,
+  // BookOutlined,
   //   UsergroupAddOutlined,
 } from "@ant-design/icons";
 import {
@@ -216,6 +217,14 @@ const dashBoardNavTree = [
         path: `${APP_PREFIX_PATH}/dashboards/default`,
         title: "sidenav.dashboards.default",
         icon: DashboardOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "quran",
+        path: `${APP_PREFIX_PATH}/dashboards/quran/listing`,
+        title: "sidenav.quran",
+        icon: ReadOutlined,
         breadcrumb: false,
         submenu: [],
       },
