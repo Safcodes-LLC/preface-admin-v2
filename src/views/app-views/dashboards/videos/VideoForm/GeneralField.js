@@ -270,7 +270,11 @@ const GeneralField = (props) => {
             <Form.Item name="slug" label="Video Slug" rules={rules.slug}>
               <Input placeholder="Video Slug" disabled={props.view} />
             </Form.Item>
-            <Form.Item name="video_url" label="Video URL (youtube)" rules={rules.video_url}>
+            <Form.Item
+              name="video_url"
+              label="Video URL (youtube)"
+              rules={rules.video_url}
+            >
               <Input placeholder="Video URL" disabled={props.view} />
             </Form.Item>
             <Form.Item
@@ -344,80 +348,89 @@ const GeneralField = (props) => {
           </Card>
 
           <Card title="Thumbnail horizontal">
-            <Form.Item name="thumbnail" rules={rules.thumbnail}>
-              <Upload
-                {...thumbnailImageUploadProps}
-                beforeUpload={beforeUploadThumbnail}
-                onChange={(e) => props.handleThumbnailImageUploadChange(e)}
-                showUploadList={false}
-                disabled={props.view}
-              >
-                <div className="upload-container">
-                  {props.uploadedThumbnailImage ? (
-                    <img
-                      src={props.uploadedThumbnailImage}
-                      alt="Thumbnail"
-                      className="img-fluid"
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        objectFit: "cover",
-                      }}
-                    />
+            <Dragger
+              {...thumbnailImageUploadProps}
+              beforeUpload={beforeUploadThumbnail}
+              onChange={(e) => props.handleThumbnailImageUploadChange(e)}
+              disabled={props.view}
+              showUploadList={false}
+            >
+              {props.uploadedThumbnailImage ? (
+                <img
+                  src={props.uploadedThumbnailImage}
+                  alt="Thumbnail"
+                  className="img-fluid"
+                  // style={{
+                  //   width: "100px",
+                  //   height: "100px",
+                  //   objectFit: "cover",
+                  // }}
+                />
+              ) : (
+                <div>
+                  {props.uploadThumbnailImageLoading ? (
+                    <div>
+                      <LoadingOutlined className="font-size-xxl text-primary" />
+                      <div className="mt-3">Uploading if</div>
+                    </div>
                   ) : (
-                    <div className="upload-placeholder">
-                      {props.uploadThumbnailImageLoading ? (
-                        <div>
-                          <LoadingOutlined className="font-size-xxl text-primary" />
-                          <div className="mt-3">Uploading</div>
-                        </div>
-                      ) : (
-                        <div>
-                          <CustomIcon className="display-3" svg={ImageSvg} />
-                          <p>Click or drag thumbnail image to upload</p>
-                        </div>
-                      )}
+                    <div>
+                      <CustomIcon className="display-3" svg={ImageSvg} />
+                      <p>Click or drag files to upload</p>
                     </div>
                   )}
                 </div>
-              </Upload>
-            </Form.Item>
+              )}
+            </Dragger>
           </Card>
 
           <Card title="Thumbnail vertical">
-            <Upload
+            <Dragger
               {...moreImagesUploadProps}
               beforeUpload={beforeUploadMoreImages}
               onChange={(e) => props.handleUploadMoreImagesChange(e)}
               disabled={props.view}
             >
               {props.uploadedMoreImgs ? (
-                <img
-                  src={props.uploadedMoreImgs}
-                  alt="Additional thumbnail"
-                  className="img-fluid"
-                  style={{
-                    width: "100px",
-                    height: "100px",
-                    objectFit: "cover",
-                  }}
-                />
+                <div className="d-flex justify-content-center">
+                  <img
+                    src={props.uploadedMoreImgs}
+                    alt="Additional thumbnail"
+                    style={{
+                      maxWidth: "200px",
+                      maxHeight: "300px",
+                      width: "auto",
+                      height: "auto",
+                      objectFit: "contain"
+                    }}
+                  />
+                </div>
               ) : (
                 <div>
                   {props.uploadMoreImgLoading ? (
                     <div>
                       <LoadingOutlined className="font-size-xxl text-primary" />
-                      <div className="mt-3">Uploading</div>
+                      <div className="mt-3">Uploading if</div>
                     </div>
                   ) : (
-                    <div>
+                    <div
+                      style={{
+                        height: "250px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        // border: "1px dashed #d9d9d9",
+                        minWidth: "150px"
+                      }}
+                    >
                       <CustomIcon className="display-3" svg={ImageSvg} />
-                      <p>Click or drag file to upload</p>
+                      <p>Click or drag files to upload</p>
                     </div>
                   )}
                 </div>
               )}
-            </Upload>
+            </Dragger>
           </Card>
 
           {/* <Card>
