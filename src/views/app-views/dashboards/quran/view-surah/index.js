@@ -218,20 +218,21 @@ const ViewSurah = () => {
 							Surah Info
 						</Button>
 					</Tooltip>
-					{selectedAyahs.length > 0 && (
-						<>
-							<Button type="primary" danger icon={<LinkOutlined />} onClick={handleCreateGroup}>
-								Group ({selectedAyahs.length} selected)
-							</Button>
-							<Button onClick={() => setSelectedAyahs([])}>Clear Selection</Button>
-							<Button danger onClick={handleRemoveGroup}>
-								Remove Group
-							</Button>
-						</>
-					)}
+
 					<Input placeholder="Search ayahs" value={searchValue} onChange={onSearchChange} style={{ width: 250 }} />
 				</Space>
 			</Flex>
+			{selectedAyahs.length > 0 && (
+				<Flex justifyContent="flex-start" style={{ marginTop: 16 }} gap="10px">
+					<Button type="primary" style={{backgroundColor:"orange"}} icon={<LinkOutlined />} onClick={handleCreateGroup}>
+						Group ({selectedAyahs.length} selected)
+					</Button>
+					<Button onClick={() => setSelectedAyahs([])}>Clear Selection</Button>
+					<Button danger onClick={handleRemoveGroup}>
+						Remove Group
+					</Button>
+				</Flex>
+			)}
 
 			<div className="table-responsive" style={{ marginTop: 16 }}>
 				<Table
