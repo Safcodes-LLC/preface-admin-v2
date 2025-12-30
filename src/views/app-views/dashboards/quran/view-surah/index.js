@@ -238,7 +238,7 @@ const ViewSurah = () => {
 				<Table
 					columns={columns}
 					dataSource={filteredAyahs}
-					rowKey="id"
+					rowKey="ayahNumber"
 					pagination={{ pageSize: 20, showSizeChanger: true }}
 					rowSelection={{
 						selectedRowKeys: selectedAyahs,
